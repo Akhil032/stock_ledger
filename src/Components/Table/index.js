@@ -114,14 +114,12 @@ export default function EnhancedTable({
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
         .map((value) => {  return value['SR_NO']?value['SR_NO']:value['TRAN_SEQ_NO'];});        
         allSelectObject[page]=newSelecteds;  
-
         for(const key in allSelectObject){
             newallselect.push(...(allSelectObject[key]))}
         setallSelectPageNo(oldArray => [...oldArray, page]);
         setSelected(oldArray => [...oldArray,...newSelecteds]);
         // seteditRows(newSelecteds);
         setselectedrows(rowsc+allSelectObject[page].length);
-        
         if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
           for(var i=0;i<s_object[page].length;i++)
           {const index = selected.indexOf(s_object[page][i]);
@@ -129,37 +127,30 @@ export default function EnhancedTable({
               selected.splice(index, 1);
             }
           }
-          delete s_object[page]
-        
+          delete s_object[page];
         }
         return;
     }else if(selectPageNo.includes(page)){
-        console.log(23232,selected,(Object.keys(s_object)).length >1)        
         const index = selectPageNo.indexOf(page);
         const Rindex=selected;
         setselectedrows(rowsc-allSelectObject[page].length);
         if((selectPageNo.length>1) || (Object.keys(s_object)).length > 1 || !(s_object.hasOwnProperty(page))){          
-          const unselectedarray=allSelectObject[page] ; 
-          console.log("unselectedarray",unselectedarray)
+          const unselectedarray=allSelectObject[page] ;
           if (s_object.hasOwnProperty(page) && uncheck){
-            setuncheck(false)
+            setuncheck(false);
             if(s_object[page].length>0){
               for (var i= 0; i < s_object[page].length; i++) {
                 const rem=unselectedarray.indexOf(s_object[page][i]);
                 unselectedarray.splice(rem,1);
               }
-              delete s_object[page]
-              console.log("dsfs",s_object)
-            } 
-            
+              delete s_object[page];
+            }
           }
-          console.log("unselectedarray",unselectedarray)     
           for (var i= 0; i < unselectedarray.length; i++) {
             const rem=selected.indexOf(unselectedarray[i]);
             Rindex.splice(rem,1);
           }
           setSelected(Rindex);
-          console.log("selected",Rindex) 
           if (index > -1) { 
               selectPageNo.splice(index, 1);
             }
@@ -183,14 +174,11 @@ export default function EnhancedTable({
     const selectedIndex = selected.indexOf(name);
     let newSelected = [];
     if (selectedIndex === -1) {
-      console.log(23)
       setSingleSPageNo(oldArray => [...oldArray, page]);
       newSelected = newSelected.concat(selected, name);
     } else if (selectedIndex === 0) {
-      console.log(25)
       newSelected = newSelected.concat(selected.slice(1));
     } else if (selectedIndex === selected.length - 1) {
-      console.log(2345)
       setuncheck(true)
       newSelected = newSelected.concat(selected.slice(0, -1));
     } else if (selectedIndex > 0) {
@@ -200,14 +188,10 @@ export default function EnhancedTable({
         selected.slice(selectedIndex + 1)
       );
     }
-   console.log("s_object",s_object)
-    //console.log("sele newSelected",newSelected);
-
     setSelected(newSelected);
-    //seteditRows(newSelected);    
-  
+    //seteditRows(newSelected); 
   };
-//console.log("akhil",selected)
+  
   const handleDelete = () => {
     const id = selected;
     const data = [...tableData];
