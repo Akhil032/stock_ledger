@@ -12,7 +12,7 @@ import { makeStyles } from "@mui/styles";
 import IconButton from '@mui/material/IconButton';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import Grid from '@mui/material/Grid';
-
+import { CoPresentOutlined } from "@mui/icons-material";
 const useStyles = makeStyles({
   TableCell: {
     color: "#fff",
@@ -59,19 +59,37 @@ export default function EnhancedTableHead(props) {
     setTabledata,
     inputValue,
     selected,
+    rowsPerPage,
+    page,
+    selectPageNo,
+    allSelectObject,
+    s_object,
+    s_selecVal
   } = props;
   const createSortHandler = (property) => (event) => {
     onRequestSort(event, property);
   };
-
-  // console.log("tableData header",tableData);
-  //console.log("header setAllData",setAllData);
-  // console.log("header tabledataclone",tabledataclone);
-  // console.log("header setInputValue",setInputValue);
-  // console.log("header setSearched",setSearched);
-  // console.log("header setTabledata",setTabledata);
-  // console.log("header inputValue",inputValue);
-
+  var pageCount=0
+  var check=false
+  var check2=false
+ if( pageCount===0 && Object.keys(allSelectObject).length>0){
+      pageCount=(Object.keys(allSelectObject).length) * rowsPerPage
+      //check= false
+    }
+  
+    // if((pageCount===0 ||numSelected>(Object.keys(allSelectObject).length) * rowsPerPage) && numSelected>0){
+    //   //pageCount=numSelected+1
+    //   check= true
+      
+    // }
+    if(!allSelectObject.hasOwnProperty(page)){
+      console.log(123)
+      check=true
+    }
+    console.log("condition",numSelected > 0  &&  check,
+    rowCount > 0 && (numSelected <= pageCount || numSelected >= pageCount)  && allSelectObject.hasOwnProperty(page)  )
+  console.log("header setAllData",numSelected,pageCount);
+  
   const resetFilter = () => {
     setSearched("");
     setInputValue("");
@@ -98,8 +116,10 @@ export default function EnhancedTableHead(props) {
               }}>
             <Checkbox
               color="primary"
-              indeterminate={numSelected > 0 && numSelected < rowCount}
-              checked={rowCount > 0 && numSelected === rowCount}
+              // indeterminate={(numSelected > 0 && numSelected < pageCount) }
+              // checked={ rowCount > 0 && numSelected <= pageCount  && allSelectObject.hasOwnProperty(page) }
+              indeterminate={(numSelected > 0 && numSelected < rowCount )}
+              checked={rowCount > 0 && numSelected ===rowCount}
               onChange={onSelectAllClick}
               inputProps={{
                 "aria-label": "select all data",

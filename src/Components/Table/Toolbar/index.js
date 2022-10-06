@@ -13,6 +13,7 @@ import { Button } from "@mui/material";
 
 export default function EnhancedTableToolbar(props) {
   const { selected, handledelete, edithandle, seteditRows, setSelected, editRows = [], setUpdateRow, setupdateData, setTabledata, allData } = props;
+  //console.log("Asdsdsf",selected)
   return (
     <Toolbar
       sx={{

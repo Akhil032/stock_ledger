@@ -261,7 +261,7 @@ const StageProcessing = () => {
 
     });
     dispatch(getStageProcessingRequest(JSON.stringify(tabledata)));
-    //setLoading(() => window.location.reload(), 500)
+    setLoading(() => window.location.reload(), 500)
     setLoading(true);
     setOpen(false);
   }
@@ -503,7 +503,7 @@ const StageProcessing = () => {
         </Snackbar>
       </Stack>
 
-      <div>
+      <div> 
         <Dialog
           fullScreen={fullScreen}
           open={isError}

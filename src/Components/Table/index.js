@@ -94,6 +94,7 @@ export default function EnhancedTable({
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(30);
   const[allSelectObject,setallSelectObject]=React.useState({});
+  const[s_selecVal,sets_selecVal]=React.useState({});
   const[selectPageNo,setallSelectPageNo]=React.useState([]);
   const[singleSPageNo,setSingleSPageNo]=React.useState([]);
   const[rowsc,setselectedrows]=React.useState(0);
@@ -105,8 +106,7 @@ export default function EnhancedTable({
     setOrderBy(property);
   };
   const handleSelectAllClick = (event) => {
-    // console.log("event",event,event.target)   
-    // console.log(selectPageNo.includes(page),",event.target",event.target.checked)
+    console.log(123,event.target.checked )
     let stageData = [...tableData];
     if (event.target.checked && !(selectPageNo.includes(page))) {
         const newallselect=[];
@@ -118,7 +118,7 @@ export default function EnhancedTable({
             newallselect.push(...(allSelectObject[key]))}
         setallSelectPageNo(oldArray => [...oldArray, page]);
         setSelected(oldArray => [...oldArray,...newSelecteds]);
-        // seteditRows(newSelecteds);
+         //seteditRows(newSelecteds);
         setselectedrows(rowsc+allSelectObject[page].length);
         if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
           for(var i=0;i<s_object[page].length;i++)
@@ -150,6 +150,7 @@ export default function EnhancedTable({
             const rem=selected.indexOf(unselectedarray[i]);
             Rindex.splice(rem,1);
           }
+          delete allSelectObject[page];
           setSelected(Rindex);
           if (index > -1) { 
               selectPageNo.splice(index, 1);
@@ -163,9 +164,23 @@ export default function EnhancedTable({
           }}
         }
    };
+   //console.log("s_object",allSelectObject)
   const handleClick = (event, name) => {
+    console.log(name)
+
     if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
+      console.log(s_object[page])
+     // if( Object.values(s_object)[page].includes(name)){
+        const index = s_object[page].indexOf(name);
+          if (index > -1) { 
+          s_object[page].splice(index, 1);
+          if(s_object[page].length===0){
+            delete s_object[page];
+          }
+        }
+      else{
       s_object[page].push(name)
+      }
     }else{
       const arr=[]
       arr.push(name)
@@ -189,8 +204,10 @@ export default function EnhancedTable({
       );
     }
     setSelected(newSelected);
+    sets_selecVal(s_object)
     //seteditRows(newSelected); 
   };
+ // console.log("ski",uncheck)
   
   const handleDelete = () => {
     const id = selected;
@@ -202,10 +219,6 @@ export default function EnhancedTable({
     const updatedTabledata = data1.filter((val) => {
       return !id.includes(val.SR_NO);
   });
-  // console.log("updatedTable",updatedTable)
-  // console.log("updatedTabledata",updatedTabledata)
-  // console.log("tableData123",tableData)
-  // console.log("tabledataclone",tabledataclone)
     setTabledata(updatedTable)
     setTabledataclone(updatedTabledata)
     setAllData(updatedTabledata);
@@ -273,6 +286,7 @@ export default function EnhancedTable({
           allSelectObject={allSelectObject}
           selectPageNo={selectPageNo}
           rowsc={rowsc}
+          s_selecVal={s_selecVal}
         />
       </Box>
     </>

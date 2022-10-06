@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import CommonTable from "./commonTable/indexCC";
-import TableToolbar from "./Toolbar/index";
+import TableToolbar from "../Table/Toolbar/index";
 import DeleteIcon from '@mui/icons-material/Delete';
 import Button from "@mui/material/Button";
+import { prevElementSibling } from "domutils";
 
 function descendingComparator(a, b, orderBy) {
 
@@ -12,12 +13,14 @@ function descendingComparator(a, b, orderBy) {
     c=b[orderBy].slice(b[orderBy].indexOf("-")+1);
     d = a[orderBy].slice(a[orderBy].indexOf("-")+1);
        c = isNaN(c)?c:parseInt(c);
-       d = isNaN(d)?d:parseInt(d);
-      
+       d = isNaN(d)?d:parseInt(d);  
+  }else if(orderBy == "TRAN_SEQ_NO"){
+    c =(b[orderBy]);
+    d =(a[orderBy]);    
   }else {
      c = isNaN(b[orderBy])?b[orderBy]:parseInt(b[orderBy]);
      d = isNaN(a[orderBy])?a[orderBy]:parseInt(a[orderBy]);
-  }  
+  } 
   if(c==="NULL" || d==="NULL")
   {
     if(c==="NULL" && d !=="NULL"){
@@ -51,6 +54,7 @@ function stableSort(array, comparator) {
   const stabilizedThis = array.map((el, index) => [el, index]);
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0]);
+    // //console.log("data:",array)
     if (order !== 0) {
       return order;
     }
@@ -81,6 +85,8 @@ export default function EnhancedTable({
   setTabledataclone,
   tabledataclone,
   inputValue,
+  setFreeze,
+  setEditSelect,
 }) {
   const [order, setOrder] = React.useState("asc");
   const [orderBy, setOrderBy] = React.useState("");
@@ -88,6 +94,7 @@ export default function EnhancedTable({
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(30);
   const[allSelectObject,setallSelectObject]=React.useState({});
+  const[s_selecVal,sets_selecVal]=React.useState({});
   const[selectPageNo,setallSelectPageNo]=React.useState([]);
   const[singleSPageNo,setSingleSPageNo]=React.useState([]);
   const[rowsc,setselectedrows]=React.useState(0);
@@ -99,23 +106,22 @@ export default function EnhancedTable({
     setOrderBy(property);
   };
   const handleSelectAllClick = (event) => {
-    // console.log("event",event,event.target)   
-    // console.log(selectPageNo.includes(page),",event.target",event.target.checked)
     let stageData = [...tableData];
     if (event.target.checked && !(selectPageNo.includes(page))) {
         const newallselect=[];
         const newSelecteds = stableSort(stageData, getComparator(order, orderBy))
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-        .map((value) => {  return value['SR_NO']?value['SR_NO']:value['ITEM'];});        
+        .map((value) => {  return value['SR_NO']?value['SR_NO']:value['ITEM'];});    
+        //console.log("newSelecteds",newSelecteds)         
         allSelectObject[page]=newSelecteds;  
-
+         
         for(const key in allSelectObject){
             newallselect.push(...(allSelectObject[key]))}
+            //console.log("newallselect",newallselect) 
         setallSelectPageNo(oldArray => [...oldArray, page]);
         setSelected(oldArray => [...oldArray,...newSelecteds]);
-        // seteditRows(newSelecteds);
+         seteditRows(newSelecteds);
         setselectedrows(rowsc+allSelectObject[page].length);
-        
         if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
           for(var i=0;i<s_object[page].length;i++)
           {const index = selected.indexOf(s_object[page][i]);
@@ -123,44 +129,38 @@ export default function EnhancedTable({
               selected.splice(index, 1);
             }
           }
-          delete s_object[page]
-        
+          delete s_object[page];
         }
         return;
     }else if(selectPageNo.includes(page)){
-        console.log(23232,selected,(Object.keys(s_object)).length >1)        
         const index = selectPageNo.indexOf(page);
         const Rindex=selected;
         setselectedrows(rowsc-allSelectObject[page].length);
         if((selectPageNo.length>1) || (Object.keys(s_object)).length > 1 || !(s_object.hasOwnProperty(page))){          
-          const unselectedarray=allSelectObject[page] ; 
-          console.log("unselectedarray",unselectedarray)
+          const unselectedarray=allSelectObject[page] ;
           if (s_object.hasOwnProperty(page) && uncheck){
-            setuncheck(false)
+            setuncheck(false);
             if(s_object[page].length>0){
               for (var i= 0; i < s_object[page].length; i++) {
                 const rem=unselectedarray.indexOf(s_object[page][i]);
                 unselectedarray.splice(rem,1);
               }
-              delete s_object[page]
-              console.log("dsfs",s_object)
-            } 
-            
+              delete s_object[page];
+            }
           }
-          console.log("unselectedarray",unselectedarray)     
           for (var i= 0; i < unselectedarray.length; i++) {
             const rem=selected.indexOf(unselectedarray[i]);
             Rindex.splice(rem,1);
           }
+          delete allSelectObject[page];
           setSelected(Rindex);
-          console.log("selected",Rindex) 
           if (index > -1) { 
               selectPageNo.splice(index, 1);
             }
-            //seteditRows([]);
+            seteditRows([]);
         }else{
             setSelected([]);
-            //seteditRows([]);
+            seteditRows([]);
             if (index > -1) { 
               selectPageNo.splice(index, 1);
           }}
@@ -168,7 +168,16 @@ export default function EnhancedTable({
    };
   const handleClick = (event, name) => {
     if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
-      s_object[page].push(name)
+        const index = s_object[page].indexOf(name);
+        if (index > -1) { 
+          s_object[page].splice(index, 1);
+          if(s_object[page].length===0){
+            delete s_object[page];
+          }
+        }
+       else{
+          s_object[page].push(name)
+        }
     }else{
       const arr=[]
       arr.push(name)
@@ -177,14 +186,11 @@ export default function EnhancedTable({
     const selectedIndex = selected.indexOf(name);
     let newSelected = [];
     if (selectedIndex === -1) {
-      console.log(23)
       setSingleSPageNo(oldArray => [...oldArray, page]);
-      newSelected = newSelected.concat(selected, name);
+      newSelected = newSelected.concat(selected, [name]);
     } else if (selectedIndex === 0) {
-      console.log(25)
       newSelected = newSelected.concat(selected.slice(1));
     } else if (selectedIndex === selected.length - 1) {
-      console.log(2345)
       setuncheck(true)
       newSelected = newSelected.concat(selected.slice(0, -1));
     } else if (selectedIndex > 0) {
@@ -194,21 +200,24 @@ export default function EnhancedTable({
         selected.slice(selectedIndex + 1)
       );
     }
-   console.log("s_object",s_object)
-    //console.log("sele newSelected",newSelected);
-
     setSelected(newSelected);
-    //seteditRows(newSelected);    
-  
+    sets_selecVal(s_object)
+    //seteditRows(newSelected); 
   };
-
+  console.log("selected",selected)
   const handleDelete = () => {
     const id = selected;
     const data = [...tableData];
     const updatedTable = data.filter((val) => {
       return !id.includes(val.SR_NO);
-    });
-    setTabledata(updatedTable);
+  });
+  const data1 = [...tabledataclone];
+    const updatedTabledata = data1.filter((val) => {
+      return !id.includes(val.SR_NO);
+  });
+    setTabledata(updatedTable)
+    setTabledataclone(updatedTabledata)
+    setAllData(updatedTabledata);
     setSelected([]);
     setDeleteId(id);
   };
@@ -222,7 +231,17 @@ export default function EnhancedTable({
     setPage(0);
   };
 
-  const isSelected = (name) => selected.indexOf(name) !== -1;
+  const isSelected = (name) =>{ 
+    Array.prototype.indexOfForArrays = function(search)
+      {
+        var searchJson = JSON.stringify(search); // "[3,566,23,79]"
+        var arrJson = this.map(JSON.stringify); // ["[2,6,89,45]", "[3,566,23,79]", "[434,677,9,23]"]
+
+        return arrJson.indexOf(searchJson);
+      };
+  return selected.indexOfForArrays(name) !== -1;
+ // return selected[0].indexOf(name) !== -1;
+  }
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - tableData.length) : 0;
   
@@ -237,6 +256,7 @@ export default function EnhancedTable({
           handleClick={handleClick}
           handleSearchClick={handleSearchClick}
           freeze={freeze}
+          setFreeze={setFreeze}
           handleCopyDown={handleCopyDown}
           handleSelectAllClick={handleSelectAllClick}
           handleRequestSort={handleRequestSort}
@@ -269,6 +289,10 @@ export default function EnhancedTable({
           inputValue={inputValue}
           setInputValue={setInputValue}
           setSearched={setSearched}
+          allSelectObject={allSelectObject}
+          selectPageNo={selectPageNo}
+          rowsc={rowsc}
+          s_selecVal={s_selecVal}
         />
       </Box>
     </>

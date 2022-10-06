@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Header from "../Header";
+import Header from "../Header/indexCH";
 import Autocomplete from '@mui/material/Autocomplete';
 import {Table, TableBody, TableCell, TableContainer, TablePagination, TableRow,Paper, Checkbox, TextField } from "@mui/material";
 import { makeStyles } from "@mui/styles";
@@ -64,64 +64,15 @@ const CommonTable = ({
   setInputValue,
   inputValue,
   setSearched,
+  selectPageNo,
+  allSelectObject,
+  s_object,
+  s_selecVal,
 }) => {
 
 
-    const [updateData, setupdateData] = useState({});  
-    const rowClasses = useStyles();  
-
-  // const onBlur = (event, value , row) => {
-  //   //console.log("test", event.target.value, value, row);
-  //   row[event.target.name] = event.target.value;
-    
-  //   if(event.target.name == 'QTY') {
-  //     row['TOTAL_COST'] = parseInt(event.target.value) * parseInt(row['UNIT_COST']);
-  //   }
-    
-  //   var finalData = updateData;
-  //   if(updateData.length === 0) {
-  //     finalData.push(row);
-  //   }
-  //   else {
-  //     var t = finalData.findIndex(x => x.TRAN_SEQ_NO === row['TRAN_SEQ_NO']);
-  //     if(t === -1) {
-  //       finalData.push(row);
-  //     }
-  //     else {
-  //       finalData[t] = row;
-  //     }
-  //   }
-  //   setupdateData(finalData);
-  //   setUpdateRow(finalData);
-  //   //console.log("testafter", row, updateData);
-  //     sessionStorage.setItem('updateColume',JSON.stringify(finalData));
-  //   // return;
-  //   // let temp = JSON.stringify(updateData);
-  //   // temp = JSON.parse(temp);
-  //   // //console.log(temp);
-  //   //   //let oldrow = rows.filter((item) => item?.TRAN_SEQ_NO.includes(editRows) );
-  //   // if(temp.findIndex(x => x.TRAN_SEQ_NO === row['TRAN_SEQ_NO']) == -1 ){
-  //   // temp[row?.TRAN_SEQ_NO] = row;
-  //   // temp[row?.TRAN_SEQ_NO][event.target.name] = event.target.value; 
-  //   // if(event.target.name == 'QTY'){
-  //   //   temp[row?.TRAN_SEQ_NO]['TOTAL_COST'] = event.target.value * row['UNIT_COST']; 
-  //   // }
-  //   // //let updaterow = Object.values(temp);
-    
-  //   // //console.log(temp);
-  //   // setupdateData(temp)
-  //   // }
-  // }
-
-
-
-  // useEffect(() => {
-  //   //console.log("testafter1", updateData);
-    
-  //   setUpdateRow(updateData);
-    
-  // },[updateData])
-
+  const [updateData, setupdateData] = useState({});  
+  const rowClasses = useStyles();  
 
   const onBlur = (event, value , row) => {
     let temp = {...updateData};
@@ -170,12 +121,19 @@ const CommonTable = ({
               inputValue={inputValue}
               setInputValue={setInputValue}
               setSearched={setSearched}
+              rowsPerPage={rowsPerPage}
+              selectPageNo={selectPageNo}
+              page={page}
+              allSelectObject={allSelectObject}
+              s_object={s_object}
+              s_selecVal={s_selecVal}
             />
             <TableBody>
               {stableSort(rows, getComparator(order, orderBy))
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row, index) => {
-                  const isItemSelected = isSelected(row?.SR_NO?row?.SR_NO:row?.ITEM);
+                  const isItemSelected = isSelected(new Array(row?.SR_NO?row?.SR_NO:row?.ITEM,row?.SR_NO?row?.SR_NO:row?.LOCATION));
+                 // console.log("isItemSelected",isItemSelected,isSelected)
                   const labelId = `enhanced-table-checkbox-${index}`;
                   return (
                     <TableRow
@@ -183,13 +141,13 @@ const CommonTable = ({
                       role="checkbox"
                       aria-checked={isItemSelected}
                       tabIndex={-1}
-                      key={row?.SR_NO?row?.SR_NO:row?.ITEM}
+                      key={ new Array(row?.SR_NO?row?.SR_NO:row?.ITEM,row?.SR_NO?row?.SR_NO:row?.LOCATION)}
                       selected={isItemSelected}
                     >
                       <TableCell padding="checkbox" style={{width: '1%'}}>
                         <Checkbox
                           color="primary"
-                          onClick={(event) => handleClick(event, row?.SR_NO?row?.SR_NO:row?.ITEM)}
+                          onClick={(event) => handleClick(event, new Array(row?.SR_NO?row?.SR_NO:row?.ITEM,row?.SR_NO?row?.SR_NO:row?.LOCATION))}
                           checked={isItemSelected}
                           inputProps={{
                             "aria-labelledby": labelId,

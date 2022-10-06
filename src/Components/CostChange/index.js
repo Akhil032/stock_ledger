@@ -264,8 +264,9 @@ const CostChange = () => {
 
   }, [''])
 
-  useEffect(() => {
+  useEffect(() => { //console.log(12323454)
     if (CostChangeData?.data?.Data && Array.isArray(CostChangeData?.data?.Data)) {
+      // console.log(1234)
      if (load===0){
       setTabledata(serializedata(CostChangeData?.data?.Data));
       setAllData(serializedata(CostChangeData?.data?.Data));
@@ -286,7 +287,7 @@ const CostChange = () => {
       setSearch(false)
     }
   }, [CostChangeData?.data])
-  //console.log("tabledata",tabledata,load)
+ // console.log("tabledata",CostChangeData)
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (value == "") {
