@@ -9,7 +9,10 @@ import Checkbox from "@mui/material/Checkbox";
 import { visuallyHidden } from "@mui/utils";
 import SearchTableData from "../Search";
 import { makeStyles } from "@mui/styles";
-
+import IconButton from '@mui/material/IconButton';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import Grid from '@mui/material/Grid';
+import { CoPresentOutlined } from "@mui/icons-material";
 const useStyles = makeStyles({
   TableCell: {
     color: "#fff",
@@ -18,7 +21,17 @@ const useStyles = makeStyles({
   },
   SearchHead: {
     position: "sticky",
+    top: "31px",
+    background:'#fff',
+  },
+  TitleHead: {
+    height: "25px",
+    position: "sticky",
     top: -1,
+  },
+  resetfilter:{
+    padding: "6px 6px !important",
+    // top: "0px",
   }
 });
 
@@ -33,10 +46,9 @@ export default function EnhancedTableHead(props) {
     handleSearch,
     searchText,
     headCells,
-    editRows = [],
-    checkEditrows = false,
     handleSearchClick,
     freeze,
+    setFreeze,
     handleCopyDown,
     pageName,
     tableData,
@@ -46,31 +58,42 @@ export default function EnhancedTableHead(props) {
     setSearched,
     setTabledata,
     inputValue,
+    selected,
+    rowsPerPage,
+    page,
+    selectPageNo,
+    allSelectObject,
+    s_object,
+    s_selecVal
   } = props;
   const createSortHandler = (property) => (event) => {
     onRequestSort(event, property);
   };
+  
   const resetFilter = () => {
     setSearched("");
     setInputValue("");
 
     if (inputValue.length===0){
-      // console.log("if:")
+      //  console.log("if:",freeze)
     setTabledata(tableData);
     setAllData(tableData);
+    setFreeze(false);
     }else{
-      // console.log("else:")
+      //  console.log("else:",freeze)
     setTabledata(tabledataclone);
     setAllData(tabledataclone);
+     setFreeze(false);
     }
   }
-
   const headerclasses = useStyles();
   return (
     <>
-      <TableHead className={headerclasses.SearchHead}>
+      <TableHead className={headerclasses.TitleHead}>
         <TableRow>
-          {/* <TableCell padding="checkbox">
+          <TableCell padding="checkbox" style={{
+                whiteSpace: "nowrap", 
+              }}>
             <Checkbox
               color="primary"
               indeterminate={numSelected > 0 && numSelected < rowCount}
@@ -82,9 +105,8 @@ export default function EnhancedTableHead(props) {
               style={{
                 color: "#fff",
               }}
-              disabled={checkEditrows?editRows.length > 0:false}
             />
-          </TableCell> */}
+          </TableCell>
           {headCells.map((headCell) => (
             <>
               <TableCell
@@ -92,6 +114,9 @@ export default function EnhancedTableHead(props) {
                 className={headerclasses.TableCell}
                 size="small"
                 sortDirection={orderBy === headCell.id ? order : false}
+                style={{
+                  whiteSpace: "nowrap"
+                }}
               >
                 <TableSortLabel
                   active={orderBy === headCell.id}
@@ -127,9 +152,9 @@ export default function EnhancedTableHead(props) {
           ))}
         </TableRow>
       </TableHead>
-      <TableHead className={headerclasses.SearchHead}>
+      <TableHead className={headerclasses.SearchHead} >
       <TableCell padding="checkbox">
-      <Grid item xs={1} style={{ padding: "0px",margin:"0px 0px 0px -5px" }}>
+      <Grid item xs={1} style={{ padding: "0px",margin:"0px 0px 0px -6px"}}>
             <IconButton className={headerclasses.resetfilter} onClick={resetFilter}>
               <RestartAltIcon />
             </IconButton>
@@ -149,12 +174,11 @@ export default function EnhancedTableHead(props) {
                 }
                 width={searchData.width}
                 onChange={handleSearch}
-                editRows={editRows}
-                checkEditrows={true}
                 onClick={handleSearchClick}
                 freeze={freeze}
                 onCopy={handleCopyDown}
                 colEnabled={searchText}
+                selected={selected}
                 pageName={pageName}
               />
             </TableCell>

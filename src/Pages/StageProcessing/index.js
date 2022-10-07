@@ -28,6 +28,8 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
+import swal from '@sweetalert/with-react';
+
 import "./index.css";
 
 
@@ -113,20 +115,35 @@ const StageProcessing = () => {
       setFilterData(filteredTable);
     }
   }, [inputValue]);
-
+  
   // Error handle by input from web-service
   useEffect(() => {
     if (StagingProcessing.isError) {
-      setIsError(true)
+      //setIsError(true)
+      if((StagingProcessing["messgae"]).length >0)
+      {swal(
+        <div>     
+          <p>{StagingProcessing["messgae"]}</p>
+        </div>
+      )}
+      StagingProcessing.isError=false;
     } else if (StagingProcessing.isSuccess) {
-      setIsSuccess(true)
+     // setIsSuccess(true)
+     if((StagingProcessing["messgae"]).length >0)
+      {swal(
+        <div>     
+          <p>{StagingProcessing["messgae"]}</p>
+        </div>
+      )}
+    StagingProcessing.isSuccess=false;
       setTabledata("");
+    
     } else {
+      console.log(234545)
       setIsError(false)
-      setIsSuccess(false)
+      setIsSuccess(false) 
     }
   }, [StagingProcessing])
-
   // Handle input of Column filter
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -261,7 +278,7 @@ const StageProcessing = () => {
 
     });
     dispatch(getStageProcessingRequest(JSON.stringify(tabledata)));
-    setLoading(() => window.location.reload(), 500)
+    //setLoading(() => window.location.reload(), 500)
     setLoading(true);
     setOpen(false);
   }

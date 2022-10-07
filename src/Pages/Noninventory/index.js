@@ -28,6 +28,8 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
+import swal from '@sweetalert/with-react';
+
 import "./index.css";
 
 
@@ -111,15 +113,43 @@ const NonInventory = () => {
   }, [inputValue]);
 
   // Error handle by input from web-service
+  // useEffect(() => {
+  //   if (StagingProcessing.isError) {
+  //     setIsError(true)
+  //   }else if(StagingProcessing.isSuccess){
+  //     setIsSuccess(true)
+  //     setTabledata("");
+  //    } else{
+  //     setIsError(false)
+  //     setIsSuccess(false)
+  //   }
+  // }, [StagingProcessing])
+  console.log("StagingProcessing",StagingProcessing)
   useEffect(() => {
     if (StagingProcessing.isError) {
-      setIsError(true)
-    }else if(StagingProcessing.isSuccess){
-      setIsSuccess(true)
+      //setIsError(true)
+      if((StagingProcessing["messgae"]).length >0)
+      {swal(
+        <div>     
+          <p>{StagingProcessing["messgae"]}</p>
+        </div>
+      )}
+      StagingProcessing.isError=false;
+    } else if (StagingProcessing.isSuccess) {
+     // setIsSuccess(true)
+     if((StagingProcessing["messgae"]).length >0)
+      {swal(
+        <div>     
+          <p>{StagingProcessing["messgae"]}</p>
+        </div>
+      )}
+    StagingProcessing.isSuccess=false;
       setTabledata("");
-     } else{
+    
+    } else {
+      console.log(234545)
       setIsError(false)
-      setIsSuccess(false)
+      setIsSuccess(false) 
     }
   }, [StagingProcessing])
 
@@ -250,7 +280,7 @@ const NonInventory = () => {
             
     });
     dispatch(getStageProcessingRequest(JSON.stringify(tabledata)));
-    setLoading(() => window.location.reload(), 500)
+    //setLoading(() => window.location.reload(), 500)
     setOpen(false)
   }
 

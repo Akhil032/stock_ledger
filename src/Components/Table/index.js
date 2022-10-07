@@ -118,7 +118,7 @@ export default function EnhancedTable({
             newallselect.push(...(allSelectObject[key]))}
         setallSelectPageNo(oldArray => [...oldArray, page]);
         setSelected(oldArray => [...oldArray,...newSelecteds]);
-         //seteditRows(newSelecteds);
+        seteditRows(newSelecteds);
         setselectedrows(rowsc+allSelectObject[page].length);
         if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
           for(var i=0;i<s_object[page].length;i++)
@@ -155,10 +155,10 @@ export default function EnhancedTable({
           if (index > -1) { 
               selectPageNo.splice(index, 1);
             }
-            //seteditRows([]);
+            seteditRows([]);
         }else{
             setSelected([]);
-            //seteditRows([]);
+            seteditRows([]);
             if (index > -1) { 
               selectPageNo.splice(index, 1);
           }}
@@ -176,7 +176,7 @@ export default function EnhancedTable({
           s_object[page].splice(index, 1);
           if(s_object[page].length===0){
             delete s_object[page];
-          }
+          } 
         }
       else{
       s_object[page].push(name)
@@ -205,7 +205,7 @@ export default function EnhancedTable({
     }
     setSelected(newSelected);
     sets_selecVal(s_object)
-    //seteditRows(newSelected); 
+    seteditRows(newSelected); 
   };
  // console.log("ski",uncheck)
   

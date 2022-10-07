@@ -10,6 +10,7 @@ const initialState = {
 const StagingProcessingReducers = (state = initialState, action) => {
 
   switch (action.type) {
+    
     case actions.GET_STAGEPROCEESING_REQUEST:
       return {
         ...state,
@@ -26,7 +27,7 @@ const StagingProcessingReducers = (state = initialState, action) => {
         data: action.payload,
         isError: false,
         messgae: action.payload?.Data?.message,
-        isSuccess: false,
+        isSuccess: true,
       };
     case actions.RESET_STAGEPROCESSING:
       return {

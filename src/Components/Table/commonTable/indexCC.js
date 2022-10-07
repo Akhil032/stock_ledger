@@ -87,6 +87,9 @@ const CommonTable = ({
     setUpdateRow(updateData);
     }
   },[updateData])
+
+  const edArr= editRows.map(JSON.stringify);
+  
   return (
     <>
       <Paper sx={{ maxWidth: "100%", maxHeight: "fit-content", mb: 2 }}>
@@ -158,7 +161,8 @@ const CommonTable = ({
                          // disabled={editRows && editRows.length > 0}
                         />
                       </TableCell>
-                      { editRows?.includes((row?.ITEM)?row?.ITEM:row?.SR_NO) ? <>
+                      
+                      { edArr?.includes(JSON.stringify(new Array((row?.ITEM)?row?.ITEM:row?.SR_NO ,(row?.LOCATION)?row?.LOCATION:row?.SR_NO)))? <>
                         {Object.entries(row).map(([key, value]) => {
                             let editable;
                           if(pageName == "cost_maintenance"){

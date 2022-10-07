@@ -112,14 +112,14 @@ export default function EnhancedTableHead(props) {
       <TableHead className={headerclasses.TitleHead}>
         <TableRow>
           <TableCell padding="checkbox" style={{
-                whiteSpace: "nowrap",
+                whiteSpace: "nowrap", 
               }}>
             <Checkbox
               color="primary"
-              // indeterminate={(numSelected > 0 && numSelected < pageCount) }
-              // checked={ rowCount > 0 && numSelected <= pageCount  && allSelectObject.hasOwnProperty(page) }
-              indeterminate={(numSelected > 0 && numSelected < rowCount )}
-              checked={rowCount > 0 && numSelected ===rowCount}
+              // indeterminate={(numSelected > 0 && check) }
+              // checked={rowCount > 0 && numSelected <= pageCount && allSelectObject.hasOwnProperty(page)}
+              indeterminate={(numSelected > 0 && numSelected < pageCount)}
+              checked={rowCount > 0 && numSelected <= pageCount && allSelectObject.hasOwnProperty(page)}
               onChange={onSelectAllClick}
               inputProps={{
                 "aria-label": "select all data",

@@ -98,7 +98,7 @@ export default function EnhancedTable({
     setOrderBy(property);
   };
   const handleSelectAllClick = (event) => {
-    // console.log("event",event,event.target)   
+    console.log("event",event,event.target)   
     // console.log(selectPageNo.includes(page),",event.target",event.target.checked)
     let stageData = [...tableData];
     if (event.target.checked && !(selectPageNo.includes(page))) {
@@ -112,7 +112,7 @@ export default function EnhancedTable({
             newallselect.push(...(allSelectObject[key]))}
         setallSelectPageNo(oldArray => [...oldArray, page]);
         setSelected(oldArray => [...oldArray,...newSelecteds]);
-        // seteditRows(newSelecteds);
+        seteditRows(newSelecteds);
         setselectedrows(rowsc+allSelectObject[page].length);
         
         if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
@@ -156,10 +156,10 @@ export default function EnhancedTable({
           if (index > -1) { 
               selectPageNo.splice(index, 1);
             }
-            //seteditRows([]);
+            seteditRows([]);
         }else{
             setSelected([]);
-            //seteditRows([]);
+            seteditRows([]);
             if (index > -1) { 
               selectPageNo.splice(index, 1);
           }}
@@ -197,7 +197,7 @@ export default function EnhancedTable({
     //console.log("sele newSelected",newSelected);
 
     setSelected(newSelected);
-    //seteditRows(newSelected);    
+    seteditRows(newSelected);    
   
   };
 

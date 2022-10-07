@@ -111,13 +111,11 @@ export default function EnhancedTable({
         const newallselect=[];
         const newSelecteds = stableSort(stageData, getComparator(order, orderBy))
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-        .map((value) => {  return value['SR_NO']?value['SR_NO']:value['ITEM'];});    
-        //console.log("newSelecteds",newSelecteds)         
+        .map((value) => {  return new Array(value['SR_NO']?value['SR_NO']:value['ITEM'],value['SR_NO']?value['SR_NO']:value['LOCATION']); });      
         allSelectObject[page]=newSelecteds;  
-         
+        //const selecItem=newSelecteds.map((value) => {return value[0];})
         for(const key in allSelectObject){
             newallselect.push(...(allSelectObject[key]))}
-            //console.log("newallselect",newallselect) 
         setallSelectPageNo(oldArray => [...oldArray, page]);
         setSelected(oldArray => [...oldArray,...newSelecteds]);
          seteditRows(newSelecteds);
@@ -183,7 +181,14 @@ export default function EnhancedTable({
       arr.push(name)
       s_object[page]=arr
     }
-    const selectedIndex = selected.indexOf(name);
+    Array.prototype.indexOfForArrays = function(search)
+    {
+      var searchJson = JSON.stringify(search); // "[3,566,23,79]"
+      var arrJson = this.map(JSON.stringify); // ["[2,6,89,45]", "[3,566,23,79]", "[434,677,9,23]"]
+
+      return arrJson.indexOf(searchJson);
+    };
+    const selectedIndex = selected.indexOfForArrays(name);
     let newSelected = [];
     if (selectedIndex === -1) {
       setSingleSPageNo(oldArray => [...oldArray, page]);
@@ -199,12 +204,13 @@ export default function EnhancedTable({
         selected.slice(0, selectedIndex),
         selected.slice(selectedIndex + 1)
       );
+    
     }
+    const selecItem=newSelected.map((value) => {return value[0];})
     setSelected(newSelected);
     sets_selecVal(s_object)
-    //seteditRows(newSelected); 
+    seteditRows(newSelected); 
   };
-  console.log("selected",selected)
   const handleDelete = () => {
     const id = selected;
     const data = [...tableData];
@@ -236,7 +242,6 @@ export default function EnhancedTable({
       {
         var searchJson = JSON.stringify(search); // "[3,566,23,79]"
         var arrJson = this.map(JSON.stringify); // ["[2,6,89,45]", "[3,566,23,79]", "[434,677,9,23]"]
-
         return arrJson.indexOf(searchJson);
       };
   return selected.indexOfForArrays(name) !== -1;
