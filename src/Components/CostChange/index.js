@@ -1037,7 +1037,7 @@ const selectLocation = (event, value) => {
               sx={{ width: '120px' }}
               startIcon={<SearchIcon />}
             >
-              Search1
+              Search
             </Button>
             <Button
               variant="contained"
@@ -1117,7 +1117,7 @@ const selectLocation = (event, value) => {
               </div>
 
 
-              <Button variant="contained" sx={{ marginTop: '15px', textAlign: 'right' }} onClick={toggleDrawer('right', true)} startIcon={<SearchIcon />}>Search1</Button>
+              <Button variant="contained" sx={{ marginTop: '15px', textAlign: 'right' }} onClick={toggleDrawer('right', true)} startIcon={<SearchIcon />}>Search</Button>
               <Drawer
                 anchor={'right'}
                 open={state['right']}
