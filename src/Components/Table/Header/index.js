@@ -70,26 +70,12 @@ export default function EnhancedTableHead(props) {
     onRequestSort(event, property);
   };
   var pageCount=0
-  var check=false
-  var check2=false
  if( pageCount===0 && Object.keys(allSelectObject).length>0){
       pageCount=(Object.keys(allSelectObject).length) * rowsPerPage
-      //check= false
     }
-  
-    // if((pageCount===0 ||numSelected>(Object.keys(allSelectObject).length) * rowsPerPage) && numSelected>0){
-    //   //pageCount=numSelected+1
-    //   check= true
-      
-    // }
-    if(!allSelectObject.hasOwnProperty(page)){
-      console.log(123)
-      check=true
-    }
-    console.log("condition",numSelected > 0  &&  check,
-    rowCount > 0 && (numSelected <= pageCount || numSelected >= pageCount)  && allSelectObject.hasOwnProperty(page)  )
-  console.log("header setAllData",numSelected,pageCount);
-  
+
+  // console.log("header setAllData",numSelected > 0 ,numSelected < pageCount , check2,s_selecVal.hasOwnProperty(page));
+  // console.log("All",rowCount > 0 , numSelected <= pageCount, (allSelectObject.hasOwnProperty(page)),rowsPerPage,allSelectObject)
   const resetFilter = () => {
     setSearched("");
     setInputValue("");
@@ -116,10 +102,8 @@ export default function EnhancedTableHead(props) {
               }}>
             <Checkbox
               color="primary"
-              // indeterminate={(numSelected > 0 && check) }
-              // checked={rowCount > 0 && numSelected <= pageCount && allSelectObject.hasOwnProperty(page)}
-              indeterminate={(numSelected > 0 && numSelected < pageCount)}
-              checked={rowCount > 0 && numSelected <= pageCount && allSelectObject.hasOwnProperty(page)}
+              indeterminate={(numSelected > 0 && (numSelected < pageCount || s_selecVal.hasOwnProperty(page)) && s_selecVal.hasOwnProperty(page))}
+              checked={rowCount > 0 && (numSelected <= pageCount ||allSelectObject.hasOwnProperty(page) ) && (allSelectObject.hasOwnProperty(page) ) }
               onChange={onSelectAllClick}
               inputProps={{
                 "aria-label": "select all data",

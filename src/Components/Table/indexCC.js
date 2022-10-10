@@ -7,7 +7,7 @@ import Button from "@mui/material/Button";
 import { prevElementSibling } from "domutils";
 
 function descendingComparator(a, b, orderBy) {
-
+  //console.log("ab",a,b,orderBy)
   let c,d;
   if(orderBy == "LOCATION_NAME"){
     c=b[orderBy].slice(b[orderBy].indexOf("-")+1);
@@ -54,7 +54,7 @@ function stableSort(array, comparator) {
   const stabilizedThis = array.map((el, index) => [el, index]);
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0]);
-    // //console.log("data:",array)
+   console.log("data:",array)
     if (order !== 0) {
       return order;
     }

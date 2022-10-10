@@ -142,7 +142,10 @@ const NonInventory = () => {
         <div>     
           <p>{StagingProcessing["messgae"]}</p>
         </div>
-      )}
+      ).then(function(isConfirm) {
+        if (isConfirm) {
+          setLoading(() => window.location.reload(), 500)
+        }})}
     StagingProcessing.isSuccess=false;
       setTabledata("");
     
