@@ -144,7 +144,7 @@ const NonInventory = () => {
         </div>
       ).then(function(isConfirm) {
         if (isConfirm) {
-          setLoading(() => window.location.reload(), 500)
+          setLoading(() => window.location.reload())
         }})}
     StagingProcessing.isSuccess=false;
       setTabledata("");

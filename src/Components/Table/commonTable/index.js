@@ -4,7 +4,8 @@ import Autocomplete from '@mui/material/Autocomplete';
 import {Table, TableBody, TableCell, TableContainer, TablePagination, TableRow,Paper, Checkbox, TextField } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import TableToolbar from "../Toolbar/index";
-import { trnType } from "../../ErrorProcessing/transType";
+// import { trnType } from "../../ErrorProcessing/transType";
+import TrnTypeList from "../../TRNTYPE";
 import "../index.css";
 import { bgcolor } from "@mui/system";
 
@@ -95,6 +96,7 @@ const CommonTable = ({
     }
   },[updateData])
   ////console.log("ct",rows);
+  var trnTypeValue = TrnTypeList();
 
   return (
     <>
@@ -226,7 +228,7 @@ const CommonTable = ({
                                     id="combo-box-trn-type"
                                     // value={(row?.TRN_TYPE == option?.TRN_TYPE)?row?.TRN_TYPE: }
                                     onChange={ (event, value) => onBlur(event, value, row)}
-                                    options={trnType}
+                                    options={trnTypeValue}
                                     getOptionLabel={(option) => option.TRN_NAME}
                                     sx={{ width: 200 }}
                                     renderInput={(params) => <TextField {...params} variant="standard" />}

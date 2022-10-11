@@ -88,6 +88,7 @@ export default function EnhancedTable({
   const [rowsPerPage, setRowsPerPage] = React.useState(30);
   const[allSelectObject,setallSelectObject]=React.useState({});
   const[selectPageNo,setallSelectPageNo]=React.useState([]);
+  const[s_selecVal,sets_selecVal]=React.useState({});
   const[singleSPageNo,setSingleSPageNo]=React.useState([]);
   const[rowsc,setselectedrows]=React.useState(0);
   const[s_object,sets_object]=React.useState({});
@@ -97,74 +98,80 @@ export default function EnhancedTable({
     setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
-  const handleSelectAllClick = (event) => {
-    console.log("event",event,event.target)   
-    // console.log(selectPageNo.includes(page),",event.target",event.target.checked)
-    let stageData = [...tableData];
-    if (event.target.checked && !(selectPageNo.includes(page))) {
-        const newallselect=[];
-        const newSelecteds = stableSort(stageData, getComparator(order, orderBy))
-        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-        .map((value) => {  return value['SR_NO']?value['SR_NO']:value['PRIMARY_ACCOUNT'];});        
-        allSelectObject[page]=newSelecteds;  
-
-        for(const key in allSelectObject){
-            newallselect.push(...(allSelectObject[key]))}
-        setallSelectPageNo(oldArray => [...oldArray, page]);
-        setSelected(oldArray => [...oldArray,...newSelecteds]);
-        seteditRows(newSelecteds);
-        setselectedrows(rowsc+allSelectObject[page].length);
-        
-        if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
-          for(var i=0;i<s_object[page].length;i++)
-          {const index = selected.indexOf(s_object[page][i]);
-            if (index > -1) { 
-              selected.splice(index, 1);
-            }
-          }
-          delete s_object[page]
-        
-        }
-        return;
-    }else if(selectPageNo.includes(page)){
-        console.log(23232,selected,(Object.keys(s_object)).length >1)        
-        const index = selectPageNo.indexOf(page);
+const handleSelectAllClick = (event) => {  
+    if(s_object.hasOwnProperty(page)){
         const Rindex=selected;
-        setselectedrows(rowsc-allSelectObject[page].length);
-        if((selectPageNo.length>1) || (Object.keys(s_object)).length > 1 || !(s_object.hasOwnProperty(page))){          
-          const unselectedarray=allSelectObject[page] ; 
-          console.log("unselectedarray",unselectedarray)
-          if (s_object.hasOwnProperty(page) && uncheck){
-            setuncheck(false)
-            if(s_object[page].length>0){
-              for (var i= 0; i < s_object[page].length; i++) {
-                const rem=unselectedarray.indexOf(s_object[page][i]);
-                unselectedarray.splice(rem,1);
-              }
-              delete s_object[page]
-              console.log("dsfs",s_object)
-            } 
-            
-          }
-          console.log("unselectedarray",unselectedarray)     
-          for (var i= 0; i < unselectedarray.length; i++) {
-            const rem=selected.indexOf(unselectedarray[i]);
-            Rindex.splice(rem,1);
-          }
-          setSelected(Rindex);
-          console.log("selected",Rindex) 
+        let newSelected = [];
+      for (var i= 0; i < s_object[page].length; i++) {
+        const rem=selected.indexOf( s_object[page][i]);
+        Rindex.splice(rem,1);
+      }
+      newSelected = newSelected.concat(
+        Rindex)
+      delete s_object[page];
+      sets_selecVal(s_object)
+      console.log("newSelected",newSelected)
+      setSelected(newSelected)
+      return;
+    }
+    let stageData = [...tableData];
+    if (event.target.checked && !(selectPageNo.includes(page)) ) {
+      const newallselect=[];
+      const newSelecteds = stableSort(stageData, getComparator(order, orderBy))
+      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+      .map((value) => {  return value['SR_NO']?value['SR_NO']:value['PRIMARY_ACCOUNT'];});        
+      allSelectObject[page]=newSelecteds;  
+      for(const key in allSelectObject){
+          newallselect.push(...(allSelectObject[key]))}
+      setallSelectPageNo(oldArray => [...oldArray, page]);
+      setSelected(oldArray => [...oldArray,...newSelecteds]);
+      seteditRows(newSelecteds);
+      setselectedrows(rowsc+allSelectObject[page].length);
+      if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
+        for(var i=0;i<s_object[page].length;i++)
+        {const index = selected.indexOf(s_object[page][i]);
           if (index > -1) { 
-              selectPageNo.splice(index, 1);
-            }
-            seteditRows([]);
-        }else{
-            setSelected([]);
-            seteditRows([]);
-            if (index > -1) { 
-              selectPageNo.splice(index, 1);
-          }}
+            selected.splice(index, 1);
+          }
         }
-   };
+        delete s_object[page];
+      }
+      return;
+  }else if(selectPageNo.includes(page)){
+      const index = selectPageNo.indexOf(page);
+      const Rindex=selected;
+      setselectedrows(rowsc-allSelectObject[page].length);
+      if((selectPageNo.length>1) || (Object.keys(s_object)).length > 1 || !(s_object.hasOwnProperty(page))){          
+        const unselectedarray=allSelectObject[page] ;
+        if (s_object.hasOwnProperty(page) && uncheck){
+          setuncheck(false);
+          if(s_object[page].length>0){
+            for (var i= 0; i < s_object[page].length; i++) {
+              const rem=unselectedarray.indexOf(s_object[page][i]);
+              unselectedarray.splice(rem,1);
+            }
+            delete s_object[page];
+          }
+        }
+        for (var i= 0; i < unselectedarray.length; i++) {
+          const rem=selected.indexOf(unselectedarray[i]);
+          Rindex.splice(rem,1);
+        }
+        delete allSelectObject[page];
+        setSelected(Rindex);
+        if (index > -1) { 
+            selectPageNo.splice(index, 1);
+          }
+          seteditRows([]);
+      }else{
+          setSelected([]);
+          seteditRows([]);
+          if (index > -1) { 
+            selectPageNo.splice(index, 1);
+        }}
+      }
+    
+ };
   const handleClick = (event, name) => {
     if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
       s_object[page].push(name)
@@ -193,10 +200,10 @@ export default function EnhancedTable({
         selected.slice(selectedIndex + 1)
       );
     }
-   console.log("s_object",s_object)
     //console.log("sele newSelected",newSelected);
 
     setSelected(newSelected);
+    sets_selecVal(s_object)
     seteditRows(newSelected);    
   
   };
@@ -267,6 +274,9 @@ export default function EnhancedTable({
           inputValue={inputValue}
           setInputValue={setInputValue}
           setSearched={setSearched}
+          s_selecVal={s_selecVal}
+          allSelectObject={allSelectObject}
+
         />
       </Box>
     </>

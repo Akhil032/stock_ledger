@@ -106,9 +106,22 @@ export default function EnhancedTable({
     setOrderBy(property);
   };
   const handleSelectAllClick = (event) => {
-    console.log(123,event.target.checked )
     let stageData = [...tableData];
-    if (event.target.checked && !(selectPageNo.includes(page))) {
+    if(s_object.hasOwnProperty(page)){
+          const Rindex=selected;
+          let newSelected = [];
+        for (var i= 0; i < s_object[page].length; i++) {
+          const rem=selected.indexOf( s_object[page][i]);
+          Rindex.splice(rem,1);
+        }
+        newSelected = newSelected.concat(Rindex);
+        delete s_object[page];
+        sets_selecVal(s_object);
+        setSelected(newSelected);
+        //}
+      return;
+    }
+    if (event.target.checked && !(selectPageNo.includes(page)) ) {
         const newallselect=[];
         const newSelecteds = stableSort(stageData, getComparator(order, orderBy))
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
@@ -163,14 +176,11 @@ export default function EnhancedTable({
               selectPageNo.splice(index, 1);
           }}
         }
+      
    };
    //console.log("s_object",allSelectObject)
   const handleClick = (event, name) => {
-    console.log(name)
-
     if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
-      console.log(s_object[page])
-     // if( Object.values(s_object)[page].includes(name)){
         const index = s_object[page].indexOf(name);
           if (index > -1) { 
           s_object[page].splice(index, 1);
@@ -207,7 +217,7 @@ export default function EnhancedTable({
     sets_selecVal(s_object)
     seteditRows(newSelected); 
   };
- // console.log("ski",uncheck)
+  console.log("ski",s_selecVal)
   
   const handleDelete = () => {
     const id = selected;

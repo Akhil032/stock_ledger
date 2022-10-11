@@ -54,7 +54,7 @@ function stableSort(array, comparator) {
   const stabilizedThis = array.map((el, index) => [el, index]);
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0]);
-   console.log("data:",array)
+   //console.log("data:",array)
     if (order !== 0) {
       return order;
     }
@@ -107,6 +107,20 @@ export default function EnhancedTable({
   };
   const handleSelectAllClick = (event) => {
     let stageData = [...tableData];
+    if(s_object.hasOwnProperty(page)){
+      const Rindex=selected;
+      let newSelected = [];
+      for (var i= 0; i < s_object[page].length; i++) {
+        const rem=selected.indexOf( s_object[page][i]);
+        Rindex.splice(rem,1);
+      }
+      newSelected = newSelected.concat(Rindex)
+      delete s_object[page];
+      sets_selecVal(s_object)
+      //console.log("newSelected",newSelected)
+      setSelected(newSelected)
+      return;
+  }
     if (event.target.checked && !(selectPageNo.includes(page))) {
         const newallselect=[];
         const newSelecteds = stableSort(stageData, getComparator(order, orderBy))
