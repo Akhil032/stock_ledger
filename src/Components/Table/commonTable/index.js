@@ -89,7 +89,7 @@ const CommonTable = ({
       }   
     setupdateData(temp)
   }
-//console.log("sa ",s_selecVal)
+
   useEffect(() => {
     if(setUpdateRow){
     setUpdateRow(updateData);

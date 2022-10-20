@@ -73,12 +73,12 @@ export default function EnhancedTableHead(props) {
  if( pageCount===0 && Object.keys(allSelectObject).length>0){
       pageCount=(Object.keys(allSelectObject).length) * rowsPerPage
     }
+    //console.log("if:",s_selecVal)
   const resetFilter = () => {
     setSearched("");
     setInputValue("");
-
     if (inputValue.length===0){
-      //  console.log("if:",freeze)
+   
     setTabledata(tableData);
     setAllData(tableData);
     setFreeze(false);
