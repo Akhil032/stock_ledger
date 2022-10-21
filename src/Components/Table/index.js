@@ -54,7 +54,6 @@ function stableSort(array, comparator) {
   const stabilizedThis = array.map((el, index) => [el, index]);
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0]);
-    // ////console.log("data:",array)
     if (order !== 0) {
       return order;
     }
@@ -124,7 +123,6 @@ export default function EnhancedTable({
         //}
       return;
     }
-    //console.log("event",selectPageNo)
     if (event.target.checked && !(selectPageNo.includes(page)) ) {
         const newallselect=[];
         const newSelecteds = stableSort(stageData, getComparator(order, orderBy))
@@ -135,7 +133,11 @@ export default function EnhancedTable({
             newallselect.push(...(allSelectObject[key]))}
         setallSelectPageNo(oldArray => [...oldArray, page]);
         setSelected(oldArray => [...oldArray,...newSelecteds]);
-        //seteditRows(newSelecteds);
+        //EditRow handling
+        if(editRows.length>0){
+          seteditRows(oldArray => [...oldArray,...newSelecteds])
+        }else{
+          seteditRows(newSelecteds);}
         setselectedrows(rowsc+allSelectObject[page].length);
         if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
           for(var i=0;i<s_object[page].length;i++)
@@ -150,9 +152,6 @@ export default function EnhancedTable({
     }else if(selectPageNo.includes(page)){
         const index = selectPageNo.indexOf(page);
         const Rindex=selected;
-        console.log(123)
-        //if(allSelectObject.hasOwnProperty(page)){
-          console.log(1253)
           setselectedrows(rowsc-allSelectObject[page].length);
         if((selectPageNo.length>1) || (Object.keys(s_object)).length > 1 || !(s_object.hasOwnProperty(page))){          
           const unselectedarray=allSelectObject[page] ;
@@ -170,34 +169,28 @@ export default function EnhancedTable({
             const rem=selected.indexOf(unselectedarray[i]);
             Rindex.splice(rem,1);
           }
+          //EditRow handling
+          if(editRows.length>allSelectObject[page].length){
+            const filterEditRows=editRows.filter(value=>!allSelectObject[page].includes(value));
+            seteditRows(filterEditRows)
+          }else{
+            seteditRows([]);
+          }
           delete allSelectObject[page];
           setSelected(Rindex);
           if (index > -1) { 
               selectPageNo.splice(index, 1);
             }
-            seteditRows([]);
+            
         }else{
             setSelected([]);
             seteditRows([]);
             if (index > -1) { 
               selectPageNo.splice(index, 1);
           }}
-        // }else{        console.log(1203)
-
-        //   if((s_selecVal.hasOwnProperty(page))){
-        //     console.log(12036)
-        //     Object.keys(s_selecVal[page]).forEach(name => {
-        //       handleClick(event,name)
-        //      // allSelectObject[0]=f_page
-        //     })
-           
-        //     console.log(s_selecVal)
-        //   }
-        // }
       }
    };
-   ////console.log("s_object",allSelectObject)
-  const handleClick = (event, name) => {
+const handleClick = (event, name) => {
     setSingleSPageNo(rowsPerPage);
     if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
         const index = s_object[page].indexOf(name);
@@ -249,16 +242,12 @@ export default function EnhancedTable({
     }
     setSelected(newSelected);
     sets_selecVal(s_object)
-    //seteditRows(newSelected); 
+    seteditRows(newSelected); 
   };
   if(Object.keys(s_selecVal).length >0)
   {if(s_selecVal[Object.keys(s_selecVal)[0]].length!==rowsPerPage && singleSPageNo===0){
-    ////console.log(s_selecVal[Object.keys(s_selecVal)[0]].length)
     setSingleSPageNo(s_selecVal[Object.keys(s_selecVal)[0]].length)
   }}
-  //console.log("akhil",s_selecVal,s_object,allSelectObject,singleSPageNo,Object.keys(s_selecVal).length)
-
- // //console.log(234,newObj)
   const handleDelete = () => {
     const id = selected;
     const data = [...tableData];
@@ -280,20 +269,15 @@ export default function EnhancedTable({
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-    //setrowChange(true);
-    console.log("ALLDATA",s_selecVal,allSelectObject)
-     // Updating SINGLE SELECT (OBJECT) When RPP (parseInt(event.target.value, 10)) is changed
+const handleChangeRowsPerPage = (event) => {
+  setRowsPerPage(parseInt(event.target.value, 10));
+  setPage(0);
+  // Updating SINGLE SELECT (OBJECT) When RPP (parseInt(event.target.value, 10)) is changed
   if(parseInt(event.target.value, 10) !==singleSPageNo && singleSPageNo !==0 && Object.keys(s_selecVal).length >0 ){
-    
     var Temp_table=[];
     var selected_Array={};
     const keys=Object.keys(s_selecVal);
-    //console.log("s_selecVal",s_selecVal)
       if(parseInt(event.target.value, 10) > singleSPageNo){
-        
         for(let i=0;i<keys.length; i++){
           if(parseInt(keys[i])!==0){
             var end=(parseInt(keys[i])+1)*singleSPageNo;
@@ -314,10 +298,8 @@ export default function EnhancedTable({
             Temp_table=[];
           }else{selected_Array[0]=s_selecVal[0];}
         }
-        //console.log("selected_Array",selected_Array)
       }
       if(parseInt(event.target.value, 10) < singleSPageNo){
-        console.log(1)
         var count=0
         const row_count_check=singleSPageNo/10;
         for(let i=0;i<keys.length; i++){
@@ -325,15 +307,12 @@ export default function EnhancedTable({
             var start=((parseInt(keys[i])+1)*singleSPageNo) - singleSPageNo;
             Temp_table.push(...(tableData.slice(start,end)));
             const newArr = Temp_table.map((data)=>{ return data["TRAN_SEQ_NO"]});
-            ////console.log("data",newArr,start,end,"akfgh",s_selecVal)
-            /////
+            
             for(let j=0;j< s_selecVal[keys[i]].length;j++){
               const index=newArr.indexOf(s_selecVal[keys[i]][j]);
               if(index > -1)
               { count=count+1
                 let page_num = Math.floor((index+start)/parseInt(event.target.value, 10));
-                ////console.log("ak",page_num,index,start,parseInt(event.target.value, 10))
-                
                 if(!(selected_Array.hasOwnProperty(page_num))){
                   selected_Array[page_num]=[];
                   selected_Array[page_num].push(s_selecVal[keys[i]][j]);
@@ -345,9 +324,7 @@ export default function EnhancedTable({
             }
             Temp_table=[];
         }
-       console.log("selected_Array",selected_Array)
       }
-    //console.log("selected_Array",selected_Array)
     if(Object.keys(selected_Array).length >0)
     {
       const keys=Object.keys(selected_Array)
@@ -370,7 +347,6 @@ export default function EnhancedTable({
     const key=Object.keys(selected_Array)
     Object.keys(s_selecVal).forEach(key => {
       delete s_selecVal[key];
-     // allSelectObject[0]=f_page
     })
     for(let i=0;i<key.length;i++){
       s_selecVal[key[i]]=selected_Array[[key[i]]]
@@ -385,14 +361,10 @@ export default function EnhancedTable({
     
     setSingleSPageNo(parseInt(event.target.value, 10))
   }
- // //console.log("chirpp",allSelectObject[Object.keys(allSelectObject)[0]],rowChange,Object.keys(allSelectObject).length >0)
  // updating SELECT ALL (OBJECT) When RPP (parseInt(event.target.value, 10)) is changed
   if(Object.keys(allSelectObject).length >0 && parseInt(event.target.value, 10) !== allSelectObject[Object.keys(allSelectObject)[0]].length ){
       // When current RPP (parseInt(event.target.value, 10)) is Greater than previous RPP
-      //console.log("chec",allSelectObject)
-      
       if(parseInt(event.target.value, 10) > allSelectObject[Object.keys(allSelectObject)[0]].length ){
-        //console.log(456)
         var arr=[]
         var diff=0
         var d_count=0
@@ -402,18 +374,15 @@ export default function EnhancedTable({
         var page_num=0
         const row_count=parseInt(event.target.value, 10)/10;
         const keys=Object.keys(allSelectObject)
-        ////console.log(keys.length)
         for(let i=0;i< keys.length;i++){
           var end=10
           var start=0 
           for(let j=0;j<allSelectObject[keys[i]].length;j=j+10){
-             //console.log(d_count,count,j)
             if(i!==0 && !cond){
                 if(keys[i]!==keys[i-1]){
                   diff=(keys[i]-keys[i-1])-1;
                   d_count=diff * allSelectObject[keys[i]].length;
                   cond=true;
-                  ////console.log("dc",d_count)
                 }
             } 
             if(d_count>0){
@@ -429,7 +398,6 @@ export default function EnhancedTable({
                   cond=true;
                 }else{
                   if(count===4 && check2){ j=j-10
-                  //console.log(123)
                   }
                 arr.push(...(allSelectObject[keys[i]].slice(start,end)));
                 start=start+10;
@@ -438,22 +406,16 @@ export default function EnhancedTable({
             count=count+1
             if(arr.length=== parseInt(event.target.value, 10) || (count===row_count &&arr.length >0) || (arr.length >0 && i=== Object.keys(allSelectObject).length-1 && (j===allSelectObject[keys[i]].length-10))){
               count=0
-              ////console.log("akfghi",arr)
-              ////console.log("page_num",page_num)
-              
               newObj[page_num]=arr;
               page_num=page_num+1;
               arr=[];
-              //console.log(234,newObj)
               }
-             // //console.log("sdftfg",j)
           }
           if(d_count===0){cond=false;}
         }
       }
       // When current RPP (parseInt(event.target.value, 10)) is less than previous RPP
       if(parseInt(event.target.value, 10) < allSelectObject[Object.keys(allSelectObject)[0]].length && Object.keys(allSelectObject).length >0 ){
-        console.log(2)
         const keys=Object.keys(allSelectObject)
         const row_count=parseInt(event.target.value, 10)/10;
         var arr_Rpp_less=[];
@@ -462,7 +424,6 @@ export default function EnhancedTable({
         var diff=0
         var d_count=0
         var cond=false
-        //console.log(keys.length);
         for(let i=0;i< keys.length;i++){
           var end=10
           var start=0
@@ -473,7 +434,6 @@ export default function EnhancedTable({
                 diff=(keys[i]-keys[i-1])-1;
                 d_count=diff * allSelectObject[keys[i]].length;
                 cond=true;
-                //console.log("dc",d_count)
               }
             } 
             if(d_count>0){
@@ -487,7 +447,6 @@ export default function EnhancedTable({
             if(count===row_count &&arr_Rpp_less.length >0)
             {
               newObj[page_num]=arr_Rpp_less;
-              //console.log("newObj",newObj)
               page_num=page_num+1;
               arr_Rpp_less=[];
               count=0;
@@ -504,26 +463,18 @@ export default function EnhancedTable({
       if(Object.keys(allSelectObject)[0].includes(0)){
         f_page.push(...allSelectObject[0])
       }
-      //console.log(f_page)
       Object.keys(allSelectObject).forEach(key => {
         delete allSelectObject[key];
-       // allSelectObject[0]=f_page
       })
-      //console.log("chip",allSelectObject,f_page,newObj)
-      
       if(Object.keys(newObj).length >0 )
       {
         let page_keys=Object.keys(newObj)
         for(let i=0;i<page_keys.length;i++){
           if(newObj[page_keys[i]].length!==parseInt(event.target.value, 10)){
-            //console.log(123)
             if((s_selecVal.hasOwnProperty(page_keys[i])) && !s_selecVal[page_keys[i]].includes(newObj[page_keys[i]][0])){
               s_selecVal[page_keys[i]].push(...newObj[page_keys[i]])
-              //console.log("data",s_selecVal)
-    
             }
             else if(!(s_selecVal.hasOwnProperty(page_keys[i]))){
-              //console.log("newObj[page_keys[i]]",newObj[page_keys[i]])
               s_selecVal[page_keys[i]]=newObj[page_keys[i]]
             }
           }
@@ -532,32 +483,27 @@ export default function EnhancedTable({
               delete s_selecVal[page_keys[i]];
             }
             if(!allSelectObject.hasOwnProperty(page_keys[i])){
-            allSelectObject[page_keys[i]]=newObj[page_keys[i]]
+            allSelectObject[page_keys[i]]=newObj[page_keys[i]];
             }else{
               delete allSelectObject[page_keys[i]];
-              allSelectObject[page_keys[i]]=newObj[page_keys[i]]
-
-              // if(Object.keys(allSelectObject)[0].includes(0) ){
-              //   if( !allSelectObject[0].includes(f_page[0])){
-              //   allSelectObject[page_keys[i]].push(...f_page)}
-              // }
+              allSelectObject[page_keys[i]]=newObj[page_keys[i]];              
             }
           }
         }
-        
+        selectPageNo.splice(0,selectPageNo.length);
         if(Object.keys(allSelectObject).length >0){
-          setallSelectPageNo(Object.keys(allSelectObject))
+          const key_page=(Object.keys(allSelectObject))
+          for(let i=0;i<key_page.length;i++){
+          setallSelectPageNo(oldArray => [...oldArray,parseInt(key_page[i])]);}
+          
         }else{setallSelectPageNo([])}
         sets_object(s_selecVal)
-
-        //console.log("retest",s_selecVal,allSelectObject)
         setSingleSPageNo(parseInt(event.target.value, 10))
       }
-      //console.log("data2",allSelectObject)
     }
 
   };
-
+  console.log("editRows",editRows)
   const isSelected = (name) => selected.indexOf(name) !== -1;
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - tableData.length) : 0;

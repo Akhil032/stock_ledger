@@ -119,7 +119,11 @@ export default function EnhancedTable({
             newallselect.push(...(allSelectObject[key]))}
         setallSelectPageNo(oldArray => [...oldArray, page]);
         setSelected(oldArray => [...oldArray,...newSelecteds]);
-        // seteditRows(newSelecteds);
+        //EditRow handling
+        if(editRows.length>0){
+          seteditRows(oldArray => [...oldArray,...newSelecteds])
+        }else{
+          seteditRows(newSelecteds);}
         setselectedrows(rowsc+allSelectObject[page].length);
         
         if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
@@ -152,21 +156,27 @@ export default function EnhancedTable({
               console.log("dsfs",s_object)
             } 
             
-          }
-          console.log("unselectedarray",unselectedarray)     
+          }     
           for (var i= 0; i < unselectedarray.length; i++) {
             const rem=selected.indexOf(unselectedarray[i]);
             Rindex.splice(rem,1);
           }
+           //EditRow handling
+           if(editRows.length>allSelectObject[page].length){
+            const filterEditRows=editRows.filter(value=>!allSelectObject[page].includes(value));
+            seteditRows(filterEditRows)
+          }else{
+            seteditRows([]);
+          }
+          delete allSelectObject[page];
           setSelected(Rindex);
-          console.log("selected",Rindex) 
+          
           if (index > -1) { 
               selectPageNo.splice(index, 1);
             }
-            //seteditRows([]);
         }else{
             setSelected([]);
-            //seteditRows([]);
+            seteditRows([]);
             if (index > -1) { 
               selectPageNo.splice(index, 1);
           }}
@@ -200,11 +210,8 @@ export default function EnhancedTable({
         selected.slice(selectedIndex + 1)
       );
     }
-   console.log("s_object",s_object)
-    //console.log("sele newSelected",newSelected);
-
     setSelected(newSelected);
-    //seteditRows(newSelected);    
+    seteditRows(newSelected);    
   
   };
 

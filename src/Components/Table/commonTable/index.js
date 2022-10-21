@@ -171,7 +171,7 @@ const CommonTable = ({
                          // disabled={editRows && editRows.length > 0}
                         />
                       </TableCell>
-                      { editRows?.includes((row?.TRAN_SEQ_NO)?row?.TRAN_SEQ_NO:row?.SR_NO) ? <>
+                      { editRows ?.includes((row?.TRAN_SEQ_NO)?row?.TRAN_SEQ_NO:row?.SR_NO)&& selected.length>0? <>
                         {Object.entries(row).map(([key, value]) => {
                             let editable;
                           if(pageName == "error"){

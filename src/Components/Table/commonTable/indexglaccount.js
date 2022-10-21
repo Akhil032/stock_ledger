@@ -153,7 +153,7 @@ const CommonTable = ({
                          // disabled={editRows && editRows.length > 0}
                         />
                       </TableCell>
-                      { editRows?.includes((row?.PRIMARY_ACCOUNT)?row?.PRIMARY_ACCOUNT:row?.SR_NO) ? <>
+                      { editRows?.includes((row?.PRIMARY_ACCOUNT)?row?.PRIMARY_ACCOUNT:row?.SR_NO) && selected.length>0? <>
                         {Object.entries(row).map(([key, value]) => {
                             let editable;
                           if(pageName == "gl_account"){

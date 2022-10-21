@@ -162,7 +162,7 @@ const CommonTable = ({
                         />
                       </TableCell>
                       
-                      { edArr?.includes(JSON.stringify(new Array((row?.ITEM)?row?.ITEM:row?.SR_NO ,(row?.LOCATION)?row?.LOCATION:row?.SR_NO)))? <>
+                      { edArr?.includes(JSON.stringify(new Array((row?.ITEM)?row?.ITEM:row?.SR_NO ,(row?.LOCATION)?row?.LOCATION:row?.SR_NO)))&& selected.length>0? <>
                         {Object.entries(row).map(([key, value]) => {
                             let editable;
                           if(pageName == "cost_maintenance"){
