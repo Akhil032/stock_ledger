@@ -67,6 +67,9 @@ const CommonTableRev = ({
   setInputValue,
   inputValue,
   setSearched,
+  allSelectObject,
+  s_object,
+  s_selecVal,
 }) => {
 
 
@@ -175,6 +178,11 @@ const CommonTableRev = ({
               inputValue={inputValue}
               setInputValue={setInputValue}
               setSearched={setSearched}
+              allSelectObject={allSelectObject}
+              s_object={s_object}
+              s_selecVal={s_selecVal}
+              page={page}
+              rowsPerPage={rowsPerPage}
             />
             <TableBody>
               {stableSort(rows, getComparator(order, orderBy))

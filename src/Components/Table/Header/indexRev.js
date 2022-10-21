@@ -53,10 +53,18 @@ export default function EnhancedTableHead(props) {
     setSearched,
     setTabledata,
     inputValue,
+    s_selecVal,
+    allSelectObject,
+    rowsPerPage,
+    page,
   } = props;
   const createSortHandler = (property) => (event) => {
     onRequestSort(event, property);
   };
+  var pageCount=0
+  if( pageCount===0 && Object.keys(allSelectObject).length>0){
+        pageCount=(Object.keys(allSelectObject).length) * rowsPerPage
+      }
   const resetFilter = () => {
     setSearched("");
     setInputValue("");
@@ -81,8 +89,8 @@ export default function EnhancedTableHead(props) {
                 whiteSpace: "nowrap"}}>
             <Checkbox
               color="primary"
-              indeterminate={numSelected > 0 && numSelected < rowCount}
-              checked={rowCount > 0 && numSelected === rowCount}
+              indeterminate={(numSelected > 0 && (numSelected < pageCount || s_selecVal.hasOwnProperty(page)) && s_selecVal.hasOwnProperty(page))}
+              checked={rowCount > 0 && (numSelected <= pageCount ||allSelectObject.hasOwnProperty(page) ) && (allSelectObject.hasOwnProperty(page) ) }
               onChange={onSelectAllClick}
               inputProps={{
                 "aria-label": "select all data",

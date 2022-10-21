@@ -41,6 +41,7 @@ function descendingComparator(a, b, orderBy) {
   return 0;
 }
 
+
 function getComparator(order, orderBy) {
   return order === "desc"
     ? (a, b) => descendingComparator(a, b, orderBy)
@@ -74,12 +75,15 @@ export default function EnhancedTable({
   handleSearchClick,
   freeze,
   handleCopyDown,
+  setDeleteId,
   setAllData,
   setInputValue,
   setSearched,
   setTabledataclone,
   tabledataclone,
   inputValue,
+  setFreeze,
+  setEditSelect,
 }) {
   const [order, setOrder] = React.useState("asc");
   const [orderBy, setOrderBy] = React.useState("");
@@ -87,9 +91,10 @@ export default function EnhancedTable({
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(30);
   const[allSelectObject,setallSelectObject]=React.useState({});
-  const[selectPageNo,setallSelectPageNo]=React.useState([]);
+  const[newObj,setnewObj]=React.useState({});
   const[s_selecVal,sets_selecVal]=React.useState({});
-  const[singleSPageNo,setSingleSPageNo]=React.useState([]);
+  const[selectPageNo,setallSelectPageNo]=React.useState([]);
+  const[singleSPageNo,setSingleSPageNo]=React.useState(0);
   const[rowsc,setselectedrows]=React.useState(0);
   const[s_object,sets_object]=React.useState({});
   const[uncheck,setuncheck]=React.useState(false);
@@ -98,109 +103,129 @@ export default function EnhancedTable({
     setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
-const handleSelectAllClick = (event) => {  
-    if(s_object.hasOwnProperty(page)){
-        const Rindex=selected;
-        let newSelected = [];
-      for (var i= 0; i < s_object[page].length; i++) {
-        const rem=selected.indexOf( s_object[page][i]);
-        Rindex.splice(rem,1);
-      }
-      newSelected = newSelected.concat(
-        Rindex)
-      delete s_object[page];
-      sets_selecVal(s_object)
-      console.log("newSelected",newSelected)
-      setSelected(newSelected)
-      return;
-    }
+  const handleSelectAllClick = (event) => {
     let stageData = [...tableData];
-    if (event.target.checked && !(selectPageNo.includes(page)) ) {
-      const newallselect=[];
-      const newSelecteds = stableSort(stageData, getComparator(order, orderBy))
-      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-      .map((value) => {  return value['SR_NO']?value['SR_NO']:value['PRIMARY_ACCOUNT'];});        
-      allSelectObject[page]=newSelecteds;  
-      for(const key in allSelectObject){
-          newallselect.push(...(allSelectObject[key]))}
-      setallSelectPageNo(oldArray => [...oldArray, page]);
-      setSelected(oldArray => [...oldArray,...newSelecteds]);
-      //EditRow handling
-      if(editRows.length>0){
-        seteditRows(oldArray => [...oldArray,...newSelecteds])
-      }else{
-        seteditRows(newSelecteds);}
-      setselectedrows(rowsc+allSelectObject[page].length);
-      if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
-        for(var i=0;i<s_object[page].length;i++)
-        {const index = selected.indexOf(s_object[page][i]);
-          if (index > -1) { 
-            selected.splice(index, 1);
-          }
-        }
-        delete s_object[page];
-      }
-      return;
-  }else if(selectPageNo.includes(page)){
-      const index = selectPageNo.indexOf(page);
-      const Rindex=selected;
-      setselectedrows(rowsc-allSelectObject[page].length);
-      if((selectPageNo.length>1) || (Object.keys(s_object)).length > 1 || !(s_object.hasOwnProperty(page))){          
-        const unselectedarray=allSelectObject[page] ;
-        if (s_object.hasOwnProperty(page) && uncheck){
-          setuncheck(false);
-          if(s_object[page].length>0){
-            for (var i= 0; i < s_object[page].length; i++) {
-              const rem=unselectedarray.indexOf(s_object[page][i]);
-              unselectedarray.splice(rem,1);
-            }
-            delete s_object[page];
-          }
-        }
-        for (var i= 0; i < unselectedarray.length; i++) {
-          const rem=selected.indexOf(unselectedarray[i]);
+    if(s_object.hasOwnProperty(page)){
+          const Rindex=selected;
+          let newSelected = [];
+        for (var i= 0; i < s_object[page].length; i++) {
+          const rem=selected.indexOf( s_object[page][i]);
           Rindex.splice(rem,1);
         }
+        newSelected = newSelected.concat(Rindex);
+        delete s_object[page];
+        sets_selecVal(s_object);
+        setSelected(newSelected);
+      return;
+    }
+    if (event.target.checked && !(selectPageNo.includes(page)) ) {
+        const newallselect=[];
+        const newSelecteds = stableSort(stageData, getComparator(order, orderBy))
+        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+        .map((value) => {  return value['SR_NO']?value['SR_NO']:value['PRIMARY_ACCOUNT'];});        
+        allSelectObject[page]=newSelecteds;  
+        for(const key in allSelectObject){
+            newallselect.push(...(allSelectObject[key]))}
+        setallSelectPageNo(oldArray => [...oldArray, page]);
+        setSelected(oldArray => [...oldArray,...newSelecteds]);
         //EditRow handling
-        if(editRows.length>allSelectObject[page].length){
-          const filterEditRows=editRows.filter(value=>!allSelectObject[page].includes(value));
-          seteditRows(filterEditRows)
+        if(editRows.length>0){
+          seteditRows(oldArray => [...oldArray,...newSelecteds])
         }else{
-          seteditRows([]);
-        }
-        delete allSelectObject[page];
-        setSelected(Rindex);
-        if (index > -1) { 
-            selectPageNo.splice(index, 1);
+          seteditRows(newSelecteds);}
+        setselectedrows(rowsc+allSelectObject[page].length);
+        if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
+          for(var i=0;i<s_object[page].length;i++)
+          {const index = selected.indexOf(s_object[page][i]);
+            if (index > -1) { 
+              selected.splice(index, 1);
+            }
           }
-      }else{
-          setSelected([]);
-          seteditRows([]);
+          delete s_object[page];
+        }
+        return;
+    }else if(selectPageNo.includes(page)){
+        const index = selectPageNo.indexOf(page);
+        const Rindex=selected;
+        setselectedrows(rowsc-allSelectObject[page].length);
+        if((selectPageNo.length>1) || (Object.keys(s_object)).length > 1 || !(s_object.hasOwnProperty(page))){          
+          const unselectedarray=allSelectObject[page] ;
+          if (s_object.hasOwnProperty(page) && uncheck){
+            setuncheck(false);
+            if(s_object[page].length>0){
+              for (var i= 0; i < s_object[page].length; i++) {
+                const rem=unselectedarray.indexOf(s_object[page][i]);
+                unselectedarray.splice(rem,1);
+              }
+              delete s_object[page];
+            }
+          }
+          for (var i= 0; i < unselectedarray.length; i++) {
+            const rem=selected.indexOf(unselectedarray[i]);
+            Rindex.splice(rem,1);
+          }
+          //EditRow handling
+          if(editRows.length>allSelectObject[page].length){
+            const filterEditRows=editRows.filter(value=>!allSelectObject[page].includes(value));
+            seteditRows(filterEditRows)
+          }else{
+            seteditRows([]);
+          }
+          delete allSelectObject[page];
+          setSelected(Rindex);
           if (index > -1) { 
-            selectPageNo.splice(index, 1);
-        }}
+              selectPageNo.splice(index, 1);
+            }
+            
+        }else{
+            setSelected([]);
+            seteditRows([]);
+            if (index > -1) { 
+              selectPageNo.splice(index, 1);
+          }}
       }
-    
- };
-  const handleClick = (event, name) => {
+   };
+const handleClick = (event, name) => {
+    setSingleSPageNo(rowsPerPage);
     if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
-      s_object[page].push(name)
+        const index = s_object[page].indexOf(name);
+        if (index > -1) { 
+          s_object[page].splice(index, 1);
+          if(s_object[page].length===0){
+            delete s_object[page];
+          } 
+        }else{
+          if(!s_object[page].includes(name) && (s_object[page].length +1)===rowsPerPage){
+            s_object[page].push(name);
+            allSelectObject[page]=s_object[page];
+            delete s_object[page];
+          }
+          else{
+            s_object[page].push(name);}
+          }
     }else{
-      const arr=[]
+      if((allSelectObject.hasOwnProperty(page)))
+        {
+          if(allSelectObject[page].includes(name)){
+            const index=allSelectObject[page].indexOf(name);
+            if (index > -1) {
+            allSelectObject[page].splice(index,1);
+            s_object[page]=allSelectObject[page];
+            delete allSelectObject[page];
+            }
+        }}
+      else{const arr=[]
       arr.push(name)
-      s_object[page]=arr
+      s_object[page]=arr}
     }
     const selectedIndex = selected.indexOf(name);
     let newSelected = [];
     if (selectedIndex === -1) {
-      console.log(23)
-      setSingleSPageNo(oldArray => [...oldArray, page]);
+      //setSingleSPageNo(oldArray => [...oldArray, page]);
       newSelected = newSelected.concat(selected, name);
     } else if (selectedIndex === 0) {
-      console.log(25)
       newSelected = newSelected.concat(selected.slice(1));
     } else if (selectedIndex === selected.length - 1) {
-      console.log(2345)
       setuncheck(true)
       newSelected = newSelected.concat(selected.slice(0, -1));
     } else if (selectedIndex > 0) {
@@ -210,33 +235,273 @@ const handleSelectAllClick = (event) => {
         selected.slice(selectedIndex + 1)
       );
     }
-    //console.log("sele newSelected",newSelected);
-
     setSelected(newSelected);
     sets_selecVal(s_object)
-    seteditRows(newSelected);    
-  
+    seteditRows(newSelected); 
   };
-
+ // console.log("glacc",s_selecVal,allSelectObject)
+  if(Object.keys(s_selecVal).length >0)
+  {
+    if(s_selecVal[Object.keys(s_selecVal)[0]].length!==rowsPerPage && singleSPageNo===0){
+      setSingleSPageNo(s_selecVal[Object.keys(s_selecVal)[0]].length)
+    }
+  }
   const handleDelete = () => {
     const id = selected;
     const data = [...tableData];
     const updatedTable = data.filter((val) => {
       return !id.includes(val.SR_NO);
-    });
-    setTabledata(updatedTable);
+  });
+  const data1 = [...tabledataclone];
+    const updatedTabledata = data1.filter((val) => {
+      return !id.includes(val.SR_NO);
+  });
+    setTabledata(updatedTable)
+    setTabledataclone(updatedTabledata)
+    setAllData(updatedTabledata);
     setSelected([]);
+    setDeleteId(id);
   };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+const handleChangeRowsPerPage = (event) => {
+  setRowsPerPage(parseInt(event.target.value, 10));
+  setPage(0);
+  // Updating SINGLE SELECT (OBJECT) When RPP (parseInt(event.target.value, 10)) is changed
+  if(parseInt(event.target.value, 10) !==singleSPageNo && singleSPageNo !==0 && Object.keys(s_selecVal).length >0 ){
+    var Temp_table=[];
+    var selected_Array={};
+    const keys=Object.keys(s_selecVal);
+      if(parseInt(event.target.value, 10) > singleSPageNo){
+        for(let i=0;i<keys.length; i++){
+          if(parseInt(keys[i])!==0){
+            var end=(parseInt(keys[i])+1)*singleSPageNo;
+            var start=((parseInt(keys[i])+1)*singleSPageNo) - singleSPageNo;
+            Temp_table.push(...(tableData.slice(start,end)));
+            const newArr = Temp_table.map((data)=>{ return data["PRIMARY_ACCOUNT"]});
+            for(let j=0;j< s_selecVal[keys[i]].length;j++){
+              const index=newArr.indexOf(s_selecVal[keys[i]][j]);
+              let page_num = Math.floor((index+start)/parseInt(event.target.value, 10));
+              if(!(selected_Array.hasOwnProperty(page_num))){
+                selected_Array[page_num]=[];
+                selected_Array[page_num].push(s_selecVal[keys[i]][j]);
+              }else{
+                if( !(selected_Array[page_num].includes(s_selecVal[keys[i]][j]))){
+                  selected_Array[page_num].push(s_selecVal[keys[i]][j]);}
+                }
+            }
+            Temp_table=[];
+          }else{selected_Array[0]=s_selecVal[0];}
+        }
+      }
+      if(parseInt(event.target.value, 10) < singleSPageNo){
+        var count=0
+        const row_count_check=singleSPageNo/10;
+        for(let i=0;i<keys.length; i++){
+            var end=(parseInt(keys[i])+1)*singleSPageNo;
+            var start=((parseInt(keys[i])+1)*singleSPageNo) - singleSPageNo;
+            Temp_table.push(...(tableData.slice(start,end)));
+            const newArr = Temp_table.map((data)=>{ return data["PRIMARY_ACCOUNT"]});
+            
+            for(let j=0;j< s_selecVal[keys[i]].length;j++){
+              const index=newArr.indexOf(s_selecVal[keys[i]][j]);
+              if(index > -1)
+              { count=count+1
+                let page_num = Math.floor((index+start)/parseInt(event.target.value, 10));
+                if(!(selected_Array.hasOwnProperty(page_num))){
+                  selected_Array[page_num]=[];
+                  selected_Array[page_num].push(s_selecVal[keys[i]][j]);
+                }else{
+                  if( !(selected_Array[page_num].includes(s_selecVal[keys[i]][j]))){
+                    selected_Array[page_num].push(s_selecVal[keys[i]][j]);}
+                  }
+              }
+            }
+            Temp_table=[];
+        }
+      }
+    if(Object.keys(selected_Array).length >0)
+    {
+      const keys=Object.keys(selected_Array)
+      for(let i=0;i<keys.length;i++){
+        if(selected_Array.hasOwnProperty(keys[i])){
+          if(selected_Array[keys[i]].length===parseInt(event.target.value, 10))
+          {
+            if(allSelectObject.hasOwnProperty(keys[i])){
+              delete allSelectObject[keys[i]]; 
+              allSelectObject[keys[i]]=selected_Array[keys[i]]
+              delete selected_Array[keys[i]]; 
+            }else{
+              allSelectObject[keys[i]]=selected_Array[keys[i]]
+            }
+          }
+        }
+      }
+    }
+    //sets_selecVal(selected_Array)
+    const key=Object.keys(selected_Array)
+    Object.keys(s_selecVal).forEach(key => {
+      delete s_selecVal[key];
+    })
+    for(let i=0;i<key.length;i++){
+      s_selecVal[key[i]]=selected_Array[[key[i]]]
+    }
+    for(let i=0;i<key.length;i++){
+      if(selected_Array[[key[i]]].length===parseInt(event.target.value, 10)){
+        allSelectObject[[key[i]]]=selected_Array[[key[i]]];
+        delete selected_Array[[key[i]]];
+        delete s_selecVal[[key[i]]];
+      }
+    }
+    
+    setSingleSPageNo(parseInt(event.target.value, 10))
+  }
+ // updating SELECT ALL (OBJECT) When RPP (parseInt(event.target.value, 10)) is changed
+  if(Object.keys(allSelectObject).length >0 && parseInt(event.target.value, 10) !== allSelectObject[Object.keys(allSelectObject)[0]].length ){
+      // When current RPP (parseInt(event.target.value, 10)) is Greater than previous RPP
+      if(parseInt(event.target.value, 10) > allSelectObject[Object.keys(allSelectObject)[0]].length ){
+        var arr=[]
+        var diff=0
+        var d_count=0
+        var cond=false
+        var check2=false
+        var count=0
+        var page_num=0
+        const row_count=parseInt(event.target.value, 10)/10;
+        const keys=Object.keys(allSelectObject)
+        for(let i=0;i< keys.length;i++){
+          var end=10
+          var start=0 
+          for(let j=0;j<allSelectObject[keys[i]].length;j=j+10){
+            if(i!==0 && !cond){
+                if(keys[i]!==keys[i-1]){
+                  diff=(keys[i]-keys[i-1])-1;
+                  d_count=diff * allSelectObject[keys[i]].length;
+                  cond=true;
+                }
+            } 
+            if(d_count>0){
+                d_count=d_count-10;
+                j=j-10;
+            }else{
+                
+                if(parseInt(keys[i])!==0 && !cond)
+                { 
+                  check2=true
+                  diff=keys[i]-0;
+                  d_count=diff * allSelectObject[keys[i]].length-10;
+                  cond=true;
+                }else{
+                  if(count===4 && check2){ j=j-10
+                  }
+                arr.push(...(allSelectObject[keys[i]].slice(start,end)));
+                start=start+10;
+                end=end+10;}
+              }
+            count=count+1
+            if(arr.length=== parseInt(event.target.value, 10) || (count===row_count &&arr.length >0) || (arr.length >0 && i=== Object.keys(allSelectObject).length-1 && (j===allSelectObject[keys[i]].length-10))){
+              count=0
+              newObj[page_num]=arr;
+              page_num=page_num+1;
+              arr=[];
+              }
+          }
+          if(d_count===0){cond=false;}
+        }
+      }
+      // When current RPP (parseInt(event.target.value, 10)) is less than previous RPP
+      if(parseInt(event.target.value, 10) < allSelectObject[Object.keys(allSelectObject)[0]].length && Object.keys(allSelectObject).length >0 ){
+        const keys=Object.keys(allSelectObject)
+        const row_count=parseInt(event.target.value, 10)/10;
+        var arr_Rpp_less=[];
+        var count=0;
+        var page_num=0;
+        var diff=0
+        var d_count=0
+        var cond=false
+        for(let i=0;i< keys.length;i++){
+          var end=10
+          var start=0
+          for(let j=0;j<allSelectObject[keys[i]].length;j=j+10){
+            count=count+1;
+            if(i!==0 && !cond){
+              if(keys[i]!==keys[i-1]){
+                diff=(keys[i]-keys[i-1])-1;
+                d_count=diff * allSelectObject[keys[i]].length;
+                cond=true;
+              }
+            } 
+            if(d_count>0){
+              d_count=d_count-10;
+              j=j-10;
+            }else{
+              arr_Rpp_less.push(...(allSelectObject[keys[i]].slice(start,end)));
+              start=start+10;
+              end=end+10;
+            }
+            if(count===row_count &&arr_Rpp_less.length >0)
+            {
+              newObj[page_num]=arr_Rpp_less;
+              page_num=page_num+1;
+              arr_Rpp_less=[];
+              count=0;
+            }
+            if(count===row_count &&arr_Rpp_less.length ===0 ){ 
+              page_num=page_num+1;
+              count=0;
+            }
+          }
+          if(d_count===0){cond=false;}
+        }
+      }
+      var f_page=[]
+      if(Object.keys(allSelectObject)[0].includes(0)){
+        f_page.push(...allSelectObject[0])
+      }
+      Object.keys(allSelectObject).forEach(key => {
+        delete allSelectObject[key];
+      })
+      if(Object.keys(newObj).length >0 )
+      {
+        let page_keys=Object.keys(newObj)
+        for(let i=0;i<page_keys.length;i++){
+          if(newObj[page_keys[i]].length!==parseInt(event.target.value, 10)){
+            if((s_selecVal.hasOwnProperty(page_keys[i])) && !s_selecVal[page_keys[i]].includes(newObj[page_keys[i]][0])){
+              s_selecVal[page_keys[i]].push(...newObj[page_keys[i]])
+            }
+            else if(!(s_selecVal.hasOwnProperty(page_keys[i]))){
+              s_selecVal[page_keys[i]]=newObj[page_keys[i]]
+            }
+          }
+          else{
+            if((s_selecVal.hasOwnProperty(page_keys[i]))){
+              delete s_selecVal[page_keys[i]];
+            }
+            if(!allSelectObject.hasOwnProperty(page_keys[i])){
+            allSelectObject[page_keys[i]]=newObj[page_keys[i]];
+            }else{
+              delete allSelectObject[page_keys[i]];
+              allSelectObject[page_keys[i]]=newObj[page_keys[i]];              
+            }
+          }
+        }
+        selectPageNo.splice(0,selectPageNo.length);
+        if(Object.keys(allSelectObject).length >0){
+          const key_page=(Object.keys(allSelectObject))
+          for(let i=0;i<key_page.length;i++){
+          setallSelectPageNo(oldArray => [...oldArray,parseInt(key_page[i])]);}
+          
+        }else{setallSelectPageNo([])}
+        sets_object(s_selecVal)
+        setSingleSPageNo(parseInt(event.target.value, 10))
+      }
+    }
 
+  };
+  //console.log("editRows",editRows)
   const isSelected = (name) => selected.indexOf(name) !== -1;
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - tableData.length) : 0;
@@ -252,6 +517,7 @@ const handleSelectAllClick = (event) => {
           handleClick={handleClick}
           handleSearchClick={handleSearchClick}
           freeze={freeze}
+          setFreeze={setFreeze}
           handleCopyDown={handleCopyDown}
           handleSelectAllClick={handleSelectAllClick}
           handleRequestSort={handleRequestSort}
@@ -284,9 +550,10 @@ const handleSelectAllClick = (event) => {
           inputValue={inputValue}
           setInputValue={setInputValue}
           setSearched={setSearched}
-          s_selecVal={s_selecVal}
           allSelectObject={allSelectObject}
-
+          selectPageNo={selectPageNo}
+          rowsc={rowsc}
+          s_selecVal={s_selecVal}
         />
       </Box>
     </>
