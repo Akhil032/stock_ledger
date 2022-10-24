@@ -96,11 +96,9 @@ export default function EnhancedTable({
   const[newObj,setnewObj]=React.useState({});
   const[s_selecVal,sets_selecVal]=React.useState({});
   const[selectPageNo,setallSelectPageNo]=React.useState([]);
-  const[condCheck,setcondCheck]=React.useState(true);
   const[singleSPageNo,setSingleSPageNo]=React.useState(0);
   const[rowsc,setselectedrows]=React.useState(0);
   const[s_object,sets_object]=React.useState({});
-  const[rowChange,setrowChange]=React.useState(false);
   const[uncheck,setuncheck]=React.useState(false);
   const handleRequestSort = (event, property) => {
     const isAsc = (orderBy === property && order === "asc");
@@ -200,10 +198,12 @@ const handleClick = (event, name) => {
               delete s_object[page];
             } 
           }else{
-            if(!s_object[page].includes(name) && (s_object[page].length +1)===rowsPerPage){
+            const Main_check=Math.ceil(tableData.length/rowsPerPage)
+            if(!s_object[page].includes(name) && ((s_object[page].length +1)===rowsPerPage|| (s_object[page].length +1)===(tableData.slice((Main_check-1)*rowsPerPage,((Main_check-1)*rowsPerPage)+rowsPerPage)).length)){
               s_object[page].push(name);
               allSelectObject[page]=s_object[page];
               delete s_object[page];
+              selectPageNo.push(page)
             }
            else{
             s_object[page].push(name);}
@@ -244,6 +244,7 @@ const handleClick = (event, name) => {
     sets_selecVal(s_object)
     seteditRows(newSelected); 
   };
+  console.log("sdfd",s_selecVal,allSelectObject)
   if(Object.keys(s_selecVal).length >0)
   {if(s_selecVal[Object.keys(s_selecVal)[0]].length!==rowsPerPage && singleSPageNo===0){
     setSingleSPageNo(s_selecVal[Object.keys(s_selecVal)[0]].length)

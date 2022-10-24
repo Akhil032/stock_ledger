@@ -195,10 +195,12 @@ const handleClick = (event, name) => {
             delete s_object[page];
           } 
         }else{
-          if(!s_object[page].includes(name) && (s_object[page].length +1)===rowsPerPage){
+          const Main_check=Math.ceil(tableData.length/rowsPerPage)
+          if(!s_object[page].includes(name) && ((s_object[page].length +1)===rowsPerPage ||(s_object[page].length +1)===(tableData.slice((Main_check-1)*rowsPerPage,((Main_check-1)*rowsPerPage)+rowsPerPage)).length)){
             s_object[page].push(name);
             allSelectObject[page]=s_object[page];
             delete s_object[page];
+            selectPageNo.push(page)
           }
           else{
             s_object[page].push(name);}
@@ -212,7 +214,8 @@ const handleClick = (event, name) => {
             allSelectObject[page].splice(index,1);
             s_object[page]=allSelectObject[page];
             delete allSelectObject[page];
-            }
+            selectPageNo.pop(page)
+          }
         }}
       else{const arr=[]
       arr.push(name)
