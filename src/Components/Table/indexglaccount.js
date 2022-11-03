@@ -165,12 +165,13 @@ export default function EnhancedTable({
             Rindex.splice(rem,1);
           }
           //EditRow handling
+          if(editRows){
           if(editRows.length>allSelectObject[page].length){
             const filterEditRows=editRows.filter(value=>!allSelectObject[page].includes(value));
             seteditRows(filterEditRows)
           }else{
             seteditRows([]);
-          }
+          }}
           delete allSelectObject[page];
           setSelected(Rindex);
           if (index > -1) { 

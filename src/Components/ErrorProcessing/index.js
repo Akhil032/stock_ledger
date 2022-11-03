@@ -37,7 +37,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import swal from '@sweetalert/with-react';
 import TrnTypeList from "../TRNTYPE";
-import Select from 'react-select';
+import Select ,{components} from 'react-select';
 import makeAnimated from 'react-select/animated';
 import { ConstructionOutlined } from "@mui/icons-material";
 //import "./index.css";
@@ -139,6 +139,7 @@ const initialItemData = {
 // }
 
 const ErrorProcessing = () => {
+  const [focused, setFocused] = useState(false);
   const [input, setInput] = useState("");
   const [inputH2, setInputH2] = useState("");
   const [inputH3, setInputH3] = useState("");
@@ -189,6 +190,28 @@ const ErrorProcessing = () => {
   );
   //////console.log(ErrorProcessingData?.data?.Data);
   const dispatch = useDispatch();
+
+  // var axios = require("axios").default;
+
+  // var options = {
+  //   method: 'POST',
+  //   url: "https://oicperf901-axwlvczjvscx-ia.integration.ocp.oraclecloud.com:443/ic/api/integration/v1/flows/rest/PUBLISHPURCHASEORDERDETAILS/1.0/processPOModel",
+  //   headers: {'content-type': 'application/x-www-form-urlencoded'},
+  //   data: new URLSearchParams({
+  //     grant_type: 'client_credentials',
+  //     client_id: "7b81dbf2c6f84d16b816d6819838035c",
+  //     client_secret: "0391070b-bef9-473b-8920-8b0533171da0",
+  //     client_scope:"https://530B7C4704E6448EA5BC5E6420D4FD56.integration.ocp.oraclecloud.com:443urn:opc:resource:consumer::all" ,
+  //     audience: 'https://idcs-e853700300e64ec68bbfe6bc66bfa64d.identity.oraclecloud.com/oauth2/v1/token'
+  //   })
+  // };
+  
+  // axios.request(options).then(function (response) {
+  //   console.log(response.data);
+  // }).catch(function (error) {
+  //   console.error(error);
+  // });
+
 
   var trnTypeValue = TrnTypeList();
 
@@ -1166,7 +1189,31 @@ const selectLocation = (event, value) => {
   const handleCancel = () => {
     setOpen(false);
   };
-
+  const { ValueContainer, Placeholder } = components;
+  const CustomValueContainer = ({ children, ...props }) => {
+    return (
+      <ValueContainer {...props}>
+        <Placeholder {...props} isFocused={props.isFocused}>
+          {props.selectProps.placeholder}
+        </Placeholder>
+        {React.Children.map(children, child =>
+          child && child.type !== Placeholder ? child : null
+        )}
+      </ValueContainer>
+    );
+  };
+  // const CustomValueContainer = ({ children, ...props }) => {
+  //   return (
+  //     <ValueContainer {...props}>
+  //       <Placeholder {...props} isFocused={props.isFocused}>
+  //         {props.selectProps.placeholder}
+  //       </Placeholder>
+  //       {React.Children.map(children, child =>
+  //         child && child.key !== 'placeholder' ? child : null
+  //       )}
+  //     </ValueContainer>
+  //   );
+  // };
   const searchPanel = () => (
     <Box
       sx={{ width: 350, marginTop: "80px" }}
@@ -1200,7 +1247,11 @@ const selectLocation = (event, value) => {
                 onChange={handleHier1}
                 placeholder={"Choose HIER1"}
                 styles={styleSelect}
-                components={animatedComponents}  
+                //components={animatedComponents}  
+                components={{ValueContainer: CustomValueContainer}}
+                // onFocus={() => setFocused(true)}
+                // onBlur={() => setFocused(false)}
+                // isFocused={focused}
                 isMulti 
                 isClearable={true}
                value={UniqDept.filter(obj => searchData?.HIER1.includes(obj.HIER1))} 
@@ -1223,7 +1274,8 @@ const selectLocation = (event, value) => {
                 onChange={handleHier2}
                 placeholder={"Choose a HIER2"}
                 styles={styleSelect}
-                components={animatedComponents}  
+                components={animatedComponents}
+                persistMultiPlaceholder={false}
                 isMulti 
                 value={filterClass.filter(obj => searchData?.HIER2.includes(obj.HIER2))} 
                 

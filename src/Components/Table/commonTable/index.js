@@ -142,8 +142,9 @@ const CommonTable = ({
               s_object={s_object}
               s_selecVal={s_selecVal}
             />
+            {console.log("rows",rows)}
             <TableBody>
-              {stableSort(rows, getComparator(order, orderBy))
+              {stableSort(rows, getComparator(order, orderBy),page,rowsPerPage)
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row, index) => {
                   const isItemSelected = isSelected(row?.SR_NO?row?.SR_NO:row?.TRAN_SEQ_NO);

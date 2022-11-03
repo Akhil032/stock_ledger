@@ -11,7 +11,8 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import BookIcon from '@mui/icons-material/Book';
 import PaymentIcon from '@mui/icons-material/Payment';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import AddBoxIcon from '@mui/icons-material/AddBox';
 export const GetItems = () => {
   let json = {
     list: [
@@ -155,6 +156,28 @@ export const GetItems = () => {
           {
             id: 1,
             name: "Stock Ledger View",
+            },   
+        ],
+      },
+      {
+        id: 11,
+        name: "PO",
+        icon: <StorefrontIcon sx={{color: "#b4b4b4"}}/>,
+        subitems: [
+          {
+            id: 1,
+            name: "PO Enquiry",
+            },   
+        ],
+      },
+      {
+        id: 12,
+        name: "Allocation",
+        icon: <AddBoxIcon sx={{color: "#b4b4b4"}}/>,
+        subitems: [
+          {
+            id: 1,
+            name: "Like Item Mapping",
             },   
         ],
       },

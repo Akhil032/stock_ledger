@@ -131,10 +131,11 @@ export default function EnhancedTable({
         setallSelectPageNo(oldArray => [...oldArray, page]);
         setSelected(oldArray => [...oldArray,...newSelecteds]);
          //EditRow handling
+         if(editRows){
         if(editRows.length>0){
           seteditRows(oldArray => [...oldArray,...newSelecteds])
         }else{
-          seteditRows(newSelecteds);}
+          seteditRows(newSelecteds);}}
         setselectedrows(rowsc+allSelectObject[page].length);
         if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
           for(var i=0;i<s_object[page].length;i++)
@@ -167,12 +168,13 @@ export default function EnhancedTable({
             Rindex.splice(rem,1);
           }
           //EditRow handling
+          if(editRows){
           if(editRows.length>allSelectObject[page].length){
             const filterEditRows=editRows.filter(value=>!allSelectObject[page].includes(value));
             seteditRows(filterEditRows)
           }else{
             seteditRows([]);
-          }
+          }}
           delete allSelectObject[page];
           setSelected(Rindex);
           if (index > -1) { 

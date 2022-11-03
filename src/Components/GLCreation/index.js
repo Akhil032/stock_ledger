@@ -116,7 +116,7 @@ const sendGLData = {
     CURRENCY: "",
 }
 
-//console.log("valus:", sendGLData)
+////console.log("valus:", sendGLData)
 const Forms = () => {
     // we're using react-hook-form library 
     //const { register, handleSubmit } = useForm();
@@ -151,13 +151,13 @@ const Forms = () => {
     //     event.preventDefault();
     //       setSearch(true);
     //       setState({ ...state, 'right': open });
-    //       //console.log("state",state);
+    //       ////console.log("state",state);
     //   }
     const handleSubmit = () => {
         sendData["CURRENCY"] = searchData["CURRENCY"];
         sendData["CREATE_ID"] = JSON.parse(localStorage.getItem("userData"))?.username;
-        //console.log("ta", searchData)
-        //console.log("ROW", sendData);
+        ////console.log("ta", searchData)
+        ////console.log("ROW", sendData);
 
         sendData.PRIMARY_ACCOUNT.length <= 0 ? setValidatePrimaryAccount(true) :
         setValidatePrimaryAccount(false);
@@ -165,10 +165,10 @@ const Forms = () => {
         setValidateSetOfBooksId(false);
 
         if (Object.keys(sendData).length > 0) {
-            // //console.log("ps",updateRow)
+            // ////console.log("ps",updateRow)
 
             if (sendData.PRIMARY_ACCOUNT.length >= 1 && sendData.SET_OF_BOOKS_ID.length >= 1) {
-                //console.log("sendData", sendData)
+                ////console.log("sendData", sendData)
                 dispatch(postGlcreationRequest([sendData]));
                 
                 setOpen(true);
@@ -211,7 +211,7 @@ const Forms = () => {
         }
       }, [GlAccountData])
     
-      console.log("sendData:", sendData)
+      //console.log("sendData:", sendData)
     const onChange = (sendData) => {
         console.log("at", sendData)
         setSendData((prev) => {
@@ -222,7 +222,7 @@ const Forms = () => {
         });
     }
     const onSubmit = (data) => {
-        //console.log("kty", data);
+        ////console.log("kty", data);
     };
 
     useEffect(() => {
@@ -251,23 +251,23 @@ const Forms = () => {
         }
 
     }, [GlAccountData?.data])
-//console.log("GlAccountData",GlAccountData)
+////console.log("GlAccountData",GlAccountData)
     // const handleSubmit = (evt) => {
     //     evt.preventDefault();
     //     //var a={itemData,sendData}
     //     //a.push({})
-    //     ////console.log("sdsd",a)
-    //     //console.log("abc",sendData);   
-    //    // //console.log(itemData)
+    //     //////console.log("sdsd",a)
+    //     ////console.log("abc",sendData);   
+    //    // ////console.log(itemData)
     //      Alert("stop") 
     //   };
-// console.log("itemData",itemData)
+// //console.log("itemData",itemData)
 
     // const selectCurrency=(value)=>{
-    //     //console.log("asda",value)
+    //     ////console.log("asda",value)
         
     //     if((value.CURRENCY).length>0){
-    //         //console.log("asdasds",value.CURRENCY)
+    //         ////console.log("asdasds",value.CURRENCY)
     //         setSearchData((prev) => {
     //           return {
     //             ...prev,
@@ -286,7 +286,7 @@ const Forms = () => {
           
     // }
     const selectCurrency = (val) => {
-        console.log("value,e",val)
+        //console.log("value,e",val)
         if(val){
             setSendData((prev) => {
             return {
@@ -306,9 +306,9 @@ const Forms = () => {
             //   setSearchData(sendData.CURRENCY)
         }
     }
-    // console.log("searchData",searchData)
+    // //console.log("searchData",searchData)
     const selectCurrency2 = (event, value) => {
-        //console.log("2343",value)
+        ////console.log("2343",value)
         let selectedCurrency = [];
         if (value.option) {     
               valCurr.push(value.option)
@@ -337,7 +337,7 @@ const Forms = () => {
               selectedCurrency.push(item.CURRENCY);
             }
           )
-          ////console.log(value);
+          //////console.log(value);
           setSearchData((prev) => {
             return {
               ...prev,
@@ -345,7 +345,7 @@ const Forms = () => {
             };
           });
         }else if(value.length > 0){
-              ////console.log(value);
+              //////console.log(value);
               swal(
                 <div>     
                   <p>{"Please Choose valid CURRENCY"}</p>
@@ -568,7 +568,7 @@ const handleClickOpen = () => {
                              }}
                             >
                             {itemData.map((make, index) => (
-                                // console.log("make:",make,"index:",index),
+                                // //console.log("make:",make,"index:",index),
                                 <MenuItem key={index} value={make.CURRENCY}>{make.CURRENCY}</MenuItem>
                             ))}
                             </Select>

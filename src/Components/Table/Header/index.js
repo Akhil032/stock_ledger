@@ -67,6 +67,7 @@ export default function EnhancedTableHead(props) {
     s_selecVal
   } = props;
   const createSortHandler = (property) => (event) => {
+    //console.log(event)
     onRequestSort(event, property);
   };
   var pageCount=0
@@ -199,4 +200,5 @@ EnhancedTableHead.propTypes = {
   order: PropTypes.oneOf(["asc", "desc"]).isRequired,
   orderBy: PropTypes.string.isRequired,
   rowCount: PropTypes.number.isRequired,
+  
 };

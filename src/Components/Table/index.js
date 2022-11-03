@@ -5,9 +5,10 @@ import TableToolbar from "../Table/Toolbar/index";
 import DeleteIcon from '@mui/icons-material/Delete';
 import Button from "@mui/material/Button";
 import { prevElementSibling } from "domutils";
+import { ConstructionOutlined } from "@mui/icons-material";
 
 function descendingComparator(a, b, orderBy) {
-
+  //console.log("inds")
   let c,d;
   if(orderBy == "LOCATION_NAME"){
     c=b[orderBy].slice(b[orderBy].indexOf("-")+1);
@@ -50,9 +51,16 @@ function getComparator(order, orderBy) {
     : (a, b) => -descendingComparator(a, b, orderBy);
 }
 
-function stableSort(array, comparator) {
-  const stabilizedThis = array.map((el, index) => [el, index]);
+function stableSort(array, comparator,page,rowsPerPage) {
+ // console.log("srort",array,comparator)
+
+  //console.log("srort",array.slice(page*rowsPerPage,rowsPerPage),comparator)
+  // var count=0
+  // var row_count=0
+  //(array.slice(page*rowsPerPage,rowsPerPage).length===count) && page===?array:array.slice(page*rowsPerPage,rowsPerPage)
+  const stabilizedThis = (array).map((el, index) => [el, index]);
   stabilizedThis.sort((a, b) => {
+    //count=count+1
     const order = comparator(a[0], b[0]);
     if (order !== 0) {
       return order;
@@ -118,7 +126,12 @@ export default function EnhancedTable({
         delete s_object[page];
         sets_selecVal(s_object);
         setSelected(newSelected);
-        //}
+        if(selectPageNo.includes(page)){
+          const index = selectPageNo.indexOf(page);
+          if (index > -1) { 
+            selectPageNo.splice(index, 1);
+        }
+        }
       return;
     }
     if (event.target.checked && !(selectPageNo.includes(page)) ) {
@@ -132,10 +145,11 @@ export default function EnhancedTable({
         setallSelectPageNo(oldArray => [...oldArray, page]);
         setSelected(oldArray => [...oldArray,...newSelecteds]);
         //EditRow handling
+        if(editRows){
         if(editRows.length>0){
           seteditRows(oldArray => [...oldArray,...newSelecteds])
         }else{
-          seteditRows(newSelecteds);}
+          seteditRows(newSelecteds);}}
         setselectedrows(rowsc+allSelectObject[page].length);
         if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
           for(var i=0;i<s_object[page].length;i++)
@@ -168,12 +182,13 @@ export default function EnhancedTable({
             Rindex.splice(rem,1);
           }
           //EditRow handling
+          if(editRows && pageName!=="stage"){
           if(editRows.length>allSelectObject[page].length){
             const filterEditRows=editRows.filter(value=>!allSelectObject[page].includes(value));
             seteditRows(filterEditRows)
           }else{
             seteditRows([]);
-          }
+          }}
           delete allSelectObject[page];
           setSelected(Rindex);
           if (index > -1) { 
@@ -188,6 +203,7 @@ export default function EnhancedTable({
           }}
       }
    };
+   console.log(allSelectObject,selectPageNo,s_selecVal)
 const handleClick = (event, name) => {
     setSingleSPageNo(rowsPerPage);
     if ( Object.keys(s_object).length > 0 && s_object.hasOwnProperty(page)){
@@ -242,9 +258,10 @@ const handleClick = (event, name) => {
     }
     setSelected(newSelected);
     sets_selecVal(s_object)
-    seteditRows(newSelected); 
+    if(pageName!=="stage"){
+    seteditRows(newSelected);} 
   };
-  console.log("sdfd",s_selecVal,allSelectObject)
+  //console.log("sdfd",s_selecVal,allSelectObject)
   if(Object.keys(s_selecVal).length >0)
   {if(s_selecVal[Object.keys(s_selecVal)[0]].length!==rowsPerPage && singleSPageNo===0){
     setSingleSPageNo(s_selecVal[Object.keys(s_selecVal)[0]].length)
@@ -504,7 +521,7 @@ const handleChangeRowsPerPage = (event) => {
     }
 
   };
-  console.log("editRows",editRows)
+  //console.log("editRows",editRows)
   const isSelected = (name) => selected.indexOf(name) !== -1;
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - tableData.length) : 0;

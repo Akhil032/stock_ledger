@@ -186,6 +186,12 @@ export default function Index() {
     if (routeName == "System Config Creation") {
       navigate(`/system-config-creation`);
     }
+    if (routeName == "PO Enquiry") {
+      navigate(`/PO_Enquiry`);
+    }
+    if (routeName == "Like Item Mapping") {
+      navigate(`/Like_Item_Map`);
+    }
     handleDrawerClose()
   };
   const handleHomePage = (routedata) => {
