@@ -1,12 +1,11 @@
-import React, {useState} from 'react';
+import React, {useEffect,useState} from 'react';
 import ReactDOM from "react-dom/client";
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from "@mui/material/Button";
 import Grid from '@mui/material/Grid';
 import { makeStyles,withStyles,styled  } from "@mui/styles";
-import { yellow } from '@mui/material/colors';
-import {Table, TableBody, TableContainer, TableCell,Paper,TableRow,TableHead} from "@mui/material";
+import {Table, TableBody, TableContainer, TableCell,Paper,TableRow,TableHead,tableCellClasses } from "@mui/material";
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
 import InputLabel from '@mui/material/InputLabel';
@@ -15,21 +14,39 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch, { SwitchProps } from '@mui/material/Switch';
+import Checkbox from '@mui/material/Checkbox';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import RestoreFromTrashIcon from '@mui/icons-material/RestoreFromTrash';
+import InfoIcon from '@mui/icons-material/Info';
+import DetailsIcon from '@mui/icons-material/Details';
+import { width } from '@mui/system';
+import {getHIERRequest,getHIER2Request,getHIER3Request,getUDARequest,
+  getITEM_LIST_HEADRequest,getITEMPARENTRequest,getDIFFRequest,
+  getSKURequest,getAllocItemsRequest,postLIkeInsertRequest} from "../../Redux/Action/Allocation"
+import { useDispatch, useSelector } from "react-redux";
+import swal from '@sweetalert/with-react';
+import PropTypes from 'prop-types';
 
 const animatedComponents = makeAnimated();
-const styleTextfield = {
-    input1: {
-      height: 50
+
+  const StyledTableRow = styled(TableRow)(({ theme }) => ({
+    root: {
+      height: "10px",
+  },
+    '&:nth-of-type(odd)': {
+      backgroundColor: theme.palette.action.hover,
     },
-    input2: {
-      height: 200,
-      fontSize: "3em"
-    }
-  };
+    // hide last border
+    '&:last-child td, &:last-child th': {
+      border: 0,
+    },
+  }));
 const styleSelect = {
     control: base => ({
       ...base,
       width:"200px",
+      //height: '50px',
+      //maxHeight:"50px",
       fontSize:"14px",
       // This line disable the blue border
      // borderRadius:"0",
@@ -40,7 +57,9 @@ const styleSelect = {
       //   // borderRadius:"0",
       //   // boxShadow:"rgba(0, 0, 0, 0.19) 0px 1px 2px, rgba(0, 0, 0, 0.23) 0px 2px 2px"
       // },
-    })
+      
+    }
+    )
     ,
     dropdownIndicator: (base) => ({
       ...base,
@@ -55,20 +74,21 @@ const styleSelect = {
     valueContainer: (provided) => ({
       ...provided,
       // minHeight: '1px',
-      // height: '40px',
+       //height: '40px',
       paddingTop: '0',
       paddingBottom: '0',
     }),
     singleValue: (provided) => ({
       ...provided,
-      // minHeight: '1px',
+      // height: '10px',
       // paddingBottom: '0px',
       
     }),
     input: (provided) => ({
       ...provided,
       width:"100%",
-      // minHeight: '1px',
+      //height:"30px"
+      
     }),
     option: provided => ({
       ...provided,
@@ -156,51 +176,1035 @@ const useStyles = makeStyles({
       textField: {
         marginRight: "10px !important",
       },
+      grid_block:{
+        display: "inline-block",
+      // border: "1px solid red",
+      padding: "0rem 0rem",
+      verticalAlign: "middle",
+      },
   });
-  const Android12Switch = styled(Switch)(({ theme }) => ({
-    padding: 8,
-    '& .MuiSwitch-track': {
-      borderRadius: 22 / 2,
-      '&:before, &:after': {
-        content: '""',
-        position: 'absolute',
-        top: '50%',
-        transform: 'translateY(-50%)',
-        width: 16,
-        height: 16,
-      },
-      '&:before': {
-        backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="16" width="16" viewBox="0 0 24 24"><path fill="${encodeURIComponent(
-          theme.palette.getContrastText(theme.palette.primary.main),
-        )}" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>')`,
-        left: 12,
-      },
-      '&:after': {
-        backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="16" width="16" viewBox="0 0 24 24"><path fill="${encodeURIComponent(
-          theme.palette.getContrastText(theme.palette.primary.main),
-        )}" d="M19,13H5V11H19V13Z" /></svg>')`,
-        right: 12,
-      },
-    },
-    '& .MuiSwitch-thumb': {
-      boxShadow: 'none',
-      width: 16,
-      height: 16,
-      margin: 2,
-    },
-  }));
-  
+
+const initialData={
+    HIER1:[],
+    HIER2:[],
+    HIER3:[],
+    UDA:[],
+    UDA_VALUE:[],
+    ITEM_LIST_NO:[],
+    SIZE_PROFILE:"",
+    ITEM_PARENT:[],
+    DIFF_ID:[],
+    SKU:"",
+    SKU_DESC:"",
+    SKU_DIFF_ID:"",
+    NO_OF_SKUS:"",
+    WEIGHT:100,
+    MAP_SIZE_PROFILE:false,
+  }
+
 const LikeItemMap=()=>{
-    const LikeItem = useStyles();
-    const Like_Criteria=()=>(
+  
+  const [loading, setLoading] = useState(false);
+  //like item criteria Webservice data
+  const [hier1Data, setHier1Data] = useState([{}]);
+  const [hier2Data, setHier2Data] = useState([{}]);
+  const [hier3Data, setHier3Data] = useState([{}]);
+  const [udaData, setUdaData] = useState([{}]);
+  const [itemListHeadData, setItemListHeadData] = useState([{}]);
+  const [itemParentData,setItemParentData] = useState([{}]);
+  const [diffData, setDIffData] = useState([{}]);
+  const [skuData, setSkuData] = useState([{}]);
+  const [tableData, setTableData] = useState([]);
+  const [mapTableData, setMapTableData] = useState([]);
+  const [delTableData, setDelTableData] = useState([]);
+  const alloc_Level="T"
+  const alloc_no="12345678"
+  //filtered uda data
+  const [filterUDAValue,setFilterUDAValue] = useState([]);
+// Unique data
+  let UniqDept =
+    hier1Data.length > 0
+      ? [...new Map(hier1Data.map((item) => [item["HIER1"], item])).values()]
+      : [];
+  let UniqClass =
+    hier2Data.length > 0
+      ? [...new Map(hier2Data.map((item) => [item["HIER2"], item])).values()]
+      : [];
+  let UniqSubClass =
+    hier3Data.length > 0
+      ? [...new Map(hier3Data.map((item) => [item["HIER3"], item])).values()]
+      : [];
+  let UniqUDA =
+    udaData.length > 0
+        ? [...new Map(udaData.map((item) => [item["UDA"], item])).values()]
+        : [];
+  let UniqItemParent =
+    itemParentData.length > 0
+      ? [...new Map(itemParentData.map((item) => [item["ITEM_PARENT"], item])).values()]
+      : [];
+
+  console.log("UniqItemParent:",UniqItemParent)
+  //Dropdown input
+  const [valHIER1,setValHIER1]=useState([]);
+  const [valHIER2,setValHIER2]=useState([]);
+  const [valHIER3,setValHIER3]=useState([]);
+  const [valUDA,setValUDA]=useState([]);
+  const [valUDAValue,setValUDAValue]=useState([]);
+  const [valItemList,setValItemList]=useState([]);
+  const [valSizeProf,setValSP]=useState("")
+  const [valItemPar,setValItempar]=useState([]);
+  const [valDiff,setValDiff]=useState([]);
+  const [valSKU,setValSKU]=useState([]);
+  const [mapSizeprof,setMapSP] =useState(false);
+  const [mapData,setMapData]=useState(initialData);
+  const []=useState([]);
+  // validation
+  const [checkClass,setCheckClass]=useState(false);
+  const [checkSubClass,setCheckSubClass]=useState(false);
+  //table CheckBox
+  const [selected,setSelected]=useState([]);
+  const [selectedMap,setSelectedMap]=useState([]);
+  const AllocationClasses = useStyles();
+  const AllocationData = useSelector(
+    (state) => state.AllocationReducers
+  );
+  useEffect(() => {
+    document.title = 'Allocation';
+  },[]);
+
+  const dispatch = useDispatch();
+  useEffect(() => {
+    setLoading(true);
+    dispatch(getHIERRequest([{}]));
+    dispatch(getHIER2Request([{}]));
+    dispatch(getHIER3Request([{}]));
+    dispatch(getUDARequest([{}]));
+    dispatch(getITEM_LIST_HEADRequest([{}]));
+    dispatch(getITEMPARENTRequest([{}]));
+    dispatch(getDIFFRequest([{}]));
+    dispatch(getSKURequest([{}]));
+    //dispatch(getAllocItemsRequest([searchHeaderData.ALLOC_NO]));
+    dispatch(getAllocItemsRequest([{"ALLOCATION_ID": 12345678}]));
+  }, [""]);
+
+  useEffect(() => {
+
+    if (AllocationData?.data?.hierData && Array.isArray(AllocationData?.data?.hierData)) {
+      setHier1Data(AllocationData?.data?.hierData);
+      setLoading(false);
+    }else if (AllocationData?.data?.hier2Data &&Array.isArray(AllocationData?.data?.hier2Data)) {
+      setHier2Data(AllocationData?.data?.hier2Data);
+      setLoading(false);
+    } else if (AllocationData?.data?.hier3Data && Array.isArray(AllocationData?.data?.hier3Data)) {
+      setHier3Data(AllocationData?.data?.hier3Data);
+      setLoading(false);
+    }else if (AllocationData?.data?.udaData && Array.isArray(AllocationData?.data?.udaData)) {
+      setUdaData(AllocationData?.data?.udaData);
+      setLoading(false);
+    }else if (AllocationData?.data?.itemListHeadData && Array.isArray(AllocationData?.data?.itemListHeadData)) {
+      setItemListHeadData(AllocationData?.data?.itemListHeadData);
+      setLoading(false);
+    } else if (AllocationData?.data?.itemParentData && Array.isArray(AllocationData?.data?.itemParentData)) {
+      setItemParentData(AllocationData?.data?.itemParentData);
+      setLoading(false);
+    } else if (AllocationData?.data?.diffData && Array.isArray(AllocationData?.data?.diffData)) {
+      setDIffData(AllocationData?.data?.diffData);
+      setLoading(false);
+    } else if(AllocationData?.data?.skuData && Array.isArray(AllocationData?.data?.skuData)) {
+      setSkuData(AllocationData?.data?.skuData);
+      setLoading(false);
+    } else if(AllocationData?.data?.likeItemTableData && Array.isArray(AllocationData?.data?.likeItemTableData) && delTableData.length===0 && tableData.length===0) {
+      setTableData(AllocationData?.data?.likeItemTableData);
+      setLoading(false);
+    } 
+  });
+  // const tb_keys=tableData.keys
+  // //console.log(tb_keys)
+  if(tableData.length>0){
+    //console.log("df", tableData[0],String(tableData[0]["item_desc"]),"item" in tableData[0]);
+  }
+  //filtering
+  
+  const filteringValData=(key,valArray)=>{
+    if(mapData[key].length>0){
+      mapData[key].map(item=>{
+        var count=0;
+        const filteredArr=valArray.filter(Obj=>Obj[key]===item);
+        valArray.filter(Obj=>{          
+          if(Obj[key]===item){return ;}
+          count=count+1
+          });
+        if(filteredArr.length>0){
+            if(count > -1){
+                 valArray.splice(count, 1); 
+              }
+        }
+      })
+    }
+  }
+  const filteringData=(Mkey,key,dataObj,valArray,delVal)=>{
+    filteringValData(key,valArray);
+    const tempData=[...mapData[key]];
+    var AllFilteredData=[];
+    (dataObj.filter(obj=>(obj[Mkey]===delVal))).map(obj=>{ AllFilteredData.push(obj[key])});
+    if(tempData.length>0){
+      tempData.map(item=>{
+        if(AllFilteredData.length>0 && AllFilteredData.includes(item)){
+          const index = mapData[key].indexOf(item);
+          if(index > -1){
+            mapData[key].splice(index, 1); 
+          }         
+        }        
+      })
+    }
+  }    
+
+// Handling Like Item Criteria input selection
+  const selectedHIER1=(event,value)=>{
+    let sel_HIER1 = [];
+    if (value.option) {  
+      valHIER1.push(value.option);
+    }else if (value.removedValue) {
+      let index=0        
+      for(var i=0;i<valHIER1.length;i++)
+      {
+        if(valHIER1[i]["HIER1"]===value.removedValue.HIER1){
+          index=i;
+          break;
+        }
+      }
+      valHIER1.splice(index,1);
+      filteringData("HIER1","HIER2",hier2Data,valHIER2,value.removedValue.HIER1);
+      filteringData("HIER1","HIER3",hier3Data,valHIER3,value.removedValue.HIER1);
+      //filteringData("HIER1","UDA",udaData,valUDA,value.removedValue.HIER1);      
+      filteringData("HIER1","ITEM_PARENT",itemParentData,valItemPar,value.removedValue.HIER1);
+      //filteringData("HIER1","SKU",skuData,valSKU,value.removedValue.HIER1);
+    }else if(value.action==="clear"){ 
+      valHIER1.splice(0,valHIER1.length);
+    }
+
+    if(valHIER1.length > 0 && typeof valHIER1[0]['HIER1'] !== "undefined"){
+      valHIER1.map(
+        (item) => {
+          sel_HIER1.push(item.HIER1);
+          
+        }
+      )
+      setMapData((prev) => {
+        return {
+          ...prev,
+          HIER1 : sel_HIER1,
+        };
+      });
+      //if(valHIER2.length===0){
+        setCheckClass(true)
+        var temp={}
+          temp["HIER1"]=sel_HIER1
+          dispatch(getHIER2Request([temp]));
+          dispatch(getUDARequest([temp]));
+          dispatch(getITEMPARENTRequest([temp]));
+          dispatch(getSKURequest([temp]));
+          
+          //console.log(temp);
+     // }
+    }else{
+      dispatch(getHIER2Request([{}]));
+      dispatch(getHIER3Request([{}]));
+      dispatch(getUDARequest([{}]));
+      dispatch(getITEMPARENTRequest([{}]));
+      dispatch(getSKURequest([{}]));
+          
+      setCheckClass(false);
+      setCheckSubClass(false);
+      setValHIER1([]);
+      setValHIER2([]);
+      setMapData((prev) => {
+        return {
+          ...prev,
+          HIER1 : [],
+          HIER2 : [],
+          HIER3 : [],
+        };
+      });
+    }
+  }
+  const selectedHIER2=(event,value)=>{
+    let sel_HIER2 = [];
+    if (value.option) {  
+      valHIER2.push(value.option);
+    }else if (value.removedValue) {
+      let index=0        
+      for(var i=0;i<valHIER2.length;i++)
+      {
+        if(valHIER2[i]["HIER2"]===value.removedValue.HIER2){
+          index=i;
+          break;
+        }
+        filteringData("HIER2","HIER3",hier3Data,valHIER3,value.removedValue.HIER2);
+        //filteringData("HIER2","UDA",udaData,valUDA,value.removedValue.HIER1);      
+        filteringData("HIER2","ITEM_PARENT",itemParentData,valItemPar,value.removedValue.HIER2);
+      }
+      valHIER2.splice(index,1);
+    }else if(value.action==="clear"){ 
+      valHIER2.splice(0,valHIER2.length);
+    }
+
+    if(valHIER2.length > 0 && typeof valHIER2[0]['HIER2'] !== "undefined"){
+      
+      valHIER2.map(
+        (item) => {
+          sel_HIER2.push(item.HIER2);
+        }
+      )
+      if(valHIER3.length===0){
+        setCheckSubClass(true)
+        var temp={}
+          if(mapData.HIER1.length>0){
+          temp["HIER1"]=[...mapData.HIER1];}
+          temp["HIER2"]=sel_HIER2;
+          dispatch(getHIER3Request([temp]));
+          dispatch(getUDARequest([temp]))
+          dispatch(getITEMPARENTRequest([temp]));
+          dispatch(getSKURequest([temp]));
+          
+          //console.log(temp);
+      }
+      setMapData((prev) => {
+        return {
+          ...prev,
+          HIER2 : sel_HIER2,
+        };
+      });
+    }else{
+      dispatch(getHIER3Request([{}]));
+      dispatch(getUDARequest([{}]));
+      dispatch(getITEMPARENTRequest([{}]));
+      dispatch(getSKURequest([{}]));
+          
+      setCheckSubClass(false)
+      setValHIER3([]);
+
+      setMapData((prev) => {
+        return {
+          ...prev,
+          HIER2 : [],
+          HIER3 : [],
+        };
+      });
+    }
+  }
+  const selectedHIER3=(event,value)=>{
+    let sel_HIER3 = [];
+    if (value.option) {  
+      valHIER3.push(value.option);
+    }else if (value.removedValue) {
+      let index=0        
+      for(var i=0;i<valHIER3.length;i++)
+      {
+        if(valHIER3[i]["HIER3"]===value.removedValue.HIER3){
+          index=i;
+          break;
+        }
+        //filteringData("HIER3","UDA",udaData,valUDA,value.removedValue.HIER1);      
+        filteringData("HIER3","ITEM_PARENT",itemParentData,valItemPar,value.removedValue.HIER2);
+      }
+      valHIER3.splice(index,1);
+    }else if(value.action==="clear"){ 
+      valHIER3.splice(0,valHIER3.length);
+    }
+
+    if(valHIER3.length > 0 && typeof valHIER3[0]['HIER3'] !== "undefined"){
+      valHIER3.map(
+        (item) => {
+          sel_HIER3.push(item.HIER3);
+        }
+      )
+      setMapData((prev) => {
+        return {
+          ...prev,
+          HIER3 : sel_HIER3,
+        };
+      });
+      if(valUDA.length===0){
+        setCheckSubClass(true)
+        var temp={}
+          if(mapData.HIER1.length>0){
+          temp["HIER1"]=[...mapData.HIER1];}
+          if(mapData.HIER2.length>0){
+            temp["HIER2"]=[...mapData.HIER2];}
+          temp["HIER3"]=sel_HIER3;
+          dispatch(getUDARequest([temp]))
+          dispatch(getITEMPARENTRequest([temp]));
+          dispatch(getSKURequest([temp]));
+          
+          //console.log(temp);
+      }
+    }else{
+      dispatch(getUDARequest([{}]));
+      dispatch(getITEMPARENTRequest([{}]));
+      dispatch(getSKURequest([{}]));
+          
+      setMapData((prev) => {
+        return {
+          ...prev,
+          HIER3 : [],
+        };
+      });
+    }
+  }
+  const selectedUDA=(event,value)=>{
+    let sel_UDA = [];
+    if (value.option) {  
+      valUDA.push(value.option);
+    }else if (value.removedValue) {
+      let index=0        
+      for(var i=0;i<valUDA.length;i++)
+      {
+        if(valUDA[i]["UDA"]===value.removedValue.UDA){
+          index=i;
+          break;
+        }
+      }
+      valUDA.splice(index,1);
+    }else if(value.action==="clear"){ 
+      valUDA.splice(0,valUDA.length);
+    }
+
+    if(valUDA.length > 0 && typeof valUDA[0]['UDA'] !== "undefined"){
+
+      const filterUDAVal = UniqUDA.filter((item) => {      
+        return (valUDA).some((val) => {
+          return item.UDA === val.UDA;
+        });     
+      }); 
+      //console.log("filterUDAVal",filterUDAVal)
+      setFilterUDAValue(filterUDAVal);
+      valUDA.map(
+        (item) => {
+          sel_UDA.push(item.UDA);
+        }
+      )
+      setMapData((prev) => {
+        return {
+          ...prev,
+          UDA : sel_UDA,
+        };
+      });
+    }else {
+      setFilterUDAValue([]);
+      setMapData((prev) => {
+        return {
+          ...prev,
+          UDA: [],
+          UDA_VALUE:[],
+        };
+      });
+    }
+  }
+  const selectedUDAValue=(event,value)=>{
+    let sel_UDA_Val = [];
+    if (value.option) {  
+      valUDAValue.push(value.option);
+    }else if (value.removedValue) {
+      let index=0        
+      for(var i=0;i<valUDAValue.length;i++)
+      {
+        if(valUDAValue[i]["UDA_VALUE"]===value.removedValue.UDA_VALUE){
+          index=i;
+          break;
+        }
+      }
+      valUDAValue.splice(index,1);
+    }else if(value.action==="clear"){ 
+      valUDAValue.splice(0,valUDAValue.length);
+    }
+
+    if(valUDAValue.length > 0 && typeof valUDAValue[0]['UDA_VALUE'] !== "undefined"){
+      valUDAValue.map(
+        (item) => {
+          sel_UDA_Val.push(item.UDA_VALUE);
+        }
+      )
+      setMapData((prev) => {
+        return {
+          ...prev,
+          UDA_VALUE : sel_UDA_Val,
+        };
+      });
+    }else{
+      setMapData((prev) => {
+        return {
+          ...prev,
+          UDA_VALUE : [],
+        };
+      });
+    }
+  }
+  const selectedItemList=(event,value)=>{
+    let sel_Item_list = [];
+    if (value.option) {  
+      valItemList.push(value.option);
+    }else if (value.removedValue) {
+      let index=0        
+      for(var i=0;i<valItemList.length;i++)
+      {
+        if(valItemList[i]["ITEM_LIST_NO"]===value.removedValue.ITEM_LIST_NO){
+          index=i;
+          break;
+        }
+      }
+      valItemList.splice(index,1);
+    }else if(value.action==="clear"){ 
+      valItemList.splice(0,valItemList.length);
+    }
+
+    if(valItemList.length > 0 && typeof valItemList[0]['ITEM_LIST_NO'] !== "undefined"){
+      valItemList.map(
+        (item) => {
+          sel_Item_list.push(item.ITEM_LIST_NO);
+        }
+      )
+      setMapData((prev) => {
+        return {
+          ...prev,
+          ITEM_LIST_NO : sel_Item_list,
+        };
+      });
+    }else{
+      setMapData((prev) => {
+        return {
+          ...prev,
+          ITEM_LIST_NO : [],
+        };
+      });
+    }
+  }
+  const selectedItemParent=(event,value)=>{
+    
+    //console.log("selectedItemParent",value,"kjvkugfkuilyf",event)
+    let sel_Item_Par = [];
+    if (value.option) {  
+      valItemPar.push(value.option);
+    }else if (value.removedValue) {
+      let index=0        
+      for(var i=0;i<valItemPar.length;i++)
+      {
+        if(valItemPar[i]["ITEM_PARENT"]===value.removedValue.ITEM_PARENT){
+          index=i;
+          break;
+        }
+      }
+      valItemPar.splice(index,1);
+    }else if(value.action==="clear"){ 
+      valItemPar.splice(0,valItemPar.length);
+    }
+
+    if(valItemPar.length === 1 && typeof valItemPar[0]['ITEM_PARENT'] !== "undefined"){
+      
+      valItemPar.map(
+        (item) => {
+          sel_Item_Par.push(item.ITEM_PARENT);
+        }
+      )
+      if(valSKU.length===0){
+        var temp={}
+          temp["ITEM_PARENT"]=sel_Item_Par;
+          dispatch(getDIFFRequest([temp]));
+          dispatch(getSKURequest([temp]));
+          //console.log(temp);
+      }
+      setMapData((prev) => {
+        return {
+          ...prev,
+          ITEM_PARENT : sel_Item_Par,
+        };
+      });
+
+    }
+    else{
+      setMapData((prev) => {
+        return {
+          ...prev,
+          ITEM_PARENT : [],
+        };
+      });
+    }
+  }
+  const selectedDiff=(event,value)=>{
+    let sel_Diff_id = [];
+    if (value.option) {  
+      valDiff.push(value.option);
+    }else if (value.removedValue) {
+      let index=0        
+      for(var i=0;i<valDiff.length;i++)
+      {
+        if(valDiff[i]["DIFF_ID"]===value.removedValue.DIFF_ID){
+          index=i;
+          break;
+        }
+      }
+      valDiff.splice(index,1);
+    }else if(value.action==="clear"){ 
+      valDiff.splice(0,valDiff.length);
+    }
+
+    if(valDiff.length > 0 && typeof valDiff[0]['DIFF_ID'] !== "undefined"){
+      valDiff.map(
+        (item) => {
+          sel_Diff_id.push(item.DIFF_ID);
+        }
+      )
+      setMapData((prev) => {
+        return {
+          ...prev,
+          DIFF_ID : sel_Diff_id,
+        };
+      });
+    }else{
+      setMapData((prev) => {
+        return {
+          ...prev,
+          DIFF_ID : [],
+        };
+      });
+    }
+  }
+  const selectedSKU=(value)=>{
+    console.log(value);
+    if (value) {  
+      setMapData((prev) => {
+        return {
+          ...prev,
+          SKU : value.SKU,
+          SKU_DESC:value.SKU_DESC,
+          SKU_DIFF_ID: value.DIFF1,
+        };
+      });
+    }else{
+      setMapData((prev) => {
+        return {
+          ...prev,
+          SKU : "",
+          SKU_DESC:"",
+          SKU_DIFF_ID:"",
+        };
+      });
+    }
+  }
+  const selectedSizeProfile=(value)=>{
+    if(value && value.value.length>0 ){
+      setValSP(value.value)
+      setMapData((prev) => {
+        return {
+          ...prev,
+          SIZE_PROFILE : value.value,
+        };
+     });
+   }else{
+    setMapData((prev) => {
+      return {
+        ...prev,
+        SIZE_PROFILE : "",
+      };
+   });
+   }
+  }
+  const selectedWeight=(event)=>{ 
+    //console.log("weig",event.target.value)
+
+  if(event.target.value >0 && event.target.value <=100){
+      
+      setMapData((prev) => {
+        return {
+          ...prev,
+          WEIGHT : event.target.value,
+        };
+      });
+    }else{
+      swal(
+        <div>     
+          <p>{"Invalid WEIGHT% :"}{event.target.value}</p>
+        </div>
+      )  
+    }
+  }
+  const selectedMapSizeProf=(event)=>{
+    if(alloc_Level!=="T"){
+    mapSizeprof?setMapSP(false):setMapSP(true)
+    setMapData((prev) => {
+        return {
+          ...prev,
+          MAP_SIZE_PROFILE : !mapSizeprof
+        };
+      });
+    }
+  }
+  const handleInfo=(info)=>{
+    swal(
+      <div>     
+        <p>{info}</p>
+      </div>
+    )
+  }
+  //console.log("map",mapData)
+  const handleCellClick=(index)=>{
+    if(!selected.includes(tableData[index]["item"])){
+      setSelected(oldArray => [...oldArray, tableData[index]["item"]]);
+    }else{
+      const ind = selected.indexOf(tableData[index]["item"]);
+      console.log("sele",selected,ind)
+          if(ind > -1){
+            selected.splice(ind, 1); 
+          }  
+          console.log("sele",selected,ind,selected.includes(tableData[index]["item"]))
+    }
+  }
+
+  /*
+  ***** Like Item Mapping Button Function *****
+  
+  */
+  const handleOK=()=>{
+    if( mapTableData.length>0){
+      var item= [];
+      console.log(mapTableData)
+      var sendData={ITEM:[],LIKE_ITEM:[]}
+      mapTableData.map(obj => {
+        item.push(obj.item);
+        sendData["ITEM"].push(obj.item);
+        sendData["LIKE_ITEM"]=obj.like_item
+      });
+      sendData["ALLOC_NO"]=alloc_no
+      console.log(sendData)
+     dispatch(postLIkeInsertRequest([sendData]));
+     window.location.reload();
+    }
+   
+  }
+  const handleMap = () => {
+    if (alloc_Level === "T") {
+      if (mapData.SKU.length === 0) {
+        swal(
+          <div>
+            <p>{"SKU Required* for Mapping"}</p>
+          </div>
+        );
+        return;
+      }
+      if(selected.includes(mapData.SKU)){
+        swal(
+          <div>
+            <p>{"SKU cannot be mapped to same SKU"}</p>
+          </div>
+        );
+        return;
+      }
+      const temp =[... tableData.filter(obj => selected.includes(obj.item))];
+      const deletedData= tableData.filter(obj => selected.includes(obj.item));
+      
+      setDelTableData(deletedData);
+      setTableData(tableData.filter(obj => !selected.includes(obj.item)));
+      var mappedData= [];
+      temp.map(obj => {
+        mappedData.push({...obj,
+        like_item : mapData.SKU,
+        like_item_desc:mapData.SKU_DESC,
+        like_item_diff_id :mapData.DIFF1
+        });
+      });
+      setMapTableData(mappedData);
+      setSelected([]);
+      console.log((mappedData))
+    }
+  }
+  const handleDelete = () => {
+     console.log("del ton",selectedMap);
+      setDelTableData(delTableData.filter(obj=>!selectedMap.includes(obj.item)));
+      setTableData([...tableData,...delTableData.filter(obj=>selectedMap.includes(obj.item))]);
+      setMapTableData(mapTableData.filter(obj=>!selectedMap.includes(obj.item)));
+      setSelectedMap(selectedMap.filter(item=>!selectedMap.includes(item)));
+
+  }
+  const handleCancel= () =>{
+    setTableData([]);
+    setMapTableData([]);
+    setDelTableData([]);
+    selected([]);
+    selectedMap([]);
+    window.location.reload();
+  }
+  const handleRefresh=()=>{
+    setCheckClass(false);
+    setCheckSubClass(false)
+    setValHIER1([]);
+    setValHIER2([]);
+    setValHIER3([]);
+    setValUDA([]);
+    setValUDAValue([]);
+    setValItemList([]);
+    setValItempar([]);
+    setValSKU([]);
+    setFilterUDAValue([]);
+    setValSP("");
+    setMapSP(false);
+    setMapData(initialData);
+  }
+
+  
+  const tableCount=[...Array(tableData.length).keys()]
+  const LikeItem = useStyles();
+  
+  const SearchHeader=()=>(
     <Box 
+      display="flex"
+      sx={{backgroundColor:"",
+      height:"auto",
+      width:"100%",
+    }}
+    >
+      <div  className={LikeItem.header_container}>
+              <div className={LikeItem.float_container}>
+              <div>
+                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+                  Allocation ID</InputLabel>
+              </div>
+              <div>
+                <TextField
+                  size="small"
+                  sx={{"& .MuiInputBase-input.Mui-disabled": {
+                    backgroundColor:"#f0f0f0",border:0
+                },backgroundColor:"white"}}
+                  // disabled
+                  name="ALLOC_NO"
+                  // value={searchHeaderData.ALLOC_NO}
+                  // onChange={onChange}
+                  id="outlined-disabled"
+                  // defaultValue="1234567890"
+                  InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
+                    InputProps={{
+                    style:{fontSize:12},
+                    className: LikeItem.inputField,
+                  
+                  }}
+                />
+              </div>
+              </div>
+  
+              <div className={LikeItem.float_container}>
+              <div>
+                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+                  Desc</InputLabel>
+              </div>
+              <div>
+                <TextField
+                  size="small"
+                  sx={{"& .MuiInputBase-input.Mui-disabled": {
+                    backgroundColor:"#f0f0f0",border:0
+                },backgroundColor:"white"}}
+                  id="outlined-disabled"
+                  name="ALLOC_DESC"
+                  //value={searchHeaderData.ALLOC_DESC}
+                  defaultValue=""
+                  //onChange={onChange}
+                  InputProps={{
+                  style:{fontSize:12},
+                  className: LikeItem.inputField,
+                  }}
+                />
+              </div>
+              </div>
+              
+              <div className={LikeItem.float_container}>
+              <div>
+                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+                  Context Type</InputLabel>
+              </div>
+              <div className={LikeItem.multiselectfield}>
+                <Select 
+                  classNamePrefix="mySelect"
+                  // getOptionLabel={option =>
+                  //   `${option.CONTEXT.toString()}`}
+                  // getOptionValue={option => option.CONTEXT}
+                  // options={contextTypeData.length > 0 ? contextTypeData : []}
+                  isSearchable={true}
+                  //onChange={selectCONTEXT_TYPE}
+                  maxMenuHeight={180}
+                  // placeholder={"Choose a Dept"}
+                  styles={styleSelect}
+                  components={animatedComponents} 
+                  isClearable={true}
+                  //value={contextTypeData.filter(obj => searchHeaderData?.CONTEXT_CODE===(obj.CONTEXT))} 
+                  closeMenuOnSelect={true}
+                />
+              </div>
+              </div>
+  
+              {/* {searchHeaderData.CONTEXT_CODE==="Promotion"?
+              [
+              <div className={LikeItem.float_container}>
+              <div>
+                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 2px 2px", display: 'inline', float: 'left'}}>
+                  Promotion</InputLabel>
+              </div>
+              <div className={LikeItem.multiselectfield}>
+                <Select 
+                  // className= {LikeItem.inputField}
+                  classNamePrefix="mySelect"
+                  // getOptionLabel={option =>
+                  //   `${option.PROMOTION.toString()} -${option.DESCRIPTION.toString()} (${option.START_DATE.toString()})-(${option.END_DATE.toString()})`}
+                  // getOptionValue={option => option.PROMOTION}
+                  // options={promotionData.length > 0 ? promotionData : []}
+                  isSearchable={true}
+                  //onChange={selectPROMOTION}
+                  maxMenuHeight={180}
+                  // placeholder={"Choose a Dept"}
+                  styles={styleSelect}
+                  components={animatedComponents} 
+                  isClearable={true}
+                  //value={promotionData.filter(obj => searchHeaderData?.PROMOTION_CODE===obj.PROMOTION)} 
+                  closeMenuOnSelect={true}
+                />
+              </div>
+              </div>
+              ]:null} */}
+              
+  
+              <div className={LikeItem.float_container}>
+              <div >
+                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+                  Alloc Level</InputLabel>
+              </div>
+              <div className={LikeItem.multiselectfield}>
+                <Select 
+                  // className= {LikeItem.inputField}
+                  classNamePrefix="mySelect"
+                  // getOptionLabel={option =>
+                  //   `${option.ALLOC_LEVEL.toString()}`}
+                  // getOptionValue={option => option.ALLOC_LEVEL}
+                  // options={allocLevelData.length > 0 ? allocLevelData : []}
+                  isSearchable={true}
+                  //onChange={selectALLOC_LEVEL}
+                  maxMenuHeight={180}
+                  // placeholder={"Choose a Dept"}
+                  styles={styleSelect}
+                  components={animatedComponents} 
+                  isClearable={true}
+                  //value={allocLevelData.filter(obj => searchHeaderData?.ALLOC_LEVEL_CODE===(obj.ALLOC_LEVEL))} 
+                  closeMenuOnSelect={true}
+                />
+              </div>
+              </div>
+              
+              <div className={LikeItem.float_container}>
+              <div>
+                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+                  Release Date</InputLabel>
+              </div>
+              <div>
+                <TextField
+                  variant="outlined"
+                  type="date"
+                  size="small"
+                  name="RELEASE_DATE"
+                  sx={{margin:"0px 0px 10px 2px"}}
+                  id="outlined-disabled"
+                  label=""
+                  defaultValue=""
+                  // value={searchHeaderData.RELEASE_DATE}
+                  // onChange={onChange}
+                  InputProps={{
+                  style:{fontSize:12},
+                  shrink: true,
+                  //className: LikeItem.input,
+                }}
+                />
+              </div>
+              </div>
+  
+              <div className={LikeItem.float_container}>
+              <div>
+                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+                  Status</InputLabel>
+              </div>
+              <div className={LikeItem.multiselectfield}>
+                <Select 
+                  // className= {LikeItem.inputField}
+                  classNamePrefix="mySelect"
+                  // getOptionLabel={option =>
+                  //   `${option.STATUS.toString()}`}
+                  // getOptionValue={option => option.STATUS}
+                  // options={statusData.length > 0 ? statusData : []}
+                  isSearchable={true}
+                  //defaultValue={statusData.find((value)=> value==="Worksheet")}
+                  //onChange={selectSTATUS}
+                  maxMenuHeight={180}
+                  // placeholder={"Choose a Dept"}
+                  styles={styleSelect}
+                  components={animatedComponents} 
+                  isClearable={true}
+                  //value={statusData.filter(obj => searchHeaderData?.STATUS_CODE===(obj.STATUS))} 
+                  closeMenuOnSelect={true}
+                />
+              </div>
+              </div>
+  
+              <div className={LikeItem.float_container}>
+              <div>
+                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"0px 0px 0px 0px", display: 'inline', float: 'left'}}>
+                  Alloc Type</InputLabel>
+              </div>
+              <div className={LikeItem.multiselectfield}>
+                  <Select 
+                      closeMenuOnSelect={true}
+                      isSearchable={true}
+                      maxMenuHeight={180}
+                      // placeholder={"Choose a Warehouse"}
+                      styles={styleSelect}
+                      components={animatedComponents} 
+                      isClearable={true} 
+                      //alue={allocTypeData.filter(obj => searchHeaderData?.ALLOC_TYPE_CODE===(obj.ALLOC_TYPE))}  
+                      // isMulti 
+                      />
+              </div>
+              </div>
+              
+              <div className={LikeItem.float_container}>
+              <div>
+                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+                  Allocator</InputLabel>
+              </div>
+              <div>
+                <TextField
+                  variant="outlined"
+                  size="small"
+                  sx={{"& .MuiInputBase-input.Mui-disabled": {
+                      backgroundColor:"#f0f0f0",border:0
+                  },backgroundColor:"white"}}
+                  InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
+                  InputProps={{
+                  style:{fontSize:12},
+                  className: LikeItem.inputField,
+                  }}
+                  disabled
+                  name="CREATE_ID"
+                  id="outlined-disabled"
+                 // value={searchHeaderData.CREATE_ID}
+                 // onChange={onChange}
+                  
+                />
+              </div>
+              </div>
+      </div>
+    </Box>
+  )
+  const Header=()=>(
+<Box 
         component="fieldset"
         display="inline-block"
         sx={{
             height:"auto",
             marginLeft:"5px",
-        width:"100%",
-        //backgroundColor:"#F0FFFF",
+            marginTop:"20px",
         backgroundColor:"#F5F5F5",
         borderRadius: 1,
         
@@ -208,10 +1212,201 @@ const LikeItemMap=()=>{
         borderBottom:3,
         }}
         >
-        <legend style={{fontWeight:"bold",color:"#191970",}}>Like Item Criteria</legend>
+        <legend style={{fontWeight:"bold",color:"#191970",}}>Header</legend>        
+
+            <div className={LikeItem.float_container}>
+                <div>
+                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+                Allocation ID</InputLabel>
+                </div>
+                <div className={LikeItem.multiselectfield}>
+                <TextField
+                    size="small"
+                    variant="outlined"
+                    name="ESID_FROM"
+                    helperText=""
+                    sx={{"& .MuiInputBase-input.Mui-disabled": {
+                        backgroundColor:"#f0f0f0",border:0
+                    },backgroundColor:"white"}}
+                    InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
+                    InputProps={{
+                    style:{fontSize:12},
+                    className: LikeItem.inputField,
+                    }}
+                  />
+                </div> </div> 
+                {/* </div> 
+               <div className={LikeItem.float_container}> */}
+            <div className={LikeItem.float_container}>
+            <div>
+            <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+            Desc</InputLabel>
+            </div>
+            <div className={LikeItem.multiselectfield} >
+            <TextField
+                    size="small"
+                    variant="outlined"
+                    name="ESID_FROM"
+                    helperText=""
+                    sx={{"& .MuiInputBase-input.Mui-disabled": {
+                        backgroundColor:"#f0f0f0",border:0
+                    },backgroundColor:"white"}}
+                    InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
+                    InputProps={{
+                    style:{fontSize:12},
+                    className: LikeItem.inputField,
+                    }}
+                  />
+                </div> </div>  
+                 
+            <div className={LikeItem.float_container}>
+            <div>
+            <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+            Context Type</InputLabel>
+            </div>
+            <div className={LikeItem.multiselectfield}>
+                <Select 
+                closeMenuOnSelect={true}
+                isSearchable={true}                
+                
+                styles={styleSelect}
+                components={animatedComponents}
+                isClearable={true} 
+                //isDisabled={!checkSubClass}
+                />
+                </div> </div> 
+            <div className={LikeItem.float_container}>
+            <div>
+            <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+            Promotion</InputLabel>
+            </div>
+            <div className={LikeItem.multiselectfield}>
+                <Select 
+                closeMenuOnSelect={true}
+                isSearchable={true}                
+                
+                styles={styleSelect}
+                components={animatedComponents}
+                isClearable={true} 
+                //isDisabled={!checkSubClass}
+                />
+                </div> </div> 
+            <div className={LikeItem.float_container}>
+            <div>
+            <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+            Alloc Level</InputLabel>
+            </div>
+            <div className={LikeItem.multiselectfield}>
+                <Select 
+                  closeMenuOnSelect={true}
+                  isSearchable={true}                
+                  
+                  styles={styleSelect}
+                  components={animatedComponents}  
+                  //isDisabled={}
+                  isClearable={true} 
+                />
+                </div> </div> 
+            <div className={LikeItem.float_container}>
+            <div>
+            <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+            Release Date</InputLabel>
+            </div>
+            <div className={LikeItem.multiselectfield}>
+            <TextField
+                    size="small"
+                    variant="outlined"
+                    name="RELEASE_DATE"
+                    type="date"
+                    helperText=""
+                    id="outlined-disabled"
+                    label=""
+                    defaultValue=""
+                    sx={{"& .MuiInputBase-input.Mui-disabled": {
+                        backgroundColor:"#f0f0f0",border:0
+                    },backgroundColor:"white"}}
+                    InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
+                    InputProps={{
+                    style:{fontSize:12},
+                    className: LikeItem.inputField,
+                    }}
+                  />
+                </div> </div> 
+          
+                <div className={LikeItem.float_container}>
+            <div>
+            <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+            Status</InputLabel>
+            </div>
+            <div className={LikeItem.multiselectfield}>
+              <Select 
+                  closeMenuOnSelect={true}
+                  isSearchable={true}                
+                  
+                  styles={styleSelect}
+                  components={animatedComponents}  
+                  //isDisabled={}
+                  isClearable={true} 
+                />
+                </div> </div> 
+            <div className={LikeItem.float_container}>
+            <div>
+            <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+            Alloc Type</InputLabel>
+            </div>
+            <div className={LikeItem.multiselectfield}>
+            <Select 
+                  closeMenuOnSelect={true}
+                  isSearchable={true}                
+                  
+                  styles={styleSelect}
+                  components={animatedComponents}  
+                  //isDisabled={}
+                  isClearable={true} 
+                />
+                </div> </div> 
+                <div className={LikeItem.float_container}>
+            <div>
+            <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+            Allocator</InputLabel>
+            </div>
+            <div className={LikeItem.multiselectfield}>
+            <TextField
+                    size="small"
+                    variant="outlined"
+                    name="ESID_FROM"
+                    helperText=""
+                    sx={{"& .MuiInputBase-input.Mui-disabled": {
+                        backgroundColor:"#f0f0f0",border:0
+                    },backgroundColor:"white"}}
+                    InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
+                    InputProps={{
+                    style:{fontSize:12},
+                    className: LikeItem.inputField,
+                    }}
+                  />
+                </div> </div> 
+                </Box>
+  )
+console.log("mapData:",mapData)
+  //Like item Criteria input fields
+  const Like_Criteria=()=>(
+    <Box 
+        component="fieldset"
+        display="inline-block"
+        sx={{
+            height:"auto",
+            marginLeft:"5px",
+            marginTop:"20px",
+        backgroundColor:"#F5F5F5",
+        borderRadius: 1,
         
-{/*         
-<div className={LikeItem.float_container}> */}
+        boxShadow: 2, border: 0,
+        borderBottom:3,
+        }}
+        >
+        <legend style={{fontWeight:"bold",color:"#191970",}}>Like Item Criteria</legend>        
+
             <div className={LikeItem.float_container}>
                 <div>
                 <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
@@ -221,9 +1416,15 @@ const LikeItemMap=()=>{
             <Select 
                 closeMenuOnSelect={true}
                 isSearchable={true}                
-                placeholder={"Dept"}
+                getOptionLabel={option =>
+                  `${option.HIER1.toString()}-${option.HIER1_DESC.toString()}`}
+                getOptionValue={option => option.HIER1}
+                options={UniqDept.length > 0 ? UniqDept : []}
                 styles={styleSelect}
-                components={animatedComponents}  
+                components={animatedComponents} 
+                maxMenuHeight={180}
+                onChange={selectedHIER1}
+                value={hier1Data.filter(obj => mapData?.HIER1.includes(obj.HIER1))}  
                 isMulti 
                 isClearable={true} 
                 />
@@ -239,11 +1440,18 @@ const LikeItemMap=()=>{
                 <Select 
                 closeMenuOnSelect={true}
                 isSearchable={true}                
-                placeholder={"class"}
+                getOptionLabel={option =>
+                  `${option.HIER2.toString()}-${option.HIER2_DESC.toString()}`}
+                getOptionValue={option => option.HIER2}
+                options={(UniqClass.length > 0) ? UniqClass : []}
                 styles={styleSelect}
                 components={animatedComponents}  
+                maxMenuHeight={180} 
+                onChange={selectedHIER2}
+                value={hier2Data.filter(obj => mapData?.HIER2.includes(obj.HIER2))} 
                 isMulti 
                 isClearable={true} 
+                //isDisabled={!checkClass}
                 />
                 </div> </div>  
                  
@@ -256,110 +1464,65 @@ const LikeItemMap=()=>{
                 <Select 
                 closeMenuOnSelect={true}
                 isSearchable={true}                
-                placeholder={"subclass"}
+                getOptionLabel={option =>
+                  `${option.HIER3.toString()}-${option.HIER3_DESC.toString()}`}
+                getOptionValue={option => option.HIER3}
+                options={(UniqSubClass.length > 0) ? UniqSubClass : []}
                 styles={styleSelect}
-                components={animatedComponents}  
+                components={animatedComponents}
+                onChange={selectedHIER3}  
+                value={hier3Data.filter(obj => mapData?.HIER3.includes(obj.HIER3))} 
                 isMulti 
                 isClearable={true} 
+                //isDisabled={!checkSubClass}
                 />
                 </div> </div> 
             <div className={LikeItem.float_container}>
             <div>
             <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-            UDA1:</InputLabel>
+            UDA:</InputLabel>
             </div>
             <div className={LikeItem.multiselectfield}>
                 <Select 
-                closeMenuOnSelect={true}
-                isSearchable={true}                
-                //placeholder={"UDA1"}
-                styles={styleSelect}
-                components={animatedComponents}  
-                isMulti 
-                isClearable={true} 
+                  closeMenuOnSelect={true}
+                  isSearchable={true}                
+                  getOptionLabel={option =>
+                    `${option.UDA.toString()}-${option.USER_ATTR_DESC.toString()}`}
+                  getOptionValue={option => option.UDA}
+                  options={UniqUDA.length && mapData.UDA.length<3 > 0 ? UniqUDA : [] }
+                  styles={styleSelect}
+                  components={animatedComponents}  
+                  onChange={selectedUDA}
+                  value={udaData.filter(obj => mapData?.UDA.includes(obj.UDA))}  
+                  isMulti 
+                  //isDisabled={}
+                  isClearable={true} 
                 />
                 </div> </div> 
             <div className={LikeItem.float_container}>
             <div>
             <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-            UDA1 Value:</InputLabel>
+            UDA Value:</InputLabel>
             </div>
             <div className={LikeItem.multiselectfield}>
                 <Select 
                 closeMenuOnSelect={true}
                 isSearchable={true}                
-                //placeholder={"UDA1"}
+                getOptionLabel={option =>
+                  `${option.UDA_VALUE.toString()} (${option.USER_ATTR_VALUE_DESC.toString()})`}
+                getOptionValue={option => option.UDA_VALUE}
+                options={filterUDAValue.length > 0 ? filterUDAValue : []}
                 styles={styleSelect}
-                components={animatedComponents}  
+                components={animatedComponents} 
+                onChange={selectedUDAValue} 
+                value={udaData.filter(obj => mapData?.UDA_VALUE.includes(obj.UDA_VALUE))}  
                 isMulti 
-                isClearable={true} 
-                />
-                </div> </div> 
-            <div className={LikeItem.float_container}>
-            <div>
-            <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-            UDA2:</InputLabel>
-            </div>
-            <div className={LikeItem.multiselectfield}>
-                <Select 
-                closeMenuOnSelect={true}
-                isSearchable={true}                
-                //placeholder={"UDA1"}
-                styles={styleSelect}
-                components={animatedComponents}  
-                isMulti 
-                isClearable={true} 
-                />
-                </div> </div> 
-            <div className={LikeItem.float_container}>
-            <div>
-            <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-            UDA2 Value:</InputLabel>
-            </div>
-            <div className={LikeItem.multiselectfield}>
-                <Select 
-                closeMenuOnSelect={true}
-                isSearchable={true}                
-                //placeholder={"UDA1"}
-                styles={styleSelect}
-                components={animatedComponents}  
-                isMulti 
-                isClearable={true} 
-                />
-                </div> </div>
-            <div className={LikeItem.float_container}>
-            <div>
-            <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-            UDA3:</InputLabel>
-            </div>
-            <div className={LikeItem.multiselectfield}>
-                <Select 
-                closeMenuOnSelect={true}
-                isSearchable={true}                
-                //placeholder={"UDA1"}
-                styles={styleSelect}
-                components={animatedComponents}  
-                isMulti 
-                isClearable={true} 
-                />
-                </div> </div>
-            <div className={LikeItem.float_container}>
-            <div>
-            <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-            UDA3 Value:</InputLabel>
-            </div>
-            <div className={LikeItem.multiselectfield}>
-                <Select 
-                closeMenuOnSelect={true}
-                isSearchable={true}                
-                //placeholder={"UDA1"}
-                styles={styleSelect}
-                components={animatedComponents}  
-                isMulti 
-                isClearable={true} 
-                />
-                </div> </div> 
+                isClearable={true}
+                isDisabled={mapData.UDA.length===0}
 
+                />
+                </div> </div> 
+          
                 <div className={LikeItem.float_container}>
             <div>
             <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
@@ -369,10 +1532,15 @@ const LikeItemMap=()=>{
                 <Select 
                 closeMenuOnSelect={true}
                 isSearchable={true}                
-                //placeholder={"UDA1"}
+                getOptionLabel={option =>
+                  `${option.ITEM_LIST_NO.toString()}-${option.ITEM_LIST_DESC.toString()}`}
+                getOptionValue={option => option.ITEM_LIST_NO}
+                options={itemListHeadData.length > 0 ? itemListHeadData : []}
                 styles={styleSelect}
-                components={animatedComponents}  
-                isMulti 
+                components={animatedComponents}
+                onChange={selectedItemList} 
+                value={itemListHeadData.filter(obj => mapData?.ITEM_LIST_NO.includes(obj.ITEM_LIST_NO))}  
+                //isMulti 
                 isClearable={true} 
                 />
                 </div> </div> 
@@ -384,12 +1552,17 @@ const LikeItemMap=()=>{
             <div className={LikeItem.multiselectfield}>
                 <Select 
                 closeMenuOnSelect={true}
-                isSearchable={true}                
-                //placeholder={"UDA1"}
+                isSearchable={true}
+                getOptionLabel={option => `${option.value.toString()}`}
+                getOptionValue={option => option.value}
+                options={[{ value: 'YES'},{ value: 'NO'}]}
                 styles={styleSelect}
                 components={animatedComponents}  
-                isMulti 
+                onChange={selectedSizeProfile} 
+                value={[{ value: 'YES'},{ value: 'NO'}].filter(obj => mapData?.SIZE_PROFILE.includes(obj.value))}
                 isClearable={true} 
+                isDisabled={alloc_Level==="T"}
+
                 />
                 </div> </div> 
             <div className={LikeItem.float_container}>
@@ -401,9 +1574,13 @@ const LikeItemMap=()=>{
                 <Select 
                 closeMenuOnSelect={true}
                 isSearchable={true}                
-                //placeholder={"UDA1"}
+                getOptionLabel={option =>`${option.ITEM_PARENT.toString()}`}
+                getOptionValue={option => option.ITEM_PARENT}
+                options={(UniqItemParent.length > 0) ? UniqItemParent : []}
                 styles={styleSelect}
                 components={animatedComponents}  
+                onChange={selectedItemParent}  
+                value={UniqItemParent.filter(obj => mapData?.ITEM_PARENT.includes(obj.ITEM_PARENT))}   
                 isMulti 
                 isClearable={true} 
                 />
@@ -417,11 +1594,18 @@ const LikeItemMap=()=>{
                 <Select 
                 closeMenuOnSelect={true}
                 isSearchable={true}                
-                //placeholder={"UDA1"}
+                getOptionLabel={option =>
+                  `${option.DIFF_ID.toString()}`}
+                getOptionValue={option => option.DIFF_ID}
+                options={diffData.length > 0 ? diffData : []}
                 styles={styleSelect}
-                components={animatedComponents}  
+                components={animatedComponents} 
+                onChange={selectedDiff}    
+                value={diffData.filter(obj => mapData?.DIFF_ID.includes(obj.DIFF_ID))}  
                 isMulti 
                 isClearable={true} 
+                isDisabled={mapData.ITEM_PARENT.length===0}
+
                 />
                 </div> </div>  
             <div className={LikeItem.float_container}>
@@ -433,10 +1617,15 @@ const LikeItemMap=()=>{
                 <Select 
                 closeMenuOnSelect={true}
                 isSearchable={true}                
-                //placeholder={"UDA1"}
+                getOptionLabel={option =>
+                  `${option.SKU.toString()}`}
+                getOptionValue={option => option.SKU}
+                options={skuData.length > 0 ? skuData : []}
                 styles={styleSelect}
                 components={animatedComponents}  
-                isMulti 
+                onChange={selectedSKU}    
+                value={skuData.filter(obj => mapData?.SKU.includes(obj.SKU))}  
+                //isMulti 
                 isClearable={true} 
                 />
                 </div> </div>   
@@ -459,7 +1648,8 @@ const LikeItemMap=()=>{
                     style:{fontSize:12},
                     className: LikeItem.inputField,
                     }}
-                    />
+                    disabled={alloc_Level==="T"}
+                  />
                 </div> </div>   
             <div className={LikeItem.float_container}>
             <div>
@@ -475,10 +1665,10 @@ const LikeItemMap=()=>{
                 sx={{"& .MuiInputBase-input.Mui-disabled": {
                     backgroundColor:"#f0f0f0",border:0
                 },backgroundColor:"white"}}
-                // onChange={onChange}
+                onChange={selectedWeight}
                 //value={searchData.ESID_FROM}
                 id="outlined-disabled"
-                // label="EISD From"
+                value={mapData.WEIGHT}  
                 InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
                 InputProps={{
                 style:{fontSize:12},
@@ -496,14 +1686,18 @@ const LikeItemMap=()=>{
                 <FormControlLabel
                 sx={{margin:"2px 0px 0px 0px",//backgroundColor:"#F0FFFF" 
             }}
-                //control={<Android12Switch defaultChecked />}
-                control={<Switch defaultChecked />} 
+                
+                control={
+                  
+                  <Switch checked={mapSizeprof} onChange={selectedMapSizeProf}  name="jason" />} 
+                
+                //onChange={selectedMapSizeProf}
                 /></div></div>
     <Box 
         component="fieldset"
-        display="flex"
+        display="inline-block"
         justifyContent="flex-end"
-        sx={{height:"auto", marginTop:"15px",width:"auto",border: 0,}}
+        sx={{height:"fit-content", width:"auto",border: 0,}}
         >
             {/* <Grid container justify="flex-end"> */}
     {/* <Paper sx={{ maxWidth: "100%", maxHeight: "fit-content", mb: 2,border:0 }}> */}
@@ -511,7 +1705,7 @@ const LikeItemMap=()=>{
            variant="contained"
            //className={CreateAllocationClasses.textField}
            type="submit"
-           //onClick={SubmitList}
+           onClick={handleMap}
            >
             Map</Button> 
     <Button sx={{backgroundColor:"#B22202",'&:hover': {
@@ -520,7 +1714,7 @@ const LikeItemMap=()=>{
            variant="contained"
            className={LikeItem.textField}
            type="submit"
-           //onClick={SubmitList}
+           onClick={handleRefresh}
            startIcon={<RefreshIcon/>}
            >
             Refresh</Button>
@@ -539,16 +1733,16 @@ const LikeItemMap=()=>{
            variant="contained"
            //className={CreateAllocationClasses.textField}
            type="submit"
-           //onClick={SubmitList}
+           onClick={handleOK}
            startIcon={<DoneAllIcon/>}
            >
             OK</Button> 
     <Button sx={{backgroundColor:"maroon",'&:hover': {
-                backgroundColor: "#B22222",boxShadow:3},fontSize:"12px", margin: "0rem 2.7rem",height:"38"}}
+                backgroundColor: "maroon",boxShadow:3},fontSize:"12px", margin: "0rem 2.7rem",height:"38"}}
            variant="contained"
            className={LikeItem.textField}
            type="submit"
-           //onClick={SubmitList}
+           onClick={handleCancel}
            startIcon={<CancelIcon/>}
            >
             Cancel</Button>
@@ -556,39 +1750,499 @@ const LikeItemMap=()=>{
     </Box>
     </Box>
     )
-    return(
+
+  const handleSelectAllClick = (event) => {
+    //console.log("event::",event)
+    if (event.target.checked && selected.length === 0) {
+      const newSelected = tableData.map((n) => n.item);
+      setSelected(newSelected);
+      return;
+    }
+    setSelected([]);
+  };
+
+  const handleClick = (event, name) => {
+    const selectedIndex = selected.indexOf(name);
+    let newSelected = [];
+
+    if (selectedIndex === -1) {
+      newSelected = newSelected.concat(selected, name);
+    } else if (selectedIndex === 0) {
+      newSelected = newSelected.concat(selected.slice(1));
+    } else if (selectedIndex === selected.length - 1) {
+      newSelected = newSelected.concat(selected.slice(0, -1));
+    } else if (selectedIndex > 0) {
+      newSelected = newSelected.concat(
+        selected.slice(0, selectedIndex),
+        selected.slice(selectedIndex + 1),
+      );
+    }
+
+    setSelected(newSelected);
+  };
+
+  const isSelected = (name) => selected.indexOf(name) !== -1;
+  const handleMapSelectAllClick = (event) => {
+    //console.log("event::",event)
+    if (event.target.checked && selectedMap.length === 0) {
+      const newSelected = tableData.map((n) => n.item);
+      setSelectedMap(newSelected);
+      return;
+    }
+    setSelectedMap([]);
+  };
+
+  const handleMapClick = (event, name) => {
+    console.log("han map", selectedMap, name)
+    const selectedIndex = selectedMap.indexOf(name);
+    let newSelected = [];
+
+    if (selectedIndex === -1) {
+      newSelected = newSelected.concat(selectedMap, name);
+    } else if (selectedIndex === 0) {
+      newSelected = newSelected.concat(selectedMap.slice(1));
+    } else if (selectedIndex === selectedMap.length - 1) {
+      newSelected = newSelected.concat(selectedMap.slice(0, -1));
+    } else if (selectedIndex > 0) {
+      newSelected = newSelected.concat(
+        selectedMap.slice(0, selectedIndex),
+        selectedMap.slice(selectedIndex + 1),
+      );
+    }
+
+    setSelectedMap(newSelected);
+  };
+
+  const isMapSelected = (name) => selectedMap.indexOf(name) !== -1;
+
+  function Alloc_Grid(props) {
+    const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } =
+      props;
+    const createSortHandler = (property) => (event) => {
+      onRequestSort(event, property);
+    };
+  
+    return (
+      <TableHead>
+        <TableRow role="checkbox" sx={{backgroundColor:"#6495ED",height:"15px"}}>
+          <TableCell padding="checkbox" style={{
+                  whiteSpace: "nowrap", 
+                }} 
+            >
+            <Checkbox
+              color="primary"
+              indeterminate={selected.length > 0 && selected.length < tableData.length}
+              checked={tableData.length > 0 && selected.length === tableData.length}
+              onChange={onSelectAllClick}
+              inputProps={{
+                'aria-label': 'select all data',
+              }}
+              style={{transform: "scale(0.8)",}}
+            />
+          </TableCell>
+          <TableCell sx={{textTransform:"uppercase",fontWeight:"bold",fontFamily:"system-ui",textAlign:"left",fontSize:"75%",color:"white",padding:0}}>ITEM</TableCell>
+            <TableCell align="right" sx={{textTransform:"uppercase",fontWeight:"bold",fontFamily:"system-ui",textAlign:"left",fontSize:"75%",color:"white",padding:0}}>ITEM&nbsp;DESC</TableCell>
+            <TableCell align="right" sx={{textTransform:"uppercase",fontWeight:"bold",fontFamily:"system-ui",textAlign:"left",fontSize:"75%",color:"white",padding:0}}>DIFF&nbsp;ID</TableCell>
+            <TableCell align="right" sx={{textTransform:"uppercase",fontWeight:"bold",fontFamily:"system-ui",textAlign:"left",fontSize:"75%",color:"white",padding:0}} >#OF&nbsp;SKUS</TableCell>
+        
+        </TableRow>
+      </TableHead> 
+       );
+  }  
+
+  Alloc_Grid.propTypes = {
+    numSelected: PropTypes.number.isRequired,
+    onRequestSort: PropTypes.func.isRequired,
+    onSelectAllClick: PropTypes.func.isRequired,
+    order: PropTypes.oneOf(['asc', 'desc']).isRequired,
+    orderBy: PropTypes.string.isRequired,
+    rowCount: PropTypes.number.isRequired,
+  };
+
+  // MAPPED ITEMS GRID
+  function Mapped_Grid(props) {
+    const { onSelectMapAllClick, order, orderBy, numMapSelected, rowCount, onRequestSortMap } =
+      props;
+    const createSortMapHandler = (property) => (event) => {
+      onRequestSortMap(event, property);
+    };
+  
+    return (
+      <TableHead>
+        <TableRow role="checkbox" sx={{backgroundColor:"#6495ED",height:"15px"}}>
+          <TableCell padding="checkbox" style={{
+                  whiteSpace: "nowrap", 
+                }} 
+            >
+            <Checkbox
+              color="primary"
+              indeterminate={selectedMap.length > 0 && selectedMap.length < tableData.length}
+              checked={tableData.length > 0 && selectedMap.length === tableData.length}
+              onChange={onSelectMapAllClick}
+              inputProps={{
+                'aria-label': 'select all data',
+              }}
+              style={{transform: "scale(0.8)",}}
+            />
+          </TableCell>
+          <TableCell sx={{ color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>
+            ITEM</TableCell>
+          <TableCell align="right" sx={{ color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>
+            ITEM&nbsp;DESC</TableCell>
+          <TableCell align="right" sx={{ color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>
+            DIFF&nbsp;ID</TableCell>
+          <TableCell align="right" sx={{ color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }} >
+            LIKE&nbsp;ITEM</TableCell>
+          <TableCell align="right" sx={{ color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }} >
+            LIKE&nbsp;ITEM&nbsp;DESC</TableCell>
+          <TableCell align="right" sx={{ color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }} >
+            LIKE&nbsp;ITEM&nbsp;DIFF&nbsp;ID</TableCell>
+          <TableCell align="right" sx={{ color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }} >
+            WEIGHT&nbsp;%</TableCell>
+          <TableCell align="right" sx={{
+            color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0
+          }} >
+            MAP&nbsp;SIZE&nbsp;PROF</TableCell>
+        
+        </TableRow>
+      </TableHead> 
+       );
+  }  
+
+  Mapped_Grid.propTypes = {
+    numMapSelected: PropTypes.number.isRequired,
+    onRequestSortMap: PropTypes.func.isRequired,
+    onSelectMapAllClick: PropTypes.func.isRequired,
+    order: PropTypes.oneOf(['asc', 'desc']).isRequired,
+    orderBy: PropTypes.string.isRequired,
+    rowCount: PropTypes.number.isRequired,
+  };
+  
+  function EnhancedTableToolbar(props) {
+    const { numSelected } = props;
+  }
+  function EnhancedTableToolbarMap(props) {
+    const { numMapSelected } = props;
+  }
+
+
+
+
+  //ALLOCATED ITEMS TABLE
+  
+      return(
         <Box sx={{
             marginTop:"50px",
-            // backgroundColor: 'primary.dark',
-            // '&:hover': {
-            //   backgroundColor: 'primary.main',
-            // },
-          }}>
-            <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-            <Grid item xs={6}>
-                <Box className={LikeItem.boxDiv}>
-                {console.log("akhil")}
-
-                <div className={LikeItem.boxDiv}>
-                    <h4>PO ENQUIRY</h4>
+            }}>
+            {/* <Box component="fieldset"
+                display="flex"
+                sx={{
+                    marginLeft:"5px",
+                    marginTop:"150px",
+                    backgroundColor:"#F5F5F5",
+                    borderRadius: 1,
+                    boxShadow: 2, border: 0,
+                    borderBottom:3,}}>
+                       <legend style={{fontWeight:"bold",color:"#191970",}}>Header </legend>
+                <div sx={{display: "flex",flexDirection:"row"}}>
+                <Grid id="top-row" container spacing={0}>
+                    <div className={LikeItem.course_box}>
+                    {SearchHeader()}
+                    </div>               
+                </Grid>
                 </div>
-                </Box>
-            </Grid>
-            </Grid>
-            <Box sx={{'& .MuiTextField-root': { m: 0, width: '35ch',margin:"20px 0px 0px 20px"},height:"100px" }}>
-
-            </Box>
-            
-
-           <div sx={{display: "flex",flexDirection:"row"}}>
-            <Grid id="top-row" container spacing={0}>
-            <div className={LikeItem.course_box}>
-            {Like_Criteria()}
-            </div>               
-            </Grid>
+            </Box > */}
+            <div sx={{display: "flex",flexDirection:"row"}}>
+                <Grid id="top-row" container spacing={0}>
+                    <div className={LikeItem.course_box}>
+                        {Header()}
+                    </div>               
+                </Grid>
           </div>
+            
+          <div sx={{display: "flex",flexDirection:"row"}}>
+                <Grid id="top-row" container spacing={0}>
+                    <div className={LikeItem.course_box}>
+                        {Like_Criteria()}
+                    </div>               
+                </Grid>
+          </div>
+          <Box component="fieldset"
+                display="flex"
+                sx={{
+                    marginLeft:"5px",
+                    marginTop:"20px",
+                    backgroundColor:"#F5F5F5",
+                    borderRadius: 1,
+                    boxShadow: 2, border: 0,
+                    borderBottom:3,
+                    //backgroundColor:"blue"
+                    }}>
+                <Box  display="grid" sx={{width:"100%"}} 
+                    gridTemplateColumns="repeat(13, 3fr)" gap={1}
+                    >
+                    <Box gridColumn="span 5" //sx={{backgroundColor:"goldenrod",height:"100%"}}
+                    >
+                        <legend style={{fontWeight:"bold",color:"#191970",}}>Allocated&nbsp;Items </legend>
+                       
+                  <Paper sx={{  maxHeight: "20%",mb: 7 }}>
+                  <EnhancedTableToolbar numSelected={selected.length} />
+                  <TableContainer sx={{//height: "fit-content", //maxHeight: "70vh",
+                                borderRadius: '10px' }} component={Paper}>
+                    <Table sx={{ minWidth:"auto" }} aria-label="customized table">
+                      <Alloc_Grid
+                      numSelected={selected.length}
+                      onSelectAllClick={handleSelectAllClick}
+                      rowCount={tableData.length}
+                      />
+                        <TableBody >
+                        {tableData
+                        .map((row, index) => {
+                        const isItemSelected = isSelected(row.item);
+                        const labelId = `enhanced-table-checkbox-${index}`;
+                        return (
+                          <TableRow 
+                          hover
+                          role="checkbox"
+                          aria-checked={isItemSelected}
+                          tabIndex={-1}
+                          key={row.item}
+                          selected={isItemSelected}
+                          >
+                            <TableCell padding="checkbox">
+                            <Checkbox
+                              onClick={(event) => handleClick(event, row?.item)}
+                              color="primary"
+                              checked={isItemSelected}
+                              inputProps={{
+                              'aria-labelledby': labelId,
+                              }}
+                              style={{transform: "scale(0.8)",}}
+                            />
+                            </TableCell>
+                           
+                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}>{row.item}</TableCell>
+                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0,width:"130px"}}>
+                                  <Box   
+                                      display="flex"
+                                      justifyContent="space-between"
+                                      sx={{border:0,}}>
+                                      <p>{String(row.item_desc).length>0 && String(row.item_desc).length<5?
+                                          row.item_desc
+                                          :String(row.item_desc).substring(0,10)+"..."}</p>
+                                      <Button sx={{backgroundColor:"",'&:hover': {
+                                              backgroundColor: "",},border:0,color:"CadetBlue"}}
+                                              style={{maxWidth: '25px', minWidth: '25px',justifyContent:"flex-start"
+                                            }}
+                                              size='small'
+                                              className={LikeItem.textField}
+                                              onClick={()=>{swal(
+                                                <div>     
+                                                  <p>{row.item_desc}</p>
+                                                </div>
+                                              )}}
+                                              startIcon={<InfoIcon/>}
+                                              >
+                                      </Button>
+                                  </Box>
+                              </TableCell>
+                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}} >{row.diff_id}</TableCell>
+                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}} textAlign="right">
+                                      <Box   
+                                        display="flex"
+                                        justifyContent="space-between"
+                                        sx={{border:0,}}>
+                                        <p>{row.sku_count}</p>
+                                        <Button sx={{backgroundColor:"",'&:hover': {
+                                                backgroundColor: "",},border:0,color:"CadetBlue"}}
+                                                style={{maxWidth: '25px', minWidth: '25px',justifyContent:"flex-start"
+                                              }}
+                                                size='small'
+                                                className={LikeItem.textField}
+                                                onClick={()=>{swal(
+                                                  <div>     
+                                                    <p>{row.sku_count}</p>
+                                                  </div>
+                                                )}}
+                                                startIcon={<InfoIcon/>}
+                                                >
+                                        </Button>
+                                      </Box>
+                              </TableCell>
+                          </TableRow >
+                        );
+                        })}
+                        {tableData.length<5?
+                          [...Array(5-(tableData.length)).keys()].map(val=>(
+                              <StyledTableRow > 
+                              <TableCell padding="checkbox"> <Checkbox color="primary" disabled={true} style={{transform: "scale(0.8)",}}/></TableCell>
+                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}></TableCell>
+                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}></TableCell>
+                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}} ></TableCell>
+                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}} textAlign="right"></TableCell>
+                              </StyledTableRow>
+                          )):false}
+                        </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Paper>
+               </Box>
 
-
+                    <Box gridColumn="span 8" //sx={{backgroundColor:"yellowgreen"}}
+                    >
+                            <legend style={{fontWeight:"bold",color:"#191970",}}>Mapped&nbsp;Items </legend>
+                            <Paper sx={{ maxHeight: "20%", mb: 7}}>
+                                <EnhancedTableToolbarMap numMapSelected={selectedMap.length} />
+                                <TableContainer sx={{ borderRadius: '10px' ,}} component={Paper}>
+                                <Table sx={{ minWidth:"auto",}} aria-label="customized table">
+                                <Mapped_Grid
+                                  numMapSelected={selectedMap.length}
+                                  onSelectMapAllClick={handleMapSelectAllClick}
+                                  rowCount={mapTableData.length}
+                                />
+                                <TableBody >
+                                {mapTableData.length>0?
+                                mapTableData
+                                  .map((row, index) => {
+                                  const isItemSelected = isMapSelected(row.item);
+                                  const labelId = `enhanced-table-checkbox-${index}`;
+                                  return (
+                                    <TableRow 
+                                    hover
+                                    role="checkbox"
+                                    aria-checked={isItemSelected}
+                                    //sx={{backgroundColor:"green",border:"5px solid black"}}
+                                    tabIndex={-1}
+                                    key={row.item}
+                                    selected={isItemSelected}
+                                    >
+                                      <TableCell padding="checkbox">
+                                        <Checkbox
+                                          onClick={(event) => handleMapClick(event, row?.item)}
+                                          color="primary"
+                                          checked={isItemSelected}
+                                          inputProps={{
+                                          'aria-labelledby': labelId,
+                                          }}
+                                          style={{transform: "scale(0.8)",}}
+                                        />
+                                      </TableCell>
+                                      <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}>{row.item}</TableCell>
+                                      <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}>
+                                        <Box
+                                          display="flex"
+                                          justifyContent="space-between"
+                                          sx={{ border: 0, }}>
+                                          <p>{String(row.item_desc).length > 0 && String(row.item_desc).length < 5 ?
+                                            row.item_desc
+                                            : String(row.item_desc).substring(0, 10) + "..."}</p>
+                                          <Button sx={{
+                                            backgroundColor: "", '&:hover': {
+                                              backgroundColor: "",
+                                            }, border: 0, color: "CadetBlue"
+                                          }}
+                                            style={{
+                                              maxWidth: '25px', minWidth: '25px', justifyContent: "flex-start"
+                                            }}
+                                            size='small'
+                                            className={LikeItem.textField}
+                                            onClick={() => {
+                                              swal(
+                                                <div>
+                                                  <p>{row.item_desc}</p>
+                                                </div>
+                                              )
+                                            }}
+                                            startIcon={<InfoIcon />}
+                                          >
+                                          </Button>
+                                        </Box>
+                                      </TableCell>
+                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.diff_id}</TableCell>
+                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.like_item}</TableCell>
+                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>
+                                      <Box
+                                          display="flex"
+                                          justifyContent="space-between"
+                                          sx={{ border: 0, }}>
+                                          <p>{String(row.like_item_desc).length > 0 && String(row.item_desc).length < 5 ?
+                                            row.item_desc
+                                            : String(row.item_desc).substring(0, 10) + "..."}</p>
+                                          <Button sx={{
+                                            backgroundColor: "", '&:hover': {
+                                              backgroundColor: "",
+                                            }, border: 0, color: "CadetBlue"
+                                          }}
+                                            style={{
+                                              maxWidth: '25px', minWidth: '25px', justifyContent: "flex-start"
+                                            }}
+                                            size='small'
+                                            className={LikeItem.textField}
+                                            onClick={() => {
+                                              swal(
+                                                <div>
+                                                  <p>{row.like_item_desc}</p>
+                                                </div>
+                                              )
+                                            }}
+                                            startIcon={<InfoIcon />}
+                                          >
+                                          </Button>
+                                        </Box>
+                                      </TableCell>
+                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.like_item_diff_id}</TableCell>
+                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{mapData.WEIGHT}</TableCell>
+                                      <TableCell padding="checkbox"> <Checkbox color="primary" disabled={alloc_Level==="T"} style={{ transform: "scale(0.8)",}}/></TableCell>
+                                    </TableRow>
+                                  );}) :null}
+                                  {mapTableData.length<5?
+                                   [...Array(5-(mapTableData.length)).keys()]
+                                   .map(val=>(
+                                    <TableRow>
+                                      <TableCell padding="checkbox">
+                                        <Checkbox
+                                          color="primary"
+                                          disabled={true}
+                                          style={{transform: "scale(0.8)",}}
+                                        />
+                                      </TableCell>
+                                      <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}></TableCell>
+                                      <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}></TableCell>
+                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}></TableCell>
+                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}></TableCell>
+                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}></TableCell>
+                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}></TableCell>
+                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}></TableCell>
+                                      <TableCell padding="checkbox"> <Checkbox color="primary" disabled={true} style={{transform: "scale(0.8)", }}/></TableCell>
+                                    </TableRow>
+                                    )):false}
+                                </TableBody>
+                                 </Table>
+                                </TableContainer>
+                            </Paper>                
+                    </Box>
+                    <Box   
+                        display="flex"
+                        gridColumn="span 13"
+                        //alignItems="self-end"
+                        justifyContent="right"
+                        sx={{border:0}}>
+                        <Button sx={{backgroundColor:"maroon",'&:hover': {
+                            backgroundColor: "maroon",boxShadow:3},borderRadius: '16px'}}
+                            variant="contained"
+                            size='medium'
+                            className={LikeItem.textField}
+                            type="submit"
+                            onClick={handleDelete}
+                            startIcon={<DeleteSweepIcon/>}
+                        />
+                    </Box> 
+                </Box>
+                
+           
+          </Box>
+           
+          
         </Box>
     )
 

@@ -13,7 +13,8 @@ import FinanceInterfaceReducers from "./financeInterfaceReducer";
 import DailyViewReducers from "./DailyViewReducers";
 import SubLedgerCostReducers from "./subLedgerCostReducers";
 import sysconfigcreationReducers from "./SysConfigCreationReducers";
-
+import AllocationReducers from "./AllocationReducers";
+console.log(23456)
 const rootReducer = combineReducers({
   StagingProcessingReducers,
   ErrorProcessingReducers,
@@ -29,6 +30,7 @@ const rootReducer = combineReducers({
   DailyViewReducers,
   SubLedgerCostReducers,
   sysconfigcreationReducers,
+  AllocationReducers,
 });
 
 export default rootReducer;

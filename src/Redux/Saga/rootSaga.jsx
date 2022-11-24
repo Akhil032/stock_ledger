@@ -13,7 +13,8 @@ import {FinanceInterface} from "./FinanceInterfaceSaga";
 import { DailyView } from "./DailyViewSaga";
 import {SubLedgerCost} from "./subLedgerCostSaga";
 import {SysConfigcreation,GlPrimary} from "./SysConfigCreationSaga";
-
+import { HIERData,HIER2Data,HIER3Data,UDAData,ItemListHead,ITEMPARENTData,DIFFData,
+  SkuData,likeItemTableData,insertLikeItemData } from "./AllocationSaga";
 export function* rootSaga() {
   yield all([
     fork(StagingProcessing),
@@ -46,5 +47,15 @@ export function* rootSaga() {
     fork(SubLedgerCost),
     fork(SysConfigcreation),
     fork(GlPrimary),
+    fork(HIERData),
+    fork(HIER2Data),
+    fork(HIER3Data),
+    fork(UDAData),
+    fork(ItemListHead),
+    fork(ITEMPARENTData),
+    fork(DIFFData),
+    fork(SkuData),
+    fork(likeItemTableData),
+    fork(insertLikeItemData),
   ]);
 }
