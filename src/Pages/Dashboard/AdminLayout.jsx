@@ -192,6 +192,9 @@ export default function Index() {
     if (routeName == "Like Item Mapping") {
       navigate(`/Like_Item_Map`);
     }
+    if (routeName == "Schedule") {
+      navigate(`/Schedule`);
+    }
     handleDrawerClose()
   };
   const handleHomePage = (routedata) => {

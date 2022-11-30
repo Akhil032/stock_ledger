@@ -97,3 +97,23 @@ export const postLIkeInsertSuccess = createAction(
 export const postLIkeInsertError = createAction(
     actions.POST_LIKE_INSERT_ERROR
 );
+
+export const getAllocIdRequest = createAction(
+    actions.GET_ALLOC_ID_REQUEST
+);
+export const getAllocIdSuccess = createAction(
+    actions.GET_ALLOC_ID_SUCCESS
+);
+export const getAllocIdError = createAction(
+    actions.GET_ALLOC_ID_ERROR
+);
+
+export const postAllocHDetailsRequest = createAction(
+    actions.POST_ALLOC_HDETAILS_REQUEST
+);
+export const postAllocHDetailsSuccess = createAction(
+    actions.POST_ALLOC_HDETAILS_SUCCESS
+);
+export const postAllocHDetailsError = createAction(
+    actions.POST_ALLOC_HDETAILS_ERROR
+);

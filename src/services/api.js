@@ -37,4 +37,6 @@ export const API = {
   FETCHSKU:"/SKU_tab/",
   FECTCHALLOCITEMS:"/allocated_items/",
   INSERTLIKEITEM: "/Insert_LikeItem/",
+  ALLOCIDDETAILS:"/alloc_no_detail_table/",
+  ALLOCHEADERDETAILS:"/Alloc_no_screen_tab/"
 };

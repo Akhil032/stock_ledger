@@ -20,6 +20,7 @@ import SubLedgerCost from "./Pages/Subledger_cost";
 import SystemConfigCreation from "./Pages/systemConfig_Creation";
 import POrder from "./Components/POrder"
 import LikeItemMap from "./Components/LikeItem";
+import ScheduleAlloc from "./Components/ScheduleAlloc";
 function Routing() {
   return (
     <Routes>
@@ -44,6 +45,7 @@ function Routing() {
         <Route path="/system-config-creation" element={<SystemConfigCreation />} />
         <Route path="/PO_Enquiry" element={<POrder />} />
         <Route path="/Like_Item_Map" element={<LikeItemMap />} />
+        <Route path="/Schedule" element={<ScheduleAlloc />} />
 
       </Route>
     </Routes>

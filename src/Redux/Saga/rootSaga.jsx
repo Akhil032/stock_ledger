@@ -14,7 +14,7 @@ import { DailyView } from "./DailyViewSaga";
 import {SubLedgerCost} from "./subLedgerCostSaga";
 import {SysConfigcreation,GlPrimary} from "./SysConfigCreationSaga";
 import { HIERData,HIER2Data,HIER3Data,UDAData,ItemListHead,ITEMPARENTData,DIFFData,
-  SkuData,likeItemTableData,insertLikeItemData } from "./AllocationSaga";
+  SkuData,likeItemTableData,insertLikeItemData,allocIDs ,allocHDetails} from "./AllocationSaga";
 export function* rootSaga() {
   yield all([
     fork(StagingProcessing),
@@ -57,5 +57,7 @@ export function* rootSaga() {
     fork(SkuData),
     fork(likeItemTableData),
     fork(insertLikeItemData),
+    fork(allocIDs),
+    fork(allocHDetails),
   ]);
 }

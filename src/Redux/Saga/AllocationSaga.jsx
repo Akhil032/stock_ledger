@@ -18,6 +18,8 @@ import {
     getSKUError,
     getAllocItemsRequest,getAllocItemsSuccess,getAllocItemsError,
     postLIkeInsertError,postLIkeInsertRequest,postLIkeInsertSuccess,
+    getAllocIdError,getAllocIdRequest,getAllocIdSuccess,
+    postAllocHDetailsError,postAllocHDetailsRequest,postAllocHDetailsSuccess,
 } from "../Action/Allocation";
 import * as actions from "../constant";
 import axiosCall from "../../services/index";
@@ -191,4 +193,39 @@ function* insertLikeItem(action) {
     yield takeLatest(actions.POST_LIKE_INSERT_REQUEST, insertLikeItem);
   }
 
+function* allocIds(action) {
+  try {
+    const response = yield call(axiosCall, "GET", API.ALLOCIDDETAILS, action.payload);
+    if (response?.status == 200) {
+      yield put(getAllocIdSuccess({ allocIDs: response?.data }));
+    } else {
+      yield put(getAllocIdError(response?.data?.message));
+    }
+  } catch (e) {
+    yield put(getAllocIdError(e.message));
+  }
+}
+  
+    export function* allocIDs() {
+      yield takeLatest(actions.GET_ALLOC_ID_REQUEST, allocIds);
+    }
+
+function* allocHDtls(action) {
+  try {
+    const response = yield call(axiosCall, "POST", API.ALLOCHEADERDETAILS, action.payload);
+    if (response?.status == 200) {
+      yield put(postAllocHDetailsSuccess({ allocHDetails: response?.data }));
+    } else {
+      yield put(postAllocHDetailsError(response?.data?.message));
+    }
+  } catch (e) {
+    yield put(postAllocHDetailsError(e.message));
+  }
+}
+  
+    export function* allocHDetails() {
+      yield takeLatest(actions.POST_ALLOC_HDETAILS_REQUEST, allocHDtls);
+    }
+  
+  
 

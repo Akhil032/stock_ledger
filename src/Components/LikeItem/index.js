@@ -22,10 +22,13 @@ import DetailsIcon from '@mui/icons-material/Details';
 import { width } from '@mui/system';
 import {getHIERRequest,getHIER2Request,getHIER3Request,getUDARequest,
   getITEM_LIST_HEADRequest,getITEMPARENTRequest,getDIFFRequest,
-  getSKURequest,getAllocItemsRequest,postLIkeInsertRequest} from "../../Redux/Action/Allocation"
+  getSKURequest,getAllocItemsRequest,postLIkeInsertRequest,
+  getAllocIdRequest,postAllocHDetailsRequest} from "../../Redux/Action/Allocation"
 import { useDispatch, useSelector } from "react-redux";
 import swal from '@sweetalert/with-react';
 import PropTypes from 'prop-types';
+import TableSortLabel from '@mui/material/TableSortLabel';
+import { visuallyHidden } from '@mui/utils';
 
 const animatedComponents = makeAnimated();
 
@@ -215,8 +218,11 @@ const LikeItemMap=()=>{
   const [diffData, setDIffData] = useState([{}]);
   const [skuData, setSkuData] = useState([{}]);
   const [tableData, setTableData] = useState([]);
+  const [allocID, setAllocID] = useState([]);
+  const [allocHDtl, setAllocHDtl] = useState([]);
   const [mapTableData, setMapTableData] = useState([]);
   const [delTableData, setDelTableData] = useState([]);
+  const [allocNo,setAllocNo]=useState({})
   const alloc_Level="T"
   const alloc_no="12345678"
   //filtered uda data
@@ -243,7 +249,7 @@ const LikeItemMap=()=>{
       ? [...new Map(itemParentData.map((item) => [item["ITEM_PARENT"], item])).values()]
       : [];
 
-  console.log("UniqItemParent:",UniqItemParent)
+  //console.log("UniqItemParent:",UniqItemParent)
   //Dropdown input
   const [valHIER1,setValHIER1]=useState([]);
   const [valHIER2,setValHIER2]=useState([]);
@@ -268,6 +274,15 @@ const LikeItemMap=()=>{
   const AllocationData = useSelector(
     (state) => state.AllocationReducers
   );
+
+  //sort
+  const [order, setOrder] = React.useState('asc');
+  const [orderBy, setOrderBy] = React.useState('');
+  const [orderM, setOrderM] = React.useState('asc');
+  const [orderMBy, setOrderMBy] = React.useState('');
+  //Table Header for Grids
+  const alloc_head=["ITEM","ITEM_DESC","DIFF_ID","#OF_SKUS"]
+  const map_head=["ITEM","ITEM_DESC","DIFF_ID","LIKE_ITEM","LIKE_ITEM_DESC","LIKE_ITEM_DIFF_ID","WEIGHT%"]
   useEffect(() => {
     document.title = 'Allocation';
   },[]);
@@ -283,6 +298,7 @@ const LikeItemMap=()=>{
     dispatch(getITEMPARENTRequest([{}]));
     dispatch(getDIFFRequest([{}]));
     dispatch(getSKURequest([{}]));
+    dispatch(getAllocIdRequest());
     //dispatch(getAllocItemsRequest([searchHeaderData.ALLOC_NO]));
     dispatch(getAllocItemsRequest([{"ALLOCATION_ID": 12345678}]));
   }, [""]);
@@ -317,9 +333,17 @@ const LikeItemMap=()=>{
       setTableData(AllocationData?.data?.likeItemTableData);
       setLoading(false);
     } 
+    else if(AllocationData?.data?.allocIDs && Array.isArray(AllocationData?.data?.allocIDs) && delTableData.length===0 && tableData.length===0) {
+      setAllocID(AllocationData?.data?.allocIDs);
+      setLoading(false);
+    } 
+    else if(AllocationData?.data?.allocHDetails && Array.isArray(AllocationData?.data?.allocHDetails)) {
+      setAllocHDtl(AllocationData?.data?.allocHDetails);
+      setLoading(false);
+    }
   });
   // const tb_keys=tableData.keys
-  // //console.log(tb_keys)
+  console.log("alloc",AllocationData?.data?.allocHDetails,allocHDtl)
   if(tableData.length>0){
     //console.log("df", tableData[0],String(tableData[0]["item_desc"]),"item" in tableData[0]);
   }
@@ -358,11 +382,17 @@ const LikeItemMap=()=>{
       })
     }
   }    
-
+/**** Allocation number ****/
+const selectedAlloc=(value)=>{
+console.log("addfd",value)
+dispatch(postAllocHDetailsRequest([value]));
+setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
+}
 // Handling Like Item Criteria input selection
   const selectedHIER1=(event,value)=>{
     let sel_HIER1 = [];
     if (value.option) {  
+      console.log(value.option)
       valHIER1.push(value.option);
     }else if (value.removedValue) {
       let index=0        
@@ -377,7 +407,6 @@ const LikeItemMap=()=>{
       filteringData("HIER1","HIER2",hier2Data,valHIER2,value.removedValue.HIER1);
       filteringData("HIER1","HIER3",hier3Data,valHIER3,value.removedValue.HIER1);
       //filteringData("HIER1","UDA",udaData,valUDA,value.removedValue.HIER1);      
-      filteringData("HIER1","ITEM_PARENT",itemParentData,valItemPar,value.removedValue.HIER1);
       //filteringData("HIER1","SKU",skuData,valSKU,value.removedValue.HIER1);
     }else if(value.action==="clear"){ 
       valHIER1.splice(0,valHIER1.length);
@@ -680,10 +709,12 @@ const LikeItemMap=()=>{
     }
   }
   const selectedItemParent=(event,value)=>{
+    console.log("selectedItemParent",value)
+
     
-    //console.log("selectedItemParent",value,"kjvkugfkuilyf",event)
     let sel_Item_Par = [];
     if (value.option) {  
+      console.log("selectedItemParent",value.option)
       valItemPar.push(value.option);
     }else if (value.removedValue) {
       let index=0        
@@ -693,25 +724,28 @@ const LikeItemMap=()=>{
           index=i;
           break;
         }
+          
+      //filteringData("ITEM_PARENT","SKU",skuData,valSKU,value.removedValue.ITEM_PARENT);
       }
       valItemPar.splice(index,1);
     }else if(value.action==="clear"){ 
       valItemPar.splice(0,valItemPar.length);
     }
 
-    if(valItemPar.length === 1 && typeof valItemPar[0]['ITEM_PARENT'] !== "undefined"){
+    if(valItemPar.length >0 && typeof valItemPar[0]['ITEM_PARENT'] !== "undefined"){
       
       valItemPar.map(
         (item) => {
           sel_Item_Par.push(item.ITEM_PARENT);
         }
       )
+      console.log("tp",sel_Item_Par,valSKU.length)
       if(valSKU.length===0){
         var temp={}
           temp["ITEM_PARENT"]=sel_Item_Par;
           dispatch(getDIFFRequest([temp]));
           dispatch(getSKURequest([temp]));
-          //console.log(temp);
+          console.log(temp);
       }
       setMapData((prev) => {
         return {
@@ -722,6 +756,7 @@ const LikeItemMap=()=>{
 
     }
     else{
+      dispatch(getSKURequest([{}]));
       setMapData((prev) => {
         return {
           ...prev,
@@ -839,26 +874,7 @@ const LikeItemMap=()=>{
       });
     }
   }
-  const handleInfo=(info)=>{
-    swal(
-      <div>     
-        <p>{info}</p>
-      </div>
-    )
-  }
-  //console.log("map",mapData)
-  const handleCellClick=(index)=>{
-    if(!selected.includes(tableData[index]["item"])){
-      setSelected(oldArray => [...oldArray, tableData[index]["item"]]);
-    }else{
-      const ind = selected.indexOf(tableData[index]["item"]);
-      console.log("sele",selected,ind)
-          if(ind > -1){
-            selected.splice(ind, 1); 
-          }  
-          console.log("sele",selected,ind,selected.includes(tableData[index]["item"]))
-    }
-  }
+ 
 
   /*
   ***** Like Item Mapping Button Function *****
@@ -870,9 +886,9 @@ const LikeItemMap=()=>{
       console.log(mapTableData)
       var sendData={ITEM:[],LIKE_ITEM:[]}
       mapTableData.map(obj => {
-        item.push(obj.item);
-        sendData["ITEM"].push(obj.item);
-        sendData["LIKE_ITEM"]=obj.like_item
+        item.push(obj.ITEM);
+        sendData["ITEM"].push(obj.ITEM);
+        sendData["LIKE_ITEM"]=obj.LIKE_ITEM
       });
       sendData["ALLOC_NO"]=alloc_no
       console.log(sendData)
@@ -899,29 +915,29 @@ const LikeItemMap=()=>{
         );
         return;
       }
-      const temp =[... tableData.filter(obj => selected.includes(obj.item))];
-      const deletedData= tableData.filter(obj => selected.includes(obj.item));
+      const temp =[... tableData.filter(obj => selected.includes(obj.ITEM))];
+      const deletedData= tableData.filter(obj => selected.includes(obj.ITEM));
       
-      setDelTableData(deletedData);
-      setTableData(tableData.filter(obj => !selected.includes(obj.item)));
+      setDelTableData([...delTableData,...deletedData]);
+      setTableData(tableData.filter(obj => !selected.includes(obj.ITEM)));
       var mappedData= [];
       temp.map(obj => {
         mappedData.push({...obj,
-        like_item : mapData.SKU,
-        like_item_desc:mapData.SKU_DESC,
-        like_item_diff_id :mapData.DIFF1
+        LIKE_ITEM : mapData.SKU,
+        LIKE_ITEM_DESC:mapData.SKU_DESC,
+        LIKE_ITEM_DIFF_ID :mapData.DIFF1
         });
       });
-      setMapTableData(mappedData);
+      setMapTableData([...mapTableData,...mappedData]);
       setSelected([]);
-      console.log((mappedData))
+      console.log(mappedData,tableData)
     }
   }
   const handleDelete = () => {
-     console.log("del ton",selectedMap);
-      setDelTableData(delTableData.filter(obj=>!selectedMap.includes(obj.item)));
-      setTableData([...tableData,...delTableData.filter(obj=>selectedMap.includes(obj.item))]);
-      setMapTableData(mapTableData.filter(obj=>!selectedMap.includes(obj.item)));
+     //console.log("del ton",delTableData,selectedMap,[...tableData,...delTableData.filter(obj=>selectedMap.includes(obj.item))],"del",delTableData.filter(obj=>!selectedMap.includes(obj.item)));
+      setDelTableData(delTableData.filter(obj=>!selectedMap.includes(obj.ITEM)));
+      setTableData([...tableData,...delTableData.filter(obj=>selectedMap.includes(obj.ITEM))]);
+      setMapTableData(mapTableData.filter(obj=>!selectedMap.includes(obj.ITEM)));
       setSelectedMap(selectedMap.filter(item=>!selectedMap.includes(item)));
 
   }
@@ -948,257 +964,24 @@ const LikeItemMap=()=>{
     setValSP("");
     setMapSP(false);
     setMapData(initialData);
+
+
+    // Referesh Data
+    dispatch(getHIERRequest([{}]));
+    dispatch(getHIER2Request([{}]));
+    dispatch(getHIER3Request([{}]));
+    dispatch(getUDARequest([{}]));
+    dispatch(getITEMPARENTRequest([{}]));
+    dispatch(getDIFFRequest([{}]));
+    dispatch(getSKURequest([{}]));
   }
 
   
-  const tableCount=[...Array(tableData.length).keys()]
+  //const tableCount=[...Array(tableData.length).keys()]
   const LikeItem = useStyles();
-  
-  const SearchHeader=()=>(
-    <Box 
-      display="flex"
-      sx={{backgroundColor:"",
-      height:"auto",
-      width:"100%",
-    }}
-    >
-      <div  className={LikeItem.header_container}>
-              <div className={LikeItem.float_container}>
-              <div>
-                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-                  Allocation ID</InputLabel>
-              </div>
-              <div>
-                <TextField
-                  size="small"
-                  sx={{"& .MuiInputBase-input.Mui-disabled": {
-                    backgroundColor:"#f0f0f0",border:0
-                },backgroundColor:"white"}}
-                  // disabled
-                  name="ALLOC_NO"
-                  // value={searchHeaderData.ALLOC_NO}
-                  // onChange={onChange}
-                  id="outlined-disabled"
-                  // defaultValue="1234567890"
-                  InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
-                    InputProps={{
-                    style:{fontSize:12},
-                    className: LikeItem.inputField,
-                  
-                  }}
-                />
-              </div>
-              </div>
-  
-              <div className={LikeItem.float_container}>
-              <div>
-                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-                  Desc</InputLabel>
-              </div>
-              <div>
-                <TextField
-                  size="small"
-                  sx={{"& .MuiInputBase-input.Mui-disabled": {
-                    backgroundColor:"#f0f0f0",border:0
-                },backgroundColor:"white"}}
-                  id="outlined-disabled"
-                  name="ALLOC_DESC"
-                  //value={searchHeaderData.ALLOC_DESC}
-                  defaultValue=""
-                  //onChange={onChange}
-                  InputProps={{
-                  style:{fontSize:12},
-                  className: LikeItem.inputField,
-                  }}
-                />
-              </div>
-              </div>
-              
-              <div className={LikeItem.float_container}>
-              <div>
-                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-                  Context Type</InputLabel>
-              </div>
-              <div className={LikeItem.multiselectfield}>
-                <Select 
-                  classNamePrefix="mySelect"
-                  // getOptionLabel={option =>
-                  //   `${option.CONTEXT.toString()}`}
-                  // getOptionValue={option => option.CONTEXT}
-                  // options={contextTypeData.length > 0 ? contextTypeData : []}
-                  isSearchable={true}
-                  //onChange={selectCONTEXT_TYPE}
-                  maxMenuHeight={180}
-                  // placeholder={"Choose a Dept"}
-                  styles={styleSelect}
-                  components={animatedComponents} 
-                  isClearable={true}
-                  //value={contextTypeData.filter(obj => searchHeaderData?.CONTEXT_CODE===(obj.CONTEXT))} 
-                  closeMenuOnSelect={true}
-                />
-              </div>
-              </div>
-  
-              {/* {searchHeaderData.CONTEXT_CODE==="Promotion"?
-              [
-              <div className={LikeItem.float_container}>
-              <div>
-                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 2px 2px", display: 'inline', float: 'left'}}>
-                  Promotion</InputLabel>
-              </div>
-              <div className={LikeItem.multiselectfield}>
-                <Select 
-                  // className= {LikeItem.inputField}
-                  classNamePrefix="mySelect"
-                  // getOptionLabel={option =>
-                  //   `${option.PROMOTION.toString()} -${option.DESCRIPTION.toString()} (${option.START_DATE.toString()})-(${option.END_DATE.toString()})`}
-                  // getOptionValue={option => option.PROMOTION}
-                  // options={promotionData.length > 0 ? promotionData : []}
-                  isSearchable={true}
-                  //onChange={selectPROMOTION}
-                  maxMenuHeight={180}
-                  // placeholder={"Choose a Dept"}
-                  styles={styleSelect}
-                  components={animatedComponents} 
-                  isClearable={true}
-                  //value={promotionData.filter(obj => searchHeaderData?.PROMOTION_CODE===obj.PROMOTION)} 
-                  closeMenuOnSelect={true}
-                />
-              </div>
-              </div>
-              ]:null} */}
-              
-  
-              <div className={LikeItem.float_container}>
-              <div >
-                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-                  Alloc Level</InputLabel>
-              </div>
-              <div className={LikeItem.multiselectfield}>
-                <Select 
-                  // className= {LikeItem.inputField}
-                  classNamePrefix="mySelect"
-                  // getOptionLabel={option =>
-                  //   `${option.ALLOC_LEVEL.toString()}`}
-                  // getOptionValue={option => option.ALLOC_LEVEL}
-                  // options={allocLevelData.length > 0 ? allocLevelData : []}
-                  isSearchable={true}
-                  //onChange={selectALLOC_LEVEL}
-                  maxMenuHeight={180}
-                  // placeholder={"Choose a Dept"}
-                  styles={styleSelect}
-                  components={animatedComponents} 
-                  isClearable={true}
-                  //value={allocLevelData.filter(obj => searchHeaderData?.ALLOC_LEVEL_CODE===(obj.ALLOC_LEVEL))} 
-                  closeMenuOnSelect={true}
-                />
-              </div>
-              </div>
-              
-              <div className={LikeItem.float_container}>
-              <div>
-                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-                  Release Date</InputLabel>
-              </div>
-              <div>
-                <TextField
-                  variant="outlined"
-                  type="date"
-                  size="small"
-                  name="RELEASE_DATE"
-                  sx={{margin:"0px 0px 10px 2px"}}
-                  id="outlined-disabled"
-                  label=""
-                  defaultValue=""
-                  // value={searchHeaderData.RELEASE_DATE}
-                  // onChange={onChange}
-                  InputProps={{
-                  style:{fontSize:12},
-                  shrink: true,
-                  //className: LikeItem.input,
-                }}
-                />
-              </div>
-              </div>
-  
-              <div className={LikeItem.float_container}>
-              <div>
-                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-                  Status</InputLabel>
-              </div>
-              <div className={LikeItem.multiselectfield}>
-                <Select 
-                  // className= {LikeItem.inputField}
-                  classNamePrefix="mySelect"
-                  // getOptionLabel={option =>
-                  //   `${option.STATUS.toString()}`}
-                  // getOptionValue={option => option.STATUS}
-                  // options={statusData.length > 0 ? statusData : []}
-                  isSearchable={true}
-                  //defaultValue={statusData.find((value)=> value==="Worksheet")}
-                  //onChange={selectSTATUS}
-                  maxMenuHeight={180}
-                  // placeholder={"Choose a Dept"}
-                  styles={styleSelect}
-                  components={animatedComponents} 
-                  isClearable={true}
-                  //value={statusData.filter(obj => searchHeaderData?.STATUS_CODE===(obj.STATUS))} 
-                  closeMenuOnSelect={true}
-                />
-              </div>
-              </div>
-  
-              <div className={LikeItem.float_container}>
-              <div>
-                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"0px 0px 0px 0px", display: 'inline', float: 'left'}}>
-                  Alloc Type</InputLabel>
-              </div>
-              <div className={LikeItem.multiselectfield}>
-                  <Select 
-                      closeMenuOnSelect={true}
-                      isSearchable={true}
-                      maxMenuHeight={180}
-                      // placeholder={"Choose a Warehouse"}
-                      styles={styleSelect}
-                      components={animatedComponents} 
-                      isClearable={true} 
-                      //alue={allocTypeData.filter(obj => searchHeaderData?.ALLOC_TYPE_CODE===(obj.ALLOC_TYPE))}  
-                      // isMulti 
-                      />
-              </div>
-              </div>
-              
-              <div className={LikeItem.float_container}>
-              <div>
-                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-                  Allocator</InputLabel>
-              </div>
-              <div>
-                <TextField
-                  variant="outlined"
-                  size="small"
-                  sx={{"& .MuiInputBase-input.Mui-disabled": {
-                      backgroundColor:"#f0f0f0",border:0
-                  },backgroundColor:"white"}}
-                  InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
-                  InputProps={{
-                  style:{fontSize:12},
-                  className: LikeItem.inputField,
-                  }}
-                  disabled
-                  name="CREATE_ID"
-                  id="outlined-disabled"
-                 // value={searchHeaderData.CREATE_ID}
-                 // onChange={onChange}
-                  
-                />
-              </div>
-              </div>
-      </div>
-    </Box>
-  )
+ 
   const Header=()=>(
-<Box 
+    <Box 
         component="fieldset"
         display="inline-block"
         sx={{
@@ -1220,7 +1003,21 @@ const LikeItemMap=()=>{
                 Allocation ID</InputLabel>
                 </div>
                 <div className={LikeItem.multiselectfield}>
-                <TextField
+                <Select 
+                closeMenuOnSelect={true}
+                isSearchable={true}                
+                getOptionLabel={option =>
+                  `${option.ALLOC_NO.toString()}`}
+                getOptionValue={option => option.ALLOC_NO}
+                options={allocID.length > 0 ? allocID : []}
+                styles={styleSelect}
+                components={animatedComponents} 
+                maxMenuHeight={180}
+                onChange={selectedAlloc}
+                //value={hier1Data.filter(obj => mapData?.HIER1.includes(obj.HIER1))}
+                isClearable={true} 
+                />
+                {/* <TextField
                     size="small"
                     variant="outlined"
                     name="ESID_FROM"
@@ -1233,7 +1030,7 @@ const LikeItemMap=()=>{
                     style:{fontSize:12},
                     className: LikeItem.inputField,
                     }}
-                  />
+                  /> */}
                 </div> </div> 
                 {/* </div> 
                <div className={LikeItem.float_container}> */}
@@ -1251,6 +1048,8 @@ const LikeItemMap=()=>{
                     sx={{"& .MuiInputBase-input.Mui-disabled": {
                         backgroundColor:"#f0f0f0",border:0
                     },backgroundColor:"white"}}
+                    value={allocHDtl.length>0?allocHDtl[0].ALLOC_DESC:null}
+                    disabled={true}
                     InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
                     InputProps={{
                     style:{fontSize:12},
@@ -1265,15 +1064,32 @@ const LikeItemMap=()=>{
             Context Type</InputLabel>
             </div>
             <div className={LikeItem.multiselectfield}>
-                <Select 
+                {/* <Select 
                 closeMenuOnSelect={true}
                 isSearchable={true}                
-                
+                value={allocHDtl.length>0?allocHDtl[0].CONTEXT:null}
+                isDisabled={true}
                 styles={styleSelect}
                 components={animatedComponents}
                 isClearable={true} 
                 //isDisabled={!checkSubClass}
-                />
+                /> */}
+                <TextField
+                    size="small"
+                    variant="outlined"
+                    name="ESID_FROM"
+                    helperText=""
+                    sx={{"& .MuiInputBase-input.Mui-disabled": {
+                        backgroundColor:"#f0f0f0",border:0
+                    },backgroundColor:"white"}}
+                    value={allocHDtl.length>0?allocHDtl[0].CONTEXT:null}
+                    disabled={true}
+                    InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
+                    InputProps={{
+                    style:{fontSize:12},
+                    className: LikeItem.inputField,
+                    }}
+                  />
                 </div> </div> 
             <div className={LikeItem.float_container}>
             <div>
@@ -1281,7 +1097,7 @@ const LikeItemMap=()=>{
             Promotion</InputLabel>
             </div>
             <div className={LikeItem.multiselectfield}>
-                <Select 
+                {/* <Select 
                 closeMenuOnSelect={true}
                 isSearchable={true}                
                 
@@ -1289,7 +1105,23 @@ const LikeItemMap=()=>{
                 components={animatedComponents}
                 isClearable={true} 
                 //isDisabled={!checkSubClass}
-                />
+                /> */}
+                <TextField
+                    size="small"
+                    variant="outlined"
+                    name="ESID_FROM"
+                    helperText=""
+                    sx={{"& .MuiInputBase-input.Mui-disabled": {
+                        backgroundColor:"#f0f0f0",border:0
+                    },backgroundColor:"white"}}
+                    value={allocHDtl.length>0 && allocHDtl.CONTEXT==="PROM"?allocHDtl[0].PROMOTION:null}
+                    disabled={true}
+                    InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
+                    InputProps={{
+                    style:{fontSize:12},
+                    className: LikeItem.inputField,
+                    }}
+                  />
                 </div> </div> 
             <div className={LikeItem.float_container}>
             <div>
@@ -1297,7 +1129,7 @@ const LikeItemMap=()=>{
             Alloc Level</InputLabel>
             </div>
             <div className={LikeItem.multiselectfield}>
-                <Select 
+                {/* <Select 
                   closeMenuOnSelect={true}
                   isSearchable={true}                
                   
@@ -1306,6 +1138,23 @@ const LikeItemMap=()=>{
                   //isDisabled={}
                   isClearable={true} 
                 />
+                 */}
+                 <TextField
+                    size="small"
+                    variant="outlined"
+                    name="ESID_FROM"
+                    helperText=""
+                    sx={{"& .MuiInputBase-input.Mui-disabled": {
+                        backgroundColor:"#f0f0f0",border:0
+                    },backgroundColor:"white"}}
+                    value={allocHDtl.length>0 ?allocHDtl[0].ALLOC_LEVEL:null}
+                    disabled={true}
+                    InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
+                    InputProps={{
+                    style:{fontSize:12},
+                    className: LikeItem.inputField,
+                    }}
+                  />
                 </div> </div> 
             <div className={LikeItem.float_container}>
             <div>
@@ -1322,6 +1171,8 @@ const LikeItemMap=()=>{
                     id="outlined-disabled"
                     label=""
                     defaultValue=""
+                    value={allocHDtl.length>0 ?allocHDtl[0].RELEASE_DATE:null}
+                    disabled={true}
                     sx={{"& .MuiInputBase-input.Mui-disabled": {
                         backgroundColor:"#f0f0f0",border:0
                     },backgroundColor:"white"}}
@@ -1339,7 +1190,7 @@ const LikeItemMap=()=>{
             Status</InputLabel>
             </div>
             <div className={LikeItem.multiselectfield}>
-              <Select 
+              {/* <Select 
                   closeMenuOnSelect={true}
                   isSearchable={true}                
                   
@@ -1347,7 +1198,23 @@ const LikeItemMap=()=>{
                   components={animatedComponents}  
                   //isDisabled={}
                   isClearable={true} 
-                />
+                /> */}
+                <TextField
+                    size="small"
+                    variant="outlined"
+                    name="ESID_FROM"
+                    helperText=""
+                    sx={{"& .MuiInputBase-input.Mui-disabled": {
+                        backgroundColor:"#f0f0f0",border:0
+                    },backgroundColor:"white"}}
+                    value={allocHDtl.length>0 ?allocHDtl[0].STATUS:null}
+                    disabled={true}
+                    InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
+                    InputProps={{
+                    style:{fontSize:12},
+                    className: LikeItem.inputField,
+                    }}
+                  />
                 </div> </div> 
             <div className={LikeItem.float_container}>
             <div>
@@ -1355,7 +1222,7 @@ const LikeItemMap=()=>{
             Alloc Type</InputLabel>
             </div>
             <div className={LikeItem.multiselectfield}>
-            <Select 
+            {/* <Select 
                   closeMenuOnSelect={true}
                   isSearchable={true}                
                   
@@ -1364,6 +1231,23 @@ const LikeItemMap=()=>{
                   //isDisabled={}
                   isClearable={true} 
                 />
+                 */}
+                 <TextField
+                    size="small"
+                    variant="outlined"
+                    name="ESID_FROM"
+                    helperText=""
+                    sx={{"& .MuiInputBase-input.Mui-disabled": {
+                        backgroundColor:"#f0f0f0",border:0
+                    },backgroundColor:"white"}}
+                    value={allocHDtl.length>0 ?allocHDtl[0].ALLOC_TYPE:null}
+                    disabled={true}
+                    InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
+                    InputProps={{
+                    style:{fontSize:12},
+                    className: LikeItem.inputField,
+                    }}
+                  />
                 </div> </div> 
                 <div className={LikeItem.float_container}>
             <div>
@@ -1376,6 +1260,8 @@ const LikeItemMap=()=>{
                     variant="outlined"
                     name="ESID_FROM"
                     helperText=""
+                    value={allocHDtl.length>0 ?allocHDtl[0].ALLOCATOR:null}
+                    disabled={true}
                     sx={{"& .MuiInputBase-input.Mui-disabled": {
                         backgroundColor:"#f0f0f0",border:0
                     },backgroundColor:"white"}}
@@ -1386,9 +1272,9 @@ const LikeItemMap=()=>{
                     }}
                   />
                 </div> </div> 
-                </Box>
+    </Box>
   )
-console.log("mapData:",mapData)
+//console.log("mapData:",mapData)
   //Like item Criteria input fields
   const Like_Criteria=()=>(
     <Box 
@@ -1540,7 +1426,7 @@ console.log("mapData:",mapData)
                 components={animatedComponents}
                 onChange={selectedItemList} 
                 value={itemListHeadData.filter(obj => mapData?.ITEM_LIST_NO.includes(obj.ITEM_LIST_NO))}  
-                //isMulti 
+                isMulti 
                 isClearable={true} 
                 />
                 </div> </div> 
@@ -1754,7 +1640,7 @@ console.log("mapData:",mapData)
   const handleSelectAllClick = (event) => {
     //console.log("event::",event)
     if (event.target.checked && selected.length === 0) {
-      const newSelected = tableData.map((n) => n.item);
+      const newSelected = tableData.map((n) => n.ITEM);
       setSelected(newSelected);
       return;
     }
@@ -1785,7 +1671,7 @@ console.log("mapData:",mapData)
   const handleMapSelectAllClick = (event) => {
     //console.log("event::",event)
     if (event.target.checked && selectedMap.length === 0) {
-      const newSelected = tableData.map((n) => n.item);
+      const newSelected = mapTableData.map((n) => n.ITEM);
       setSelectedMap(newSelected);
       return;
     }
@@ -1814,7 +1700,7 @@ console.log("mapData:",mapData)
   };
 
   const isMapSelected = (name) => selectedMap.indexOf(name) !== -1;
-
+  
   function Alloc_Grid(props) {
     const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } =
       props;
@@ -1840,10 +1726,47 @@ console.log("mapData:",mapData)
               style={{transform: "scale(0.8)",}}
             />
           </TableCell>
-          <TableCell sx={{textTransform:"uppercase",fontWeight:"bold",fontFamily:"system-ui",textAlign:"left",fontSize:"75%",color:"white",padding:0}}>ITEM</TableCell>
-            <TableCell align="right" sx={{textTransform:"uppercase",fontWeight:"bold",fontFamily:"system-ui",textAlign:"left",fontSize:"75%",color:"white",padding:0}}>ITEM&nbsp;DESC</TableCell>
-            <TableCell align="right" sx={{textTransform:"uppercase",fontWeight:"bold",fontFamily:"system-ui",textAlign:"left",fontSize:"75%",color:"white",padding:0}}>DIFF&nbsp;ID</TableCell>
-            <TableCell align="right" sx={{textTransform:"uppercase",fontWeight:"bold",fontFamily:"system-ui",textAlign:"left",fontSize:"75%",color:"white",padding:0}} >#OF&nbsp;SKUS</TableCell>
+          {alloc_head.map((headCell)=>(
+          <TableCell sx={{textTransform:"uppercase",fontWeight:"bold",fontFamily:"system-ui",textAlign:"left",fontSize:"75%",color:"white",padding:0}}
+          key={headCell}
+          sortDirection={orderBy === headCell.id ? order : false}
+            >
+            {/* {headcell} */}
+            <TableSortLabel
+                active={orderBy === headCell}
+                direction={orderBy === headCell ? order : 'asc'}
+                onClick={createSortHandler(headCell)}
+                sx={{
+                  "&.MuiTableSortLabel-root": {
+                    color: "white",
+                    fontSize: "0.775rem",
+                  },
+                  "&.MuiTableSortLabel-root:hover": {
+                    color: "#fff",
+                  },
+                  "&.Mui-active": {
+                    color: "#fff",
+                  },
+                  "& .MuiTableSortLabel-icon": {
+                    color: "#fff !important",
+                  },
+                }}
+              >
+                {headCell}
+                {orderBy === headCell ? (
+                  <Box component="span" sx={visuallyHidden}>
+                    {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                  </Box>
+                ) : null}
+              </TableSortLabel>
+            
+            </TableCell>))}
+            {/* <TableCell align="right" sx={{textTransform:"uppercase",fontWeight:"bold",fontFamily:"system-ui",textAlign:"left",fontSize:"75%",color:"white",padding:0}}>
+              ITEM&nbsp;DESC</TableCell>
+            <TableCell align="right" sx={{textTransform:"uppercase",fontWeight:"bold",fontFamily:"system-ui",textAlign:"left",fontSize:"75%",color:"white",padding:0}}>
+              ,</TableCell>
+            <TableCell align="right" sx={{textTransform:"uppercase",fontWeight:"bold",fontFamily:"system-ui",textAlign:"left",fontSize:"75%",color:"white",padding:0}} >
+              #OF&nbsp;SKUS</TableCell> */}
         
         </TableRow>
       </TableHead> 
@@ -1861,7 +1784,7 @@ console.log("mapData:",mapData)
 
   // MAPPED ITEMS GRID
   function Mapped_Grid(props) {
-    const { onSelectMapAllClick, order, orderBy, numMapSelected, rowCount, onRequestSortMap } =
+    const { onSelectMapAllClick, orderM, orderMBy, numMapSelected, rowCountM, onRequestSortMap } =
       props;
     const createSortMapHandler = (property) => (event) => {
       onRequestSortMap(event, property);
@@ -1885,9 +1808,40 @@ console.log("mapData:",mapData)
               style={{transform: "scale(0.8)",}}
             />
           </TableCell>
-          <TableCell sx={{ color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>
-            ITEM</TableCell>
-          <TableCell align="right" sx={{ color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>
+          {map_head.map((headCell)=>(
+          <TableCell sx={{ color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}
+            key={headCell}
+            sortDirection={orderMBy === headCell ? orderM : false}
+          >
+             <TableSortLabel
+                active={orderMBy === headCell}
+                direction={orderMBy === headCell ? orderM : 'asc'}
+                onClick={createSortMapHandler(headCell)}
+                sx={{
+                  "&.MuiTableSortLabel-root": {
+                    color: "white",
+                    fontSize: "0.775rem",
+                  },
+                  "&.MuiTableSortLabel-root:hover": {
+                    color: "#fff",
+                  },
+                  "&.Mui-active": {
+                    color: "#fff",
+                  },
+                  "& .MuiTableSortLabel-icon": {
+                    color: "#fff !important",
+                  },
+                }}
+              >
+                {headCell}
+                {orderMBy === headCell ? (
+                  <Box component="span" sx={visuallyHidden}>
+                    {orderM === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                  </Box>
+                ) : null}
+              </TableSortLabel>
+            </TableCell>))}
+          {/* <TableCell align="right" sx={{ color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>
             ITEM&nbsp;DESC</TableCell>
           <TableCell align="right" sx={{ color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>
             DIFF&nbsp;ID</TableCell>
@@ -1898,7 +1852,7 @@ console.log("mapData:",mapData)
           <TableCell align="right" sx={{ color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }} >
             LIKE&nbsp;ITEM&nbsp;DIFF&nbsp;ID</TableCell>
           <TableCell align="right" sx={{ color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }} >
-            WEIGHT&nbsp;%</TableCell>
+            WEIGHT&nbsp;%</TableCell> */}
           <TableCell align="right" sx={{
             color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0
           }} >
@@ -1913,9 +1867,9 @@ console.log("mapData:",mapData)
     numMapSelected: PropTypes.number.isRequired,
     onRequestSortMap: PropTypes.func.isRequired,
     onSelectMapAllClick: PropTypes.func.isRequired,
-    order: PropTypes.oneOf(['asc', 'desc']).isRequired,
-    orderBy: PropTypes.string.isRequired,
-    rowCount: PropTypes.number.isRequired,
+    orderM: PropTypes.oneOf(['asc', 'desc']).isRequired,
+    orderMBy: PropTypes.string.isRequired,
+    rowCountM: PropTypes.number.isRequired,
   };
   
   function EnhancedTableToolbar(props) {
@@ -1927,7 +1881,75 @@ console.log("mapData:",mapData)
 
 
 
-
+  /*
+    ####### Sorting #######
+  */
+  const handleRequestSort = (event, property) => {
+    //console.log("handleRequestSort",property)
+    const isAsc = (orderBy === property && order === 'asc');
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+  function descendingComparator(a, b, orderBy) {
+    //console.log("sort",a,b,orderBy)
+    let c, d;
+    if (orderBy == "ITEM") {
+      c = (b[orderBy]);
+      d = (a[orderBy]);
+      //console.log("sortAsc",c,d)
+    } else {
+      c = isNaN(b[orderBy]) ? b[orderBy] : parseInt(b[orderBy]);
+      d = isNaN(a[orderBy]) ? a[orderBy] : parseInt(a[orderBy]);
+    }
+    if (c === "NULL" || d === "NULL") {
+      if (c === "NULL" && d !== "NULL") {
+        return -1
+      }
+      else if (d === "NULL" && c !== "NULL") {
+        return 1
+      }
+      else {
+        return 1
+      }
+    }
+    else {
+      if (c < d) {
+        return -1;
+      }
+      if (c > d) {
+        return 1;
+      }
+    }
+    return 0;
+  }
+  function getComparator(order, orderBy) {
+    if(orderBy==="#OF_SKUS"){
+      return order === 'desc'
+      ? (a, b) => descendingComparator(a, b, "SKU_COUNT")
+      : (a, b) => -descendingComparator(a, b, "SKU_COUNT");
+    }
+    return order === 'desc'
+      ? (a, b) => descendingComparator(a, b, orderBy)
+      : (a, b) => -descendingComparator(a, b, orderBy);
+  }
+  function stableSort(array, comparator) {
+    //console.log("sort",array,comparator)
+    const stabilizedThis = array.map((el, index) => [el, index]);
+    stabilizedThis.sort((a, b) => {
+     
+      const order = comparator(a[0], b[0]);
+      if (order !== 0) {
+        return order;
+      }
+      return a[1] - b[1];
+    });
+    //console.log("stabilizedThis",stabilizedThis.map((el) => el[0]))
+    return stabilizedThis.map((el) => el[0]);
+  }
+  
+  /*
+    ####### Sorting #######
+  */
   //ALLOCATED ITEMS TABLE
   
       return(
@@ -1994,11 +2016,15 @@ console.log("mapData:",mapData)
                       numSelected={selected.length}
                       onSelectAllClick={handleSelectAllClick}
                       rowCount={tableData.length}
+                      onRequestSort={handleRequestSort}
+                      order={order}
+                      orderBy={orderBy}
                       />
                         <TableBody >
-                        {tableData
+                        {tableData.length > 0 ?
+                        stableSort(tableData, getComparator(order, orderBy))
                         .map((row, index) => {
-                        const isItemSelected = isSelected(row.item);
+                        const isItemSelected = isSelected(row.ITEM);
                         const labelId = `enhanced-table-checkbox-${index}`;
                         return (
                           <TableRow 
@@ -2006,12 +2032,12 @@ console.log("mapData:",mapData)
                           role="checkbox"
                           aria-checked={isItemSelected}
                           tabIndex={-1}
-                          key={row.item}
+                          key={row.ITEM}
                           selected={isItemSelected}
                           >
                             <TableCell padding="checkbox">
                             <Checkbox
-                              onClick={(event) => handleClick(event, row?.item)}
+                              onClick={(event) => handleClick(event, row?.ITEM)}
                               color="primary"
                               checked={isItemSelected}
                               inputProps={{
@@ -2021,15 +2047,15 @@ console.log("mapData:",mapData)
                             />
                             </TableCell>
                            
-                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}>{row.item}</TableCell>
+                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}>{row.ITEM}</TableCell>
                               <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0,width:"130px"}}>
                                   <Box   
                                       display="flex"
                                       justifyContent="space-between"
                                       sx={{border:0,}}>
-                                      <p>{String(row.item_desc).length>0 && String(row.item_desc).length<5?
-                                          row.item_desc
-                                          :String(row.item_desc).substring(0,10)+"..."}</p>
+                                      <p>{String(row.ITEM_DESC).length>0 && String(row.ITEM_DESC).length<5?
+                                          row.ITEM_DESC
+                                          :String(row.ITEM_DESC).substring(0,10)+"..."}</p>
                                       <Button sx={{backgroundColor:"",'&:hover': {
                                               backgroundColor: "",},border:0,color:"CadetBlue"}}
                                               style={{maxWidth: '25px', minWidth: '25px',justifyContent:"flex-start"
@@ -2038,7 +2064,7 @@ console.log("mapData:",mapData)
                                               className={LikeItem.textField}
                                               onClick={()=>{swal(
                                                 <div>     
-                                                  <p>{row.item_desc}</p>
+                                                  <p>{row.ITEM_DESC}</p>
                                                 </div>
                                               )}}
                                               startIcon={<InfoIcon/>}
@@ -2046,13 +2072,13 @@ console.log("mapData:",mapData)
                                       </Button>
                                   </Box>
                               </TableCell>
-                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}} >{row.diff_id}</TableCell>
+                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}} >{row.DIFF_ID}</TableCell>
                               <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}} textAlign="right">
                                       <Box   
                                         display="flex"
                                         justifyContent="space-between"
                                         sx={{border:0,}}>
-                                        <p>{row.sku_count}</p>
+                                        <p>{row.SKU_COUNT}</p>
                                         <Button sx={{backgroundColor:"",'&:hover': {
                                                 backgroundColor: "",},border:0,color:"CadetBlue"}}
                                                 style={{maxWidth: '25px', minWidth: '25px',justifyContent:"flex-start"
@@ -2061,7 +2087,7 @@ console.log("mapData:",mapData)
                                                 className={LikeItem.textField}
                                                 onClick={()=>{swal(
                                                   <div>     
-                                                    <p>{row.sku_count}</p>
+                                                    <p>{row.SKU_COUNT}</p>
                                                   </div>
                                                 )}}
                                                 startIcon={<InfoIcon/>}
@@ -2071,7 +2097,7 @@ console.log("mapData:",mapData)
                               </TableCell>
                           </TableRow >
                         );
-                        })}
+                        }):false}
                         {tableData.length<5?
                           [...Array(5-(tableData.length)).keys()].map(val=>(
                               <StyledTableRow > 
@@ -2099,12 +2125,12 @@ console.log("mapData:",mapData)
                                   numMapSelected={selectedMap.length}
                                   onSelectMapAllClick={handleMapSelectAllClick}
                                   rowCount={mapTableData.length}
-                                />
-                                <TableBody >
-                                {mapTableData.length>0?
-                                mapTableData
+                                  />
+                                  <TableBody >
+                                  {mapTableData.length>0?
+                                  mapTableData
                                   .map((row, index) => {
-                                  const isItemSelected = isMapSelected(row.item);
+                                  const isItemSelected = isMapSelected(row.ITEM);
                                   const labelId = `enhanced-table-checkbox-${index}`;
                                   return (
                                     <TableRow 
@@ -2113,12 +2139,12 @@ console.log("mapData:",mapData)
                                     aria-checked={isItemSelected}
                                     //sx={{backgroundColor:"green",border:"5px solid black"}}
                                     tabIndex={-1}
-                                    key={row.item}
+                                    key={row.ITEM}
                                     selected={isItemSelected}
                                     >
                                       <TableCell padding="checkbox">
                                         <Checkbox
-                                          onClick={(event) => handleMapClick(event, row?.item)}
+                                          onClick={(event) => handleMapClick(event, row?.ITEM)}
                                           color="primary"
                                           checked={isItemSelected}
                                           inputProps={{
@@ -2127,20 +2153,20 @@ console.log("mapData:",mapData)
                                           style={{transform: "scale(0.8)",}}
                                         />
                                       </TableCell>
-                                      <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}>{row.item}</TableCell>
+                                      <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}>{row.ITEM}</TableCell>
                                       <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}>
                                         <Box
                                           display="flex"
                                           justifyContent="space-between"
                                           sx={{ border: 0, }}>
-                                          <p>{String(row.item_desc).length > 0 && String(row.item_desc).length < 5 ?
-                                            row.item_desc
-                                            : String(row.item_desc).substring(0, 10) + "..."}</p>
+                                          <p>{String(row.ITEM_DESC).length > 0 && String(row.ITEM_DESC).length < 5 ?
+                                            row.ITEM_DESC
+                                            : String(row.ITEM_DESC).substring(0, 10) + "..."}</p>
                                           <Button sx={{
                                             backgroundColor: "", '&:hover': {
                                               backgroundColor: "",
                                             }, border: 0, color: "CadetBlue"
-                                          }}
+                                            }}
                                             style={{
                                               maxWidth: '25px', minWidth: '25px', justifyContent: "flex-start"
                                             }}
@@ -2149,7 +2175,7 @@ console.log("mapData:",mapData)
                                             onClick={() => {
                                               swal(
                                                 <div>
-                                                  <p>{row.item_desc}</p>
+                                                  <p>{row.ITEM_DESC}</p>
                                                 </div>
                                               )
                                             }}
@@ -2158,16 +2184,16 @@ console.log("mapData:",mapData)
                                           </Button>
                                         </Box>
                                       </TableCell>
-                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.diff_id}</TableCell>
-                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.like_item}</TableCell>
+                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.DIFF_ID}</TableCell>
+                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.LIKE_ITEM}</TableCell>
                                       <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>
                                       <Box
                                           display="flex"
                                           justifyContent="space-between"
                                           sx={{ border: 0, }}>
-                                          <p>{String(row.like_item_desc).length > 0 && String(row.item_desc).length < 5 ?
-                                            row.item_desc
-                                            : String(row.item_desc).substring(0, 10) + "..."}</p>
+                                          <p>{String(row.LIKE_ITEM_DESC).length > 0 && String(row.LIKE_ITEM_DESC).length < 5 ?
+                                            row.LIKE_ITEM_DESC
+                                            : String(row.LIKE_ITEM_DESC).substring(0, 10) + "..."}</p>
                                           <Button sx={{
                                             backgroundColor: "", '&:hover': {
                                               backgroundColor: "",
@@ -2181,7 +2207,7 @@ console.log("mapData:",mapData)
                                             onClick={() => {
                                               swal(
                                                 <div>
-                                                  <p>{row.like_item_desc}</p>
+                                                  <p>{row.LIKE_ITEM_DESC}</p>
                                                 </div>
                                               )
                                             }}
@@ -2190,7 +2216,7 @@ console.log("mapData:",mapData)
                                           </Button>
                                         </Box>
                                       </TableCell>
-                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.like_item_diff_id}</TableCell>
+                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.LIKE_ITEM_DIFF_ID}</TableCell>
                                       <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{mapData.WEIGHT}</TableCell>
                                       <TableCell padding="checkbox"> <Checkbox color="primary" disabled={alloc_Level==="T"} style={{ transform: "scale(0.8)",}}/></TableCell>
                                     </TableRow>

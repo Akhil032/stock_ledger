@@ -279,6 +279,60 @@ const AllocationReducers = (state = initialState, action) => {
             messgae: action.payload?.Data?.message,
             isSuccess: false,
         };
+        case actions.GET_ALLOC_ID_REQUEST:
+        return {
+            ...state,
+            isLoading: true,
+            isError: false,
+            messgae: "",
+            isSuccess: false,
+        };
+
+        case actions.GET_ALLOC_ID_SUCCESS:
+        return {
+            ...state,
+            isLoading: false,
+            data: action.payload,
+            isError: false,
+            messgae: action.payload?.Data?.message,
+            isSuccess: false,
+        };
+
+        case actions.GET_ALLOC_ID_ERROR:
+        return {
+            ...state,
+            isLoading: false,
+            isError: true,
+            messgae: action.payload?.Data?.message,
+            isSuccess: false,
+        };
+        case actions.POST_ALLOC_HDETAILS_REQUEST:
+        return {
+            ...state,
+            isLoading: true,
+            isError: false,
+            messgae: "",
+            isSuccess: false,
+        };
+
+        case actions.POST_ALLOC_HDETAILS_SUCCESS:
+        return {
+            ...state,
+            isLoading: false,
+            data: action.payload,
+            isError: false,
+            messgae: action.payload?.Data?.message,
+            isSuccess: false,
+        };
+
+        case actions.POST_ALLOC_HDETAILS_ERROR:
+        return {
+            ...state,
+            isLoading: false,
+            isError: true,
+            messgae: action.payload?.Data?.message,
+            isSuccess: false,
+        };
         default:
             return { ...state };
         }

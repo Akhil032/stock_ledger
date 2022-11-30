@@ -14,7 +14,6 @@ import DailyViewReducers from "./DailyViewReducers";
 import SubLedgerCostReducers from "./subLedgerCostReducers";
 import sysconfigcreationReducers from "./SysConfigCreationReducers";
 import AllocationReducers from "./AllocationReducers";
-console.log(23456)
 const rootReducer = combineReducers({
   StagingProcessingReducers,
   ErrorProcessingReducers,
