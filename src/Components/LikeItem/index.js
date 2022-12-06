@@ -29,6 +29,10 @@ import swal from '@sweetalert/with-react';
 import PropTypes from 'prop-types';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import { visuallyHidden } from '@mui/utils';
+import { alpha } from "@mui/material/styles";
+import Typography from "@mui/material/Typography";
+import Toolbar from "@mui/material/Toolbar";
+
 
 const animatedComponents = makeAnimated();
 
@@ -185,6 +189,11 @@ const useStyles = makeStyles({
       padding: "0rem 0rem",
       verticalAlign: "middle",
       },
+      TitleHead: {
+        // height: "25px",
+        position: "sticky",
+        top: -1,
+    },
   });
 
 const initialData={
@@ -224,30 +233,10 @@ const LikeItemMap=()=>{
   const [delTableData, setDelTableData] = useState([]);
   const [allocNo,setAllocNo]=useState({})
   const alloc_Level="T"
-  const alloc_no="12345678"
+  // const alloc_no="12345678"
   //filtered uda data
   const [filterUDAValue,setFilterUDAValue] = useState([]);
-// Unique data
-  let UniqDept =
-    hier1Data.length > 0
-      ? [...new Map(hier1Data.map((item) => [item["HIER1"], item])).values()]
-      : [];
-  let UniqClass =
-    hier2Data.length > 0
-      ? [...new Map(hier2Data.map((item) => [item["HIER2"], item])).values()]
-      : [];
-  let UniqSubClass =
-    hier3Data.length > 0
-      ? [...new Map(hier3Data.map((item) => [item["HIER3"], item])).values()]
-      : [];
-  let UniqUDA =
-    udaData.length > 0
-        ? [...new Map(udaData.map((item) => [item["UDA"], item])).values()]
-        : [];
-  let UniqItemParent =
-    itemParentData.length > 0
-      ? [...new Map(itemParentData.map((item) => [item["ITEM_PARENT"], item])).values()]
-      : [];
+
 
   //console.log("UniqItemParent:",UniqItemParent)
   //Dropdown input
@@ -265,26 +254,72 @@ const LikeItemMap=()=>{
   const [mapData,setMapData]=useState(initialData);
   const []=useState([]);
   // validation
+  const [checkAlloc,setCheckAlloc]=useState(false);
   const [checkClass,setCheckClass]=useState(false);
   const [checkSubClass,setCheckSubClass]=useState(false);
   //table CheckBox
   const [selected,setSelected]=useState([]);
   const [selectedMap,setSelectedMap]=useState([]);
-  const AllocationClasses = useStyles();
   const AllocationData = useSelector(
     (state) => state.AllocationReducers
   );
-
+  //Filtered Data
+  const [fltrH2, setFltrH2] = useState([]);
+  const [fltrH3, setFltrH3] = useState([]);
+  const [fltrSku, setFltrSku] = useState([]);
+  const [fltrDiff, setFltrDiff] = useState([]);
+  const [fltrUDA, setFltrUDA] = useState([]);
+  const [fltrIPar, setFltrIPar] = useState([]);
   //sort
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState('');
   const [orderM, setOrderM] = React.useState('asc');
   const [orderMBy, setOrderMBy] = React.useState('');
+
+
+// Unique data
+let UniqDept =
+hier1Data.length > 0
+  ? [...new Map(hier1Data.map((item) => [item["HIER1"], item])).values()]
+  : [];
+// let UniqClass =
+// hier2Data.length > 0
+//   ? [...new Map(hier2Data.map((item) => [item["HIER2"], item])).values()]
+//   : [];
+let UniqClass =
+fltrH2.length > 0
+  ? [...new Map(fltrH2.map((item) => [item["HIER2"], item])).values()]
+  : [];
+let UniqSubClass =
+fltrH3.length > 0
+  ? [...new Map(fltrH3.map((item) => [item["HIER3"], item])).values()]
+  : [];
+// let UniqUDA =
+// udaData.length > 0
+//     ? [...new Map(udaData.map((item) => [item["UDA"], item])).values()]
+//     : [];
+let UniqUDA =
+udaData.length > 0
+    ? [...new Map(fltrUDA.map((item) => [item["UDA"], item])).values()]
+    : [];
+// let UniqItemParent =
+// itemParentData.length > 0
+//   ? [...new Map(itemParentData.map((item) => [item["ITEM_PARENT"], item])).values()]
+//   : [];
+let UniqItemParent =
+itemParentData.length > 0
+  ? [...new Map(fltrIPar.map((item) => [item["ITEM_PARENT"], item])).values()]
+  : [];
+let UniqDiff =
+fltrDiff.length > 0
+? [...new Map(fltrDiff.map((item) => [item["DIFF_ID"], item])).values()]
+: [];
+
   //Table Header for Grids
   const alloc_head=["ITEM","ITEM_DESC","DIFF_ID","#OF_SKUS"]
   const map_head=["ITEM","ITEM_DESC","DIFF_ID","LIKE_ITEM","LIKE_ITEM_DESC","LIKE_ITEM_DIFF_ID","WEIGHT%"]
   useEffect(() => {
-    document.title = 'Allocation';
+    document.title = 'Like Item Mapping';
   },[]);
 
   const dispatch = useDispatch();
@@ -300,9 +335,12 @@ const LikeItemMap=()=>{
     dispatch(getSKURequest([{}]));
     dispatch(getAllocIdRequest());
     //dispatch(getAllocItemsRequest([searchHeaderData.ALLOC_NO]));
-    dispatch(getAllocItemsRequest([{"ALLOCATION_ID": 12345678}]));
+    
   }, [""]);
-
+  if( Object.keys(allocNo).includes("ALLOCATION_ID") && !checkAlloc){
+    setCheckAlloc(true);
+    dispatch(getAllocItemsRequest([allocNo]));
+  }
   useEffect(() => {
 
     if (AllocationData?.data?.hierData && Array.isArray(AllocationData?.data?.hierData)) {
@@ -342,14 +380,17 @@ const LikeItemMap=()=>{
       setLoading(false);
     }
   });
-  // const tb_keys=tableData.keys
-  console.log("alloc",AllocationData?.data?.allocHDetails,allocHDtl)
-  if(tableData.length>0){
-    //console.log("df", tableData[0],String(tableData[0]["item_desc"]),"item" in tableData[0]);
-  }
-  //filtering
-  
+
+ // console.log("UniqClass ",UniqClass);
+
+  /* 
+                    #######################################
+                      ### Filtering Data in criteria ###
+                    #######################################
+  */
+//console.log(mapData,valHIER3,valHIER2)
   const filteringValData=(key,valArray)=>{
+    console.log(key,valArray)
     if(mapData[key].length>0){
       mapData[key].map(item=>{
         var count=0;
@@ -382,17 +423,129 @@ const LikeItemMap=()=>{
       })
     }
   }    
+  // const filterSelect=()=>{
+  //   const temp=mapData.SKU
+  //   const check=skuData.filter(obj=>obj.SKU===temp)
+
+  //   console.log("check",check,skuData)
+  // }
+
+
+
+  const filterOnSelect=(fltr_obj,Data,tableName)=>{
+    console.log("fltr_obj",fltr_obj,tableName)
+    const key=Object.keys(fltr_obj)[0]
+    var fltrData=[]
+    if (tableName==="SKU" && fltrSku.length===0){
+      fltrData=fltrSku
+    }
+    if (tableName==="DIFF" && fltrDiff.length===0){
+      fltrData=fltrDiff
+    }
+    if (tableName==="UDA" && fltrUDA.length===0){
+      fltrData=fltrUDA
+    }
+    //console.log(fltr_obj[key]);
+    fltr_obj[key].map(val=>{
+    const temp_Data=Data.filter(obj=>obj[key]===val);
+    fltrData.push(...temp_Data);
+    })
+    console.log("fltrData",fltrData)
+    if(tableName==="SKU" || tableName==="Sk"){
+      if(mapData.SKU.length>0){
+      const filtr_check=fltrData.filter((obj)=>obj.SKU===mapData.SKU)
+      if(filtr_check.length===0){
+        setMapData((prev) => {
+          return {
+            ...prev,
+            SKU : "",
+            SKU_DESC:"",
+            SKU_DIFF_ID:"",
+          };
+        });
+      }
+      //console.log("filtr_checkf",filtr_check,mapData.SKU,"fltrData",fltrData)
+    }
+      
+      setFltrSku(fltrData)
+    }else if(tableName==="DIFF" || tableName ==="ITEM_PARENT" || tableName=="SH2"){
+      const filtr_check=fltrData.filter((obj)=>obj.DIFF_ID===mapData.DIFF_ID)
+      // if(filtr_check.length===0){
+      //   console.log("valUDA",valUDA);
+      //   var check=false;
+      //   var valTemp=valUDA
+      //   valUDA.map((obj)=>{
+      //     if(mapData.HIER3.length>0){
+      //       mapData.HIER3.includes(obj.HIER3)?check=true:check=false
+      //     }else if(mapData.HIER2.length>0){
+      //       mapData.HIER2.includes(obj.HIER2)?check=true:check=false
+      //     }else if(mapData.HIER1.length>0){
+      //       mapData.HIER1.includes(obj.HIER1)?check=true:check=false
+      //     }
+      //     if(check){
+      //       valTemp=valTemp.filter(obj=>obj)
+      //     }
+      //   })
+      //   setMapData((prev) => {
+      //     return {
+      //       ...prev,
+      //       DIFF_ID : [],
+      //     };
+      //   });
+      // }
+      setFltrDiff(fltrData)
+    }else if (tableName==="UDA" || tableName==="UH1"){
+      const filtr_check=fltrData.filter((obj)=>mapData.UDA.includes(obj.UDA))
+      
+      console.log("filtr_check",filtr_check,fltrData);
+      if(filtr_check.length===0){
+        // filtr_check.map((obj)=>{
+        //   console.log(obj)
+        //   if(mapData.UDA.includes(obj.UDA) && mapData.HIER1.includes(obj.HIER1)){// && mapData.HIER3.includes(obj.HIER3 && mapData.SKU===(obj.ITEM)
+            
+            setMapData((prev) => {
+              return {
+                ...prev,
+                UDA: [],
+                UDA_VALUE:[],
+              };
+            });
+          //}
+        //})
+       
+      }
+      setFltrUDA(fltrData)
+    }else if (tableName==="IP" ){
+      setFltrIPar(fltrData)
+    }
+    else if (tableName==="HIER2" ){
+      setFltrH2(fltrData)
+    }else if (tableName==="HIER3" ){
+      setFltrH3(fltrData)
+    }
+
+  }
+
+
+
+//console.log("Diff:: ",fltrDiff,"UniqDiff",UniqDiff);
 /**** Allocation number ****/
-const selectedAlloc=(value)=>{
-console.log("addfd",value)
-dispatch(postAllocHDetailsRequest([value]));
-setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
-}
+  const selectedAlloc=(value)=>{
+  dispatch(postAllocHDetailsRequest([value]));
+  setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
+  }
 // Handling Like Item Criteria input selection
+/* 
+                    #########################################
+                    ### Handling Criteria input selection ###
+                    #########################################
+  */
+ //console.log("UniqDept",UniqDept)
   const selectedHIER1=(event,value)=>{
     let sel_HIER1 = [];
+    let temp_Arr = []
     if (value.option) {  
-      console.log(value.option)
+      //console.log(value.option)
       valHIER1.push(value.option);
     }else if (value.removedValue) {
       let index=0        
@@ -404,12 +557,33 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
         }
       }
       valHIER1.splice(index,1);
-      filteringData("HIER1","HIER2",hier2Data,valHIER2,value.removedValue.HIER1);
-      filteringData("HIER1","HIER3",hier3Data,valHIER3,value.removedValue.HIER1);
-      //filteringData("HIER1","UDA",udaData,valUDA,value.removedValue.HIER1);      
-      //filteringData("HIER1","SKU",skuData,valSKU,value.removedValue.HIER1);
+      if(valHIER1.length > 0){
+        valHIER1.map(
+          (item) => {
+            temp_Arr.push(item.HIER1);
+          }
+        )
+        var tempH1={};
+        tempH1["HIER1"]=temp_Arr;
+        filterOnSelect(tempH1,skuData,"SKU");
+        filterOnSelect(tempH1,diffData,"DIFF");
+        filterOnSelect(tempH1,udaData,"UDA");
+        filterOnSelect(tempH1,itemParentData,"IP");
+        filterOnSelect(tempH1,hier2Data,"HIER2")
+      }else{
+        setFltrH2([]);
+        setFltrSku([]);
+        setFltrDiff([]);
+        setFltrUDA([]);
+        setFltrIPar([]);
+      }
     }else if(value.action==="clear"){ 
       valHIER1.splice(0,valHIER1.length);
+      setFltrSku([]);
+      setFltrDiff([]);
+      setFltrUDA([]);
+      setFltrIPar([]);
+
     }
 
     if(valHIER1.length > 0 && typeof valHIER1[0]['HIER1'] !== "undefined"){
@@ -428,37 +602,59 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
       //if(valHIER2.length===0){
         setCheckClass(true)
         var temp={}
-          temp["HIER1"]=sel_HIER1
-          dispatch(getHIER2Request([temp]));
-          dispatch(getUDARequest([temp]));
-          dispatch(getITEMPARENTRequest([temp]));
-          dispatch(getSKURequest([temp]));
-          
+        // if(mapData.SKU.length>0){
+        //   temp["ITEM"]=mapData.SKU;}
+        // else if(mapData.ITEM_PARENT.length>0){
+        //   temp["ITEM_PARENT"]=[...mapData.ITEM_PARENT];}
+        // else if(mapData.HIER3.length>0){
+        //   temp["HIER3"]=[...mapData.HIER3];}
+        // else if(mapData.HIER2.length>0){
+        //     temp["HIER2"]=[...mapData.HIER2];}
+        // else if(mapData.HIER1.length>0){
+        // temp["HIER1"]=[...mapData.HIER1];}
+        // else{
+          temp["HIER1"]=sel_HIER1;
+        //}
+          filterOnSelect(temp,hier2Data,"HIER2")
+          if(mapData.HIER2.length===0 && mapData.HIER3.length===0 && mapData.ITEM_PARENT.length===0  && mapData.SKU.length===0 )
+          filterOnSelect(temp,skuData,"SKU")
+          filterOnSelect(temp,diffData,"DIFF")
+          filterOnSelect(temp,udaData,"UDA")
+          filterOnSelect(temp,itemParentData,"IP")
           //console.log(temp);
      // }
     }else{
-      dispatch(getHIER2Request([{}]));
-      dispatch(getHIER3Request([{}]));
-      dispatch(getUDARequest([{}]));
-      dispatch(getITEMPARENTRequest([{}]));
-      dispatch(getSKURequest([{}]));
-          
+      setFltrH2([]);
+      setFltrH3([]);
+      setFltrSku([]);
+      setFltrDiff([]);
+      setFltrUDA([]);
+      setFltrIPar([]);
       setCheckClass(false);
       setCheckSubClass(false);
       setValHIER1([]);
       setValHIER2([]);
+     
       setMapData((prev) => {
         return {
           ...prev,
           HIER1 : [],
           HIER2 : [],
           HIER3 : [],
+          UDA:[],
+          UDA_VALUE : [],
+          ITEM_PARENT : [],
+          DIFF_ID : [],
+          SKU : "",
+          SKU_DESC:"",
+          SKU_DIFF_ID:"",
         };
       });
     }
   }
   const selectedHIER2=(event,value)=>{
     let sel_HIER2 = [];
+    let temp_Arr=[]
     if (value.option) {  
       valHIER2.push(value.option);
     }else if (value.removedValue) {
@@ -469,13 +665,45 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
           index=i;
           break;
         }
-        filteringData("HIER2","HIER3",hier3Data,valHIER3,value.removedValue.HIER2);
-        //filteringData("HIER2","UDA",udaData,valUDA,value.removedValue.HIER1);      
-        filteringData("HIER2","ITEM_PARENT",itemParentData,valItemPar,value.removedValue.HIER2);
       }
       valHIER2.splice(index,1);
+
+      if(valHIER2.length > 0){
+        valHIER2.map(
+          (item) => {
+            temp_Arr.push(item.HIER2);
+          }
+        )
+        var tempH2={}
+        tempH2["HIER2"]=temp_Arr;
+        
+        filterOnSelect(tempH2,skuData,"SKU");
+        filterOnSelect(tempH2,diffData,"SH2"); 
+        filterOnSelect(tempH2,udaData,"UH1");
+        filterOnSelect(tempH2,itemParentData,"IP");
+        filterOnSelect(tempH2,fltrH3,"HIER3");
+
+
+      }else{
+        console.log(1234567)
+        var tempH1={}
+        tempH1["HIER1"]=[...mapData.HIER1];
+        filterOnSelect(tempH1,hier3Data,"HIER3");
+        filterOnSelect(tempH1,skuData,"SKU");
+        filterOnSelect(tempH1,diffData,"SH2") ;
+        filterOnSelect(tempH1,udaData,"UH1");
+        filterOnSelect(tempH1,itemParentData,"IP")
+
+      }
     }else if(value.action==="clear"){ 
       valHIER2.splice(0,valHIER2.length);
+      var tempH1={}
+      tempH1["HIER1"]=[...mapData.HIER1];
+      filterOnSelect(tempH1,hier3Data,"HIER3");
+      filterOnSelect(tempH1,skuData,"SKU");
+      filterOnSelect(tempH1,diffData,"SH2");
+      filterOnSelect(tempH1,udaData,"UH1");
+      filterOnSelect(tempH1,itemParentData,"IP");
     }
 
     if(valHIER2.length > 0 && typeof valHIER2[0]['HIER2'] !== "undefined"){
@@ -485,19 +713,22 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
           sel_HIER2.push(item.HIER2);
         }
       )
-      if(valHIER3.length===0){
+      
         setCheckSubClass(true)
         var temp={}
           if(mapData.HIER1.length>0){
           temp["HIER1"]=[...mapData.HIER1];}
           temp["HIER2"]=sel_HIER2;
-          dispatch(getHIER3Request([temp]));
-          dispatch(getUDARequest([temp]))
-          dispatch(getITEMPARENTRequest([temp]));
-          dispatch(getSKURequest([temp]));
-          
+         var tempH2={}
+         tempH2["HIER2"]=sel_HIER2;
+         filterOnSelect(tempH2,hier3Data,"HIER3");
+         filterOnSelect(tempH2,skuData,"SKU");
+         filterOnSelect(tempH2,fltrDiff,"DIFF");
+         filterOnSelect(tempH2,fltrUDA,"UDA");
+         filterOnSelect(tempH2,fltrIPar,"IP");
+
           //console.log(temp);
-      }
+      
       setMapData((prev) => {
         return {
           ...prev,
@@ -505,11 +736,7 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
         };
       });
     }else{
-      dispatch(getHIER3Request([{}]));
-      dispatch(getUDARequest([{}]));
-      dispatch(getITEMPARENTRequest([{}]));
-      dispatch(getSKURequest([{}]));
-          
+      
       setCheckSubClass(false)
       setValHIER3([]);
 
@@ -524,6 +751,7 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
   }
   const selectedHIER3=(event,value)=>{
     let sel_HIER3 = [];
+    let temp_Arr=[]
     if (value.option) {  
       valHIER3.push(value.option);
     }else if (value.removedValue) {
@@ -534,12 +762,43 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
           index=i;
           break;
         }
-        //filteringData("HIER3","UDA",udaData,valUDA,value.removedValue.HIER1);      
-        filteringData("HIER3","ITEM_PARENT",itemParentData,valItemPar,value.removedValue.HIER2);
       }
-      valHIER3.splice(index,1);
+      valHIER3.splice(index,1);    
+      if(valHIER3.length > 0){
+        console.log(76543)
+        valHIER3.map(
+          (item) => {
+            temp_Arr.push(item.HIER3);
+          }
+        )
+        var tempH3={}
+        tempH3["HIER3"]=temp_Arr;
+        filterOnSelect(tempH3,skuData,"SKU");
+        filterOnSelect(tempH3,diffData,"SH2");
+        filterOnSelect(tempH3,udaData,"UH1");
+        filterOnSelect(tempH3,itemParentData,"IP");
+
+      }else{
+        console.log(1234567)
+        var tempH2={}
+        tempH2["HIER2"]=[...mapData.HIER2];
+        filterOnSelect(tempH2,skuData,"SKU");
+        filterOnSelect(tempH2,diffData,"SH2");
+        filterOnSelect(tempH2,udaData,"UH1");
+        filterOnSelect(tempH2,itemParentData,"IP");
+
+      }
+
+
     }else if(value.action==="clear"){ 
       valHIER3.splice(0,valHIER3.length);
+      var tempH2={}
+          tempH2["HIER2"]=[...mapData.HIER2];
+          filterOnSelect(tempH2,skuData,"SKU")
+          filterOnSelect(tempH2,diffData,"SH2")
+          filterOnSelect(tempH2,udaData,"UH1")
+          filterOnSelect(tempH2,itemParentData,"IP");
+
     }
 
     if(valHIER3.length > 0 && typeof valHIER3[0]['HIER3'] !== "undefined"){
@@ -562,17 +821,16 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
           if(mapData.HIER2.length>0){
             temp["HIER2"]=[...mapData.HIER2];}
           temp["HIER3"]=sel_HIER3;
-          dispatch(getUDARequest([temp]))
-          dispatch(getITEMPARENTRequest([temp]));
-          dispatch(getSKURequest([temp]));
-          
-          //console.log(temp);
+         
+          var tempH3={}
+         tempH3["HIER3"]=sel_HIER3;
+         filterOnSelect(tempH3,skuData,"SKU");
+         filterOnSelect(tempH3,fltrDiff,"DIFF") 
+         filterOnSelect(tempH3,fltrUDA,"UDA")
+         filterOnSelect(tempH3,fltrIPar,"IP")
+
       }
     }else{
-      dispatch(getUDARequest([{}]));
-      dispatch(getITEMPARENTRequest([{}]));
-      dispatch(getSKURequest([{}]));
-          
       setMapData((prev) => {
         return {
           ...prev,
@@ -582,8 +840,16 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
     }
   }
   const selectedUDA=(event,value)=>{
+    
     let sel_UDA = [];
-    if (value.option) {  
+    if (value.option) { 
+      if(mapData.UDA.length===3){
+        return( swal(
+           <div>     
+             <p>{"UDA limit is 3"}</p>
+           </div>
+         ))
+       } 
       valUDA.push(value.option);
     }else if (value.removedValue) {
       let index=0        
@@ -613,6 +879,9 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
           sel_UDA.push(item.UDA);
         }
       )
+      var temp={}
+         temp["UDA"]=sel_UDA;
+      
       setMapData((prev) => {
         return {
           ...prev,
@@ -708,94 +977,60 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
       });
     }
   }
-  const selectedItemParent=(event,value)=>{
-    console.log("selectedItemParent",value)
+  
+  const selectedItemParent=(value)=>{
+    console.log(value)
+    if (value) { 
+      var tempIT={};
+      var temp_Arr=[];
+      temp_Arr.push(value.ITEM_PARENT);
+      tempIT["ITEM_PARENT"]=temp_Arr;
 
-    
-    let sel_Item_Par = [];
-    if (value.option) {  
-      console.log("selectedItemParent",value.option)
-      valItemPar.push(value.option);
-    }else if (value.removedValue) {
-      let index=0        
-      for(var i=0;i<valItemPar.length;i++)
-      {
-        if(valItemPar[i]["ITEM_PARENT"]===value.removedValue.ITEM_PARENT){
-          index=i;
-          break;
-        }
-          
-      //filteringData("ITEM_PARENT","SKU",skuData,valSKU,value.removedValue.ITEM_PARENT);
-      }
-      valItemPar.splice(index,1);
-    }else if(value.action==="clear"){ 
-      valItemPar.splice(0,valItemPar.length);
-    }
-
-    if(valItemPar.length >0 && typeof valItemPar[0]['ITEM_PARENT'] !== "undefined"){
-      
-      valItemPar.map(
-        (item) => {
-          sel_Item_Par.push(item.ITEM_PARENT);
-        }
-      )
-      console.log("tp",sel_Item_Par,valSKU.length)
-      if(valSKU.length===0){
-        var temp={}
-          temp["ITEM_PARENT"]=sel_Item_Par;
-          dispatch(getDIFFRequest([temp]));
-          dispatch(getSKURequest([temp]));
-          console.log(temp);
-      }
+      filterOnSelect(tempIT,skuData,"SKU");
+      filterOnSelect(tempIT,fltrDiff,"DIFF") ;
+      filterOnSelect(tempIT,fltrUDA,"UDA")
       setMapData((prev) => {
         return {
           ...prev,
-          ITEM_PARENT : sel_Item_Par,
+          ITEM_PARENT : value.ITEM_PARENT,
         };
       });
 
-    }
-    else{
-      dispatch(getSKURequest([{}]));
+    }else{
+      var temp={}
+        if(mapData.HIER3.length>0){
+          temp["HIER3"]=[...mapData.HIER3];}
+        else if(mapData.HIER2.length>0){
+            temp["HIER2"]=[...mapData.HIER2];}
+        else if(mapData.HIER1.length>0){
+        temp["HIER1"]=[...mapData.HIER1];}
+
+        filterOnSelect(temp,skuData,"SKU")
+        filterOnSelect(temp,diffData,"ITEM_PARENT") 
+        filterOnSelect(temp,udaData,"UH1")
       setMapData((prev) => {
         return {
           ...prev,
           ITEM_PARENT : [],
         };
       });
+
     }
   }
-  const selectedDiff=(event,value)=>{
-    let sel_Diff_id = [];
-    if (value.option) {  
-      valDiff.push(value.option);
-    }else if (value.removedValue) {
-      let index=0        
-      for(var i=0;i<valDiff.length;i++)
-      {
-        if(valDiff[i]["DIFF_ID"]===value.removedValue.DIFF_ID){
-          index=i;
-          break;
-        }
-      }
-      valDiff.splice(index,1);
-    }else if(value.action==="clear"){ 
-      valDiff.splice(0,valDiff.length);
-    }
 
-    if(valDiff.length > 0 && typeof valDiff[0]['DIFF_ID'] !== "undefined"){
-      valDiff.map(
-        (item) => {
-          sel_Diff_id.push(item.DIFF_ID);
-        }
-      )
+  const selectedDiff=(value)=>{
+    console.log(value)
+    if( value){
+
       setMapData((prev) => {
         return {
           ...prev,
-          DIFF_ID : sel_Diff_id,
+          DIFF_ID : value.DIFF_ID,
         };
       });
+
     }else{
+
       setMapData((prev) => {
         return {
           ...prev,
@@ -804,9 +1039,17 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
       });
     }
   }
+
   const selectedSKU=(value)=>{
     console.log(value);
-    if (value) {  
+    if (value) { 
+      var tempSku={}
+      var temp_Arr=[]
+      temp_Arr.push(value.SKU)
+      tempSku["ITEM"]=temp_Arr;
+
+      filterOnSelect(tempSku,fltrDiff,"DIFF");
+      filterOnSelect(tempSku,fltrUDA,"UDA")
       setMapData((prev) => {
         return {
           ...prev,
@@ -816,6 +1059,17 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
         };
       });
     }else{
+      var temp={}
+      if(mapData.ITEM_PARENT.length>0){
+        temp["ITEM_PARENT"]=[...mapData.ITEM_PARENT];}
+        else if(mapData.HIER3.length>0){
+          temp["HIER3"]=[...mapData.HIER3];}
+        else if(mapData.HIER2.length>0){
+            temp["HIER2"]=[...mapData.HIER2];}
+        else if(mapData.HIER1.length>0){
+        temp["HIER1"]=[...mapData.HIER1];} 
+        filterOnSelect(temp,diffData,"DIFF") 
+        filterOnSelect(temp,udaData,"UH1")
       setMapData((prev) => {
         return {
           ...prev,
@@ -845,9 +1099,14 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
    }
   }
   const selectedWeight=(event)=>{ 
-    //console.log("weig",event.target.value)
-
-  if(event.target.value >0 && event.target.value <=100){
+    console.log("weig",event.target.value)
+    // setMapData((prev) => {
+    //         return {
+    //           ...prev,
+    //           WEIGHT : event.target.value,
+    //         };
+    //       });
+  if((event.target.value >0 && event.target.value <=100) || event.target.value===""){
       
       setMapData((prev) => {
         return {
@@ -858,7 +1117,9 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
     }else{
       swal(
         <div>     
-          <p>{"Invalid WEIGHT% :"}{event.target.value}</p>
+          <p>{"Invalid WEIGHT% : "}{event.target.value}</p>
+
+          {/* <p>{"should be between 0-100"}</p> */}
         </div>
       )  
     }
@@ -874,11 +1135,12 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
       });
     }
   }
- 
+ console.log("map",mapData)
 
   /*
-  ***** Like Item Mapping Button Function *****
-  
+                    #########################################
+                  ***** Like Item Mapping Button Function *****
+                    #########################################
   */
   const handleOK=()=>{
     if( mapTableData.length>0){
@@ -889,8 +1151,10 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
         item.push(obj.ITEM);
         sendData["ITEM"].push(obj.ITEM);
         sendData["LIKE_ITEM"]=obj.LIKE_ITEM
+        sendData["LIKE_ITEM_DIFF_ID"]=obj.LIKE_ITEM_DIFF_ID
+        sendData["LIKE_ITEM_WEIGHT"]=obj.LIKE_ITEM_WEIGHT
       });
-      sendData["ALLOC_NO"]=alloc_no
+      sendData["ALLOC_NO"]=allocNo.ALLOCATION_ID
       console.log(sendData)
      dispatch(postLIkeInsertRequest([sendData]));
      window.location.reload();
@@ -915,17 +1179,30 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
         );
         return;
       }
+      if(mapData.WEIGHT===""){
+        swal(
+          <div>
+            <p>{"Invalid Weight %  "}</p>
+          </div>
+        );
+        return;
+      }
       const temp =[... tableData.filter(obj => selected.includes(obj.ITEM))];
       const deletedData= tableData.filter(obj => selected.includes(obj.ITEM));
       
       setDelTableData([...delTableData,...deletedData]);
       setTableData(tableData.filter(obj => !selected.includes(obj.ITEM)));
       var mappedData= [];
+      // var
+      // if( mappedData.DIFF_ID.length>0){
+
+      // }
       temp.map(obj => {
         mappedData.push({...obj,
         LIKE_ITEM : mapData.SKU,
         LIKE_ITEM_DESC:mapData.SKU_DESC,
-        LIKE_ITEM_DIFF_ID :mapData.DIFF1
+        LIKE_ITEM_DIFF_ID :mapData.DIFF_ID.length>0?mapData.DIFF_ID :mapData.SKU_DIFF_ID,
+        LIKE_ITEM_WEIGHT : mapData.WEIGHT
         });
       });
       setMapTableData([...mapTableData,...mappedData]);
@@ -1114,7 +1391,7 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
                     sx={{"& .MuiInputBase-input.Mui-disabled": {
                         backgroundColor:"#f0f0f0",border:0
                     },backgroundColor:"white"}}
-                    value={allocHDtl.length>0 && allocHDtl.CONTEXT==="PROM"?allocHDtl[0].PROMOTION:null}
+                    value={allocHDtl.length>0 && allocHDtl[0].CONTEXT==="Promotion"?allocHDtl[0].PROMOTION:null}
                     disabled={true}
                     InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
                     InputProps={{
@@ -1274,8 +1551,12 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
                 </div> </div> 
     </Box>
   )
-//console.log("mapData:",mapData)
-  //Like item Criteria input fields
+  /*
+                    #########################################
+                        ***** Like item Criteria*****
+                    #########################################
+  */
+  
   const Like_Criteria=()=>(
     <Box 
         component="fieldset"
@@ -1337,7 +1618,7 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
                 value={hier2Data.filter(obj => mapData?.HIER2.includes(obj.HIER2))} 
                 isMulti 
                 isClearable={true} 
-                //isDisabled={!checkClass}
+                isDisabled={mapData.HIER1.length===0}
                 />
                 </div> </div>  
                  
@@ -1360,7 +1641,8 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
                 value={hier3Data.filter(obj => mapData?.HIER3.includes(obj.HIER3))} 
                 isMulti 
                 isClearable={true} 
-                //isDisabled={!checkSubClass}
+                isDisabled={mapData.HIER2.length===0}
+                maxMenuHeight={180} 
                 />
                 </div> </div> 
             <div className={LikeItem.float_container}>
@@ -1375,14 +1657,15 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
                   getOptionLabel={option =>
                     `${option.UDA.toString()}-${option.USER_ATTR_DESC.toString()}`}
                   getOptionValue={option => option.UDA}
-                  options={UniqUDA.length && mapData.UDA.length<3 > 0 ? UniqUDA : [] }
+                  options={UniqUDA.length? UniqUDA : [] }
                   styles={styleSelect}
                   components={animatedComponents}  
                   onChange={selectedUDA}
                   value={udaData.filter(obj => mapData?.UDA.includes(obj.UDA))}  
                   isMulti 
-                  //isDisabled={}
+                  isDisabled={mapData.HIER1.length===0}
                   isClearable={true} 
+                  maxMenuHeight={180} 
                 />
                 </div> </div> 
             <div className={LikeItem.float_container}>
@@ -1403,6 +1686,7 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
                 onChange={selectedUDAValue} 
                 value={udaData.filter(obj => mapData?.UDA_VALUE.includes(obj.UDA_VALUE))}  
                 isMulti 
+                maxMenuHeight={180} 
                 isClearable={true}
                 isDisabled={mapData.UDA.length===0}
 
@@ -1427,6 +1711,7 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
                 onChange={selectedItemList} 
                 value={itemListHeadData.filter(obj => mapData?.ITEM_LIST_NO.includes(obj.ITEM_LIST_NO))}  
                 isMulti 
+                maxMenuHeight={180} 
                 isClearable={true} 
                 />
                 </div> </div> 
@@ -1448,7 +1733,7 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
                 value={[{ value: 'YES'},{ value: 'NO'}].filter(obj => mapData?.SIZE_PROFILE.includes(obj.value))}
                 isClearable={true} 
                 isDisabled={alloc_Level==="T"}
-
+                maxMenuHeight={180} 
                 />
                 </div> </div> 
             <div className={LikeItem.float_container}>
@@ -1467,8 +1752,10 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
                 components={animatedComponents}  
                 onChange={selectedItemParent}  
                 value={UniqItemParent.filter(obj => mapData?.ITEM_PARENT.includes(obj.ITEM_PARENT))}   
-                isMulti 
+                //isMulti 
+                isDisabled={mapData.HIER1.length===0}
                 isClearable={true} 
+                maxMenuHeight={180} 
                 />
                 </div> </div>
             <div className={LikeItem.float_container}>
@@ -1483,15 +1770,16 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
                 getOptionLabel={option =>
                   `${option.DIFF_ID.toString()}`}
                 getOptionValue={option => option.DIFF_ID}
-                options={diffData.length > 0 ? diffData : []}
+                //options={diffData.length > 0 ? diffData : []}\
+                options={UniqDiff.length > 0 ? UniqDiff : []}
                 styles={styleSelect}
                 components={animatedComponents} 
                 onChange={selectedDiff}    
                 value={diffData.filter(obj => mapData?.DIFF_ID.includes(obj.DIFF_ID))}  
-                isMulti 
+                //isMulti 
                 isClearable={true} 
-                isDisabled={mapData.ITEM_PARENT.length===0}
-
+                isDisabled={mapData.HIER1.length===0}
+                maxMenuHeight={180} 
                 />
                 </div> </div>  
             <div className={LikeItem.float_container}>
@@ -1506,12 +1794,15 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
                 getOptionLabel={option =>
                   `${option.SKU.toString()}`}
                 getOptionValue={option => option.SKU}
-                options={skuData.length > 0 ? skuData : []}
+                //options={ fltrSku.length>0?fltrSku: skuData.length > 0 ? skuData : []}
+                options={fltrSku.length>0?fltrSku:[]}
                 styles={styleSelect}
-                components={animatedComponents}  
+                components={animatedComponents} 
+                maxMenuHeight={180} 
                 onChange={selectedSKU}    
                 value={skuData.filter(obj => mapData?.SKU.includes(obj.SKU))}  
                 //isMulti 
+                isDisabled={mapData.HIER1.length===0}
                 isClearable={true} 
                 />
                 </div> </div>   
@@ -1637,6 +1928,11 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
     </Box>
     )
 
+    /* 
+                    ########################################
+                      ### CheckBoc selection Handling ###
+                    ########################################
+  */
   const handleSelectAllClick = (event) => {
     //console.log("event::",event)
     if (event.target.checked && selected.length === 0) {
@@ -1646,7 +1942,6 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
     }
     setSelected([]);
   };
-
   const handleClick = (event, name) => {
     const selectedIndex = selected.indexOf(name);
     let newSelected = [];
@@ -1666,8 +1961,8 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
 
     setSelected(newSelected);
   };
-
   const isSelected = (name) => selected.indexOf(name) !== -1;
+
   const handleMapSelectAllClick = (event) => {
     //console.log("event::",event)
     if (event.target.checked && selectedMap.length === 0) {
@@ -1677,7 +1972,6 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
     }
     setSelectedMap([]);
   };
-
   const handleMapClick = (event, name) => {
     console.log("han map", selectedMap, name)
     const selectedIndex = selectedMap.indexOf(name);
@@ -1698,9 +1992,13 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
 
     setSelectedMap(newSelected);
   };
-
   const isMapSelected = (name) => selectedMap.indexOf(name) !== -1;
   
+/* 
+                    ########################################
+                       ### Allocated item grid header ###
+                    ########################################
+  */
   function Alloc_Grid(props) {
     const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } =
       props;
@@ -1709,7 +2007,7 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
     };
   
     return (
-      <TableHead>
+      <TableHead className={LikeItem.TitleHead}>
         <TableRow role="checkbox" sx={{backgroundColor:"#6495ED",height:"15px"}}>
           <TableCell padding="checkbox" style={{
                   whiteSpace: "nowrap", 
@@ -1772,7 +2070,6 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
       </TableHead> 
        );
   }  
-
   Alloc_Grid.propTypes = {
     numSelected: PropTypes.number.isRequired,
     onRequestSort: PropTypes.func.isRequired,
@@ -1781,17 +2078,58 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
     orderBy: PropTypes.string.isRequired,
     rowCount: PropTypes.number.isRequired,
   };
-
-  // MAPPED ITEMS GRID
+  function EnhancedTableToolbar(props) {
+    const { numSelected } = props;
+    return (
+      <Toolbar
+          sx={{
+              pl: { sm: 2 },
+              pr: { xs: 1, sm: 1 },
+              ...(tableData.length > 0 &&
+              {
+                  minHeight: {
+                      minHeight: "40px !important",
+                  },
+                  // border:"2px solid black", 
+                  bgcolor: (theme) =>
+                      alpha(
+                          theme.palette.primary.main,
+                          theme.palette.action.activatedOpacity
+                      ),
+              }),
+          }}
+      >
+          {tableData.length > 0 && (
+              <Typography
+                  sx={{
+                      flex: "1 1 100%", display: "flex",
+                      justifyContent: "flex-end",
+                      padding:"0px 20px 0px 0px"
+                  }}
+                  color="inherit"
+                  variant="subtitle1"
+                  component="div"
+              >
+                  Rows {selected.length} of {tableData.length}
+              </Typography>
+          )}
+      </Toolbar>
+  );
+  }
+/* 
+                    ########################################
+                        ### Mapped item grid header ###
+                    ########################################
+  */
   function Mapped_Grid(props) {
-    const { onSelectMapAllClick, orderM, orderMBy, numMapSelected, rowCountM, onRequestSortMap } =
+    const { onSelectMapAllClick, orderM, orderMBy, numMapSelected, rowCountM, onRequestMapSort} =
       props;
     const createSortMapHandler = (property) => (event) => {
-      onRequestSortMap(event, property);
+      onRequestMapSort(event, property);
     };
   
     return (
-      <TableHead>
+      <TableHead className={LikeItem.TitleHead}>
         <TableRow role="checkbox" sx={{backgroundColor:"#6495ED",height:"15px"}}>
           <TableCell padding="checkbox" style={{
                   whiteSpace: "nowrap", 
@@ -1799,8 +2137,8 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
             >
             <Checkbox
               color="primary"
-              indeterminate={selectedMap.length > 0 && selectedMap.length < tableData.length}
-              checked={tableData.length > 0 && selectedMap.length === tableData.length}
+              indeterminate={selectedMap.length > 0 && selectedMap.length < mapTableData.length}
+              checked={mapTableData.length > 0 && selectedMap.length === mapTableData.length}
               onChange={onSelectMapAllClick}
               inputProps={{
                 'aria-label': 'select all data',
@@ -1854,49 +2192,71 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
           <TableCell align="right" sx={{ color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }} >
             WEIGHT&nbsp;%</TableCell> */}
           <TableCell align="right" sx={{
-            color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0
+            color: "white", textTransform: "uppercase", fontWeight: "bold", fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0,
           }} >
-            MAP&nbsp;SIZE&nbsp;PROF</TableCell>
+            MAP_SIZE_PR</TableCell>
         
         </TableRow>
       </TableHead> 
        );
   }  
-
   Mapped_Grid.propTypes = {
     numMapSelected: PropTypes.number.isRequired,
-    onRequestSortMap: PropTypes.func.isRequired,
+    onRequestMapSort: PropTypes.func.isRequired,
     onSelectMapAllClick: PropTypes.func.isRequired,
     orderM: PropTypes.oneOf(['asc', 'desc']).isRequired,
     orderMBy: PropTypes.string.isRequired,
     rowCountM: PropTypes.number.isRequired,
   };
-  
-  function EnhancedTableToolbar(props) {
-    const { numSelected } = props;
-  }
   function EnhancedTableToolbarMap(props) {
     const { numMapSelected } = props;
+
+    return (
+      <Toolbar
+          sx={{
+              pl: { sm: 2 },
+              pr: { xs: 1, sm: 1 },
+              ...(mapTableData.length > 0 &&
+              {
+                  minHeight: {
+                      minHeight: "40px !important",
+                  },
+                  // border:"2px solid black", 
+                  bgcolor: (theme) =>
+                      alpha(
+                          theme.palette.primary.main,
+                          theme.palette.action.activatedOpacity
+                      ),
+              }),
+          }}
+      >
+          {mapTableData.length > 0 && (
+              <Typography
+                  sx={{
+                      flex: "1 1 100%", display: "flex",
+                      justifyContent: "flex-end",
+                      padding:"0px 20px 0px 0px"
+                  }}
+                  color="inherit"
+                  variant="subtitle1"
+                  component="div"
+              >
+                  Rows {selectedMap.length} of {mapTableData.length}
+              </Typography>
+          )}
+      </Toolbar>
+  );
   }
-
-
-
   /*
-    ####### Sorting #######
+                    ########################################
+                          ####### Sorting #######
+                    ########################################
   */
-  const handleRequestSort = (event, property) => {
-    //console.log("handleRequestSort",property)
-    const isAsc = (orderBy === property && order === 'asc');
-    setOrder(isAsc ? 'desc' : 'asc');
-    setOrderBy(property);
-  };
   function descendingComparator(a, b, orderBy) {
-    //console.log("sort",a,b,orderBy)
     let c, d;
     if (orderBy == "ITEM") {
       c = (b[orderBy]);
       d = (a[orderBy]);
-      //console.log("sortAsc",c,d)
     } else {
       c = isNaN(b[orderBy]) ? b[orderBy] : parseInt(b[orderBy]);
       d = isNaN(a[orderBy]) ? a[orderBy] : parseInt(a[orderBy]);
@@ -1932,6 +2292,18 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
       ? (a, b) => descendingComparator(a, b, orderBy)
       : (a, b) => -descendingComparator(a, b, orderBy);
   }
+  const handleRequestMapSort = (event, property) => {
+    //console.log("handleRequestSort",property)
+    const isAsc = (orderMBy === property && orderM === 'asc');
+    setOrderM(isAsc ? 'desc' : 'asc');
+    setOrderMBy(property);
+  };
+  const handleRequestSort = (event, property) => {
+    //console.log("handleRequestSort",property)
+    const isAsc = (orderBy === property && order === 'asc');
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
   function stableSort(array, comparator) {
     //console.log("sort",array,comparator)
     const stabilizedThis = array.map((el, index) => [el, index]);
@@ -1946,194 +2318,206 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
     //console.log("stabilizedThis",stabilizedThis.map((el) => el[0]))
     return stabilizedThis.map((el) => el[0]);
   }
-  
-  /*
-    ####### Sorting #######
-  */
-  //ALLOCATED ITEMS TABLE
-  
-      return(
-        <Box sx={{
-            marginTop:"50px",
-            }}>
-            {/* <Box component="fieldset"
-                display="flex"
-                sx={{
-                    marginLeft:"5px",
-                    marginTop:"150px",
-                    backgroundColor:"#F5F5F5",
-                    borderRadius: 1,
-                    boxShadow: 2, border: 0,
-                    borderBottom:3,}}>
-                       <legend style={{fontWeight:"bold",color:"#191970",}}>Header </legend>
-                <div sx={{display: "flex",flexDirection:"row"}}>
-                <Grid id="top-row" container spacing={0}>
-                    <div className={LikeItem.course_box}>
-                    {SearchHeader()}
-                    </div>               
-                </Grid>
-                </div>
-            </Box > */}
+  function stableMapSort(array, comparator) {
+    //console.log("sort",array,comparator)
+    const stabilizedThis = array.map((el, index) => [el, index]);
+    stabilizedThis.sort((a, b) => {
+     
+      const orderM = comparator(a[0], b[0]);
+      if (orderM !== 0) {
+        return orderM;
+      }
+      return a[1] - b[1];
+    });
+    //console.log("stabilizedThis",stabilizedThis.map((el) => el[0]))
+    return stabilizedThis.map((el) => el[0]);
+  }
+ 
+  return(
+    <Box sx={{
+        marginTop:"50px",
+        }}>
+        {/* <Box component="fieldset"
+            display="flex"
+            sx={{
+                marginLeft:"5px",
+                marginTop:"150px",
+                backgroundColor:"#F5F5F5",
+                borderRadius: 1,
+                boxShadow: 2, border: 0,
+                borderBottom:3,}}>
+                    <legend style={{fontWeight:"bold",color:"#191970",}}>Header </legend>
             <div sx={{display: "flex",flexDirection:"row"}}>
-                <Grid id="top-row" container spacing={0}>
-                    <div className={LikeItem.course_box}>
-                        {Header()}
-                    </div>               
-                </Grid>
-          </div>
-            
-          <div sx={{display: "flex",flexDirection:"row"}}>
-                <Grid id="top-row" container spacing={0}>
-                    <div className={LikeItem.course_box}>
-                        {Like_Criteria()}
-                    </div>               
-                </Grid>
-          </div>
-          <Box component="fieldset"
-                display="flex"
-                sx={{
-                    marginLeft:"5px",
-                    marginTop:"20px",
-                    backgroundColor:"#F5F5F5",
-                    borderRadius: 1,
-                    boxShadow: 2, border: 0,
-                    borderBottom:3,
-                    //backgroundColor:"blue"
-                    }}>
-                <Box  display="grid" sx={{width:"100%"}} 
-                    gridTemplateColumns="repeat(13, 3fr)" gap={1}
-                    >
-                    <Box gridColumn="span 5" //sx={{backgroundColor:"goldenrod",height:"100%"}}
-                    >
-                        <legend style={{fontWeight:"bold",color:"#191970",}}>Allocated&nbsp;Items </legend>
-                       
-                  <Paper sx={{  maxHeight: "20%",mb: 7 }}>
-                  <EnhancedTableToolbar numSelected={selected.length} />
-                  <TableContainer sx={{//height: "fit-content", //maxHeight: "70vh",
-                                borderRadius: '10px' }} component={Paper}>
-                    <Table sx={{ minWidth:"auto" }} aria-label="customized table">
-                      <Alloc_Grid
-                      numSelected={selected.length}
-                      onSelectAllClick={handleSelectAllClick}
-                      rowCount={tableData.length}
-                      onRequestSort={handleRequestSort}
-                      order={order}
-                      orderBy={orderBy}
-                      />
-                        <TableBody >
-                        {tableData.length > 0 ?
-                        stableSort(tableData, getComparator(order, orderBy))
-                        .map((row, index) => {
-                        const isItemSelected = isSelected(row.ITEM);
-                        const labelId = `enhanced-table-checkbox-${index}`;
-                        return (
-                          <TableRow 
-                          hover
-                          role="checkbox"
-                          aria-checked={isItemSelected}
-                          tabIndex={-1}
-                          key={row.ITEM}
-                          selected={isItemSelected}
-                          >
-                            <TableCell padding="checkbox">
-                            <Checkbox
-                              onClick={(event) => handleClick(event, row?.ITEM)}
-                              color="primary"
-                              checked={isItemSelected}
-                              inputProps={{
-                              'aria-labelledby': labelId,
-                              }}
-                              style={{transform: "scale(0.8)",}}
-                            />
-                            </TableCell>
-                           
-                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}>{row.ITEM}</TableCell>
-                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0,width:"130px"}}>
-                                  <Box   
-                                      display="flex"
-                                      justifyContent="space-between"
-                                      sx={{border:0,}}>
-                                      <p>{String(row.ITEM_DESC).length>0 && String(row.ITEM_DESC).length<5?
-                                          row.ITEM_DESC
-                                          :String(row.ITEM_DESC).substring(0,10)+"..."}</p>
-                                      <Button sx={{backgroundColor:"",'&:hover': {
-                                              backgroundColor: "",},border:0,color:"CadetBlue"}}
-                                              style={{maxWidth: '25px', minWidth: '25px',justifyContent:"flex-start"
-                                            }}
-                                              size='small'
-                                              className={LikeItem.textField}
-                                              onClick={()=>{swal(
-                                                <div>     
-                                                  <p>{row.ITEM_DESC}</p>
-                                                </div>
-                                              )}}
-                                              startIcon={<InfoIcon/>}
-                                              >
-                                      </Button>
-                                  </Box>
-                              </TableCell>
-                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}} >{row.DIFF_ID}</TableCell>
-                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}} textAlign="right">
-                                      <Box   
-                                        display="flex"
-                                        justifyContent="space-between"
-                                        sx={{border:0,}}>
-                                        <p>{row.SKU_COUNT}</p>
-                                        <Button sx={{backgroundColor:"",'&:hover': {
-                                                backgroundColor: "",},border:0,color:"CadetBlue"}}
-                                                style={{maxWidth: '25px', minWidth: '25px',justifyContent:"flex-start"
-                                              }}
-                                                size='small'
-                                                className={LikeItem.textField}
-                                                onClick={()=>{swal(
-                                                  <div>     
-                                                    <p>{row.SKU_COUNT}</p>
-                                                  </div>
-                                                )}}
-                                                startIcon={<InfoIcon/>}
-                                                >
-                                        </Button>
-                                      </Box>
-                              </TableCell>
-                          </TableRow >
-                        );
-                        }):false}
-                        {tableData.length<5?
-                          [...Array(5-(tableData.length)).keys()].map(val=>(
-                              <StyledTableRow > 
-                              <TableCell padding="checkbox"> <Checkbox color="primary" disabled={true} style={{transform: "scale(0.8)",}}/></TableCell>
-                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}></TableCell>
-                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}></TableCell>
-                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}} ></TableCell>
-                              <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}} textAlign="right"></TableCell>
-                              </StyledTableRow>
-                          )):false}
-                        </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Paper>
-               </Box>
-
-                    <Box gridColumn="span 8" //sx={{backgroundColor:"yellowgreen"}}
-                    >
-                            <legend style={{fontWeight:"bold",color:"#191970",}}>Mapped&nbsp;Items </legend>
-                            <Paper sx={{ maxHeight: "20%", mb: 7}}>
-                                <EnhancedTableToolbarMap numMapSelected={selectedMap.length} />
-                                <TableContainer sx={{ borderRadius: '10px' ,}} component={Paper}>
-                                <Table sx={{ minWidth:"auto",}} aria-label="customized table">
-                                <Mapped_Grid
-                                  numMapSelected={selectedMap.length}
-                                  onSelectMapAllClick={handleMapSelectAllClick}
-                                  rowCount={mapTableData.length}
-                                  />
-                                  <TableBody >
-                                  {mapTableData.length>0?
-                                  mapTableData
+            <Grid id="top-row" container spacing={0}>
+                <div className={LikeItem.course_box}>
+                {SearchHeader()}
+                </div>               
+            </Grid>
+            </div>
+        </Box > */}
+        <div sx={{display: "flex",flexDirection:"row"}}>
+            <Grid id="top-row" container spacing={0}>
+                <div className={LikeItem.course_box}>
+                    {Header()}
+                </div>               
+            </Grid>
+        </div>
+        
+        <div sx={{display: "flex",flexDirection:"row"}}>
+              <Grid id="top-row" container spacing={0}>
+                  <div className={LikeItem.course_box}>
+                      {Like_Criteria()}
+                  </div>               
+              </Grid>
+        </div>
+        <Box component="fieldset"
+              display="flex"
+              sx={{
+                  marginLeft:"5px",
+                  marginTop:"20px",
+                  backgroundColor:"#F5F5F5",
+                  borderRadius: 1,
+                  boxShadow: 2, border: 0,
+                  borderBottom:3,
+                  //backgroundColor:"blue"
+                  }}>
+            <Box  display="grid" sx={{width:"100%"}} 
+                gridTemplateColumns="repeat(14, 3fr)" gap={1}
+                >
+                <Box gridColumn="span 5" //sx={{backgroundColor:"goldenrod",height:"100%"}}
+                >
+                    <legend style={{fontWeight:"bold",color:"#191970",}}>Allocated&nbsp;Items </legend>  
+                    <Paper sx={{  maxHeight: "20%",mb: 7 }}>
+                      
+                      <TableContainer sx={{height: "fit-content", maxHeight: "39vh",
+                                    borderRadius: '10px' }} component={Paper}>
+                        <Table sx={{ minWidth:"auto" }} aria-label="customized table">
+                            <Alloc_Grid
+                              numSelected={selected.length}
+                              onSelectAllClick={handleSelectAllClick}
+                              rowCount={tableData.length}
+                              onRequestSort={handleRequestSort}
+                              order={order}
+                              orderBy={orderBy}
+                              />
+                            <TableBody >
+                                {tableData.length > 0 ?
+                                  stableSort(tableData, getComparator(order, orderBy))
                                   .map((row, index) => {
-                                  const isItemSelected = isMapSelected(row.ITEM);
-                                  const labelId = `enhanced-table-checkbox-${index}`;
-                                  return (
-                                    <TableRow 
+                                      const isItemSelected = isSelected(row.ITEM);
+                                      const labelId = `enhanced-table-checkbox-${index}`;
+                                      return (
+                                        <TableRow 
+                                          hover
+                                          role="checkbox"
+                                          aria-checked={isItemSelected}
+                                          tabIndex={-1}
+                                          key={row.ITEM}
+                                          selected={isItemSelected}
+                                          >
+                                            <TableCell padding="checkbox">
+                                            <Checkbox
+                                              onClick={(event) => handleClick(event, row?.ITEM)}
+                                              color="primary"
+                                              checked={isItemSelected}
+                                              inputProps={{
+                                              'aria-labelledby': labelId,
+                                              }}
+                                              style={{transform: "scale(0.8)",}}
+                                            />
+                                            </TableCell>
+                                        
+                                            <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}>{row.ITEM}</TableCell>
+                                            <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0,width:"130px"}}>
+                                                <Box   
+                                                    display="flex"
+                                                    justifyContent="space-between"
+                                                    sx={{border:0,}}>
+                                                    <p>{String(row.ITEM_DESC).length>0 && String(row.ITEM_DESC).length<5?
+                                                        row.ITEM_DESC
+                                                        :String(row.ITEM_DESC).substring(0,10)+"..."}</p>
+                                                    <Button sx={{backgroundColor:"",'&:hover': {
+                                                            backgroundColor: "",},border:0,color:"CadetBlue"}}
+                                                            style={{maxWidth: '25px', minWidth: '25px',justifyContent:"flex-start"
+                                                          }}
+                                                            size='small'
+                                                            className={LikeItem.textField}
+                                                            onClick={()=>{swal(
+                                                              <div>     
+                                                                <p>{row.ITEM_DESC}</p>
+                                                              </div>
+                                                            )}}
+                                                            startIcon={<InfoIcon/>}
+                                                            >
+                                                    </Button>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}} >{row.DIFF_ID}</TableCell>
+                                            <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}} textAlign="right">
+                                                    <Box   
+                                                      display="flex"
+                                                      justifyContent="space-between"
+                                                      sx={{border:0,}}>
+                                                      <p>{row.SKU_COUNT}</p>
+                                                      <Button sx={{backgroundColor:"",'&:hover': {
+                                                              backgroundColor: "",},border:0,color:"CadetBlue"}}
+                                                              style={{maxWidth: '25px', minWidth: '25px',justifyContent:"flex-start"
+                                                            }}
+                                                              size='small'
+                                                              className={LikeItem.textField}
+                                                              onClick={()=>{swal(
+                                                                <div>     
+                                                                  <p>{row.SKU_COUNT}</p>
+                                                                </div>
+                                                              )}}
+                                                              startIcon={<InfoIcon/>}
+                                                              >
+                                                      </Button>
+                                                    </Box>
+                                            </TableCell>
+                                        </TableRow >
+                                      );
+                                    })
+                                  :false
+                                }
+                                {tableData.length<5?
+                                  [...Array(5-(tableData.length)).keys()].map(val=>(
+                                      <StyledTableRow > 
+                                      <TableCell padding="checkbox"> <Checkbox color="primary" disabled={true} style={{transform: "scale(0.8)",}}/></TableCell>
+                                      <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}></TableCell>
+                                      <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}></TableCell>
+                                      <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}} ></TableCell>
+                                      <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}} textAlign="right"></TableCell>
+                                      </StyledTableRow>
+                                  )):false
+                                }
+                            </TableBody>
+                        </Table>
+                      </TableContainer>
+                      {selected.length>0?<EnhancedTableToolbar numSelected={selected.length} />:false}
+                    </Paper>
+                </Box>
+
+                <Box gridColumn="span 9">
+                    <legend style={{fontWeight:"bold",color:"#191970",}}>Mapped&nbsp;Items </legend>
+                    <Paper sx={{ maxHeight: "20%", mb: 7}}>
+                        {/* <EnhancedTableToolbarMap numMapSelected={selectedMap.length} /> */}
+                        <TableContainer sx={{ height: "fit-content", maxHeight: "39vh",borderRadius: '10px' ,}} component={Paper}>
+                          <Table sx={{ minWidth:"auto",}} aria-label="customized table">
+                            <Mapped_Grid
+                              numMapSelected={selectedMap.length}
+                              onSelectMapAllClick={handleMapSelectAllClick}
+                              rowCountM={mapTableData.length}
+                              onRequestMapSort={handleRequestMapSort}
+                              />
+                            <TableBody >
+                            {mapTableData.length>0?
+                              stableMapSort(mapTableData, getComparator(orderM, orderMBy))
+                              .map((row, index) => {
+                                const isItemSelected = isMapSelected(row.ITEM);
+                                const labelId = `enhanced-table-checkbox-${index}`;
+                                return (
+                                  <TableRow 
                                     hover
                                     role="checkbox"
                                     aria-checked={isItemSelected}
@@ -2142,51 +2526,51 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
                                     key={row.ITEM}
                                     selected={isItemSelected}
                                     >
-                                      <TableCell padding="checkbox">
-                                        <Checkbox
-                                          onClick={(event) => handleMapClick(event, row?.ITEM)}
-                                          color="primary"
-                                          checked={isItemSelected}
-                                          inputProps={{
-                                          'aria-labelledby': labelId,
+                                    <TableCell padding="checkbox">
+                                      <Checkbox
+                                        onClick={(event) => handleMapClick(event, row?.ITEM)}
+                                        color="primary"
+                                        checked={isItemSelected}
+                                        inputProps={{
+                                        'aria-labelledby': labelId,
+                                        }}
+                                        style={{transform: "scale(0.8)",}}
+                                      />
+                                    </TableCell>
+                                    <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}>{row.ITEM}</TableCell>
+                                    <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}>
+                                      <Box
+                                        display="flex"
+                                        justifyContent="space-between"
+                                        sx={{ border: 0, }}>
+                                        <p>{String(row.ITEM_DESC).length > 0 && String(row.ITEM_DESC).length < 5 ?
+                                          row.ITEM_DESC
+                                          : String(row.ITEM_DESC).substring(0, 7) + "..."}</p>
+                                        <Button sx={{
+                                          backgroundColor: "", '&:hover': {
+                                            backgroundColor: "",
+                                          }, border: 0, color: "CadetBlue"
                                           }}
-                                          style={{transform: "scale(0.8)",}}
-                                        />
-                                      </TableCell>
-                                      <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}>{row.ITEM}</TableCell>
-                                      <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}>
-                                        <Box
-                                          display="flex"
-                                          justifyContent="space-between"
-                                          sx={{ border: 0, }}>
-                                          <p>{String(row.ITEM_DESC).length > 0 && String(row.ITEM_DESC).length < 5 ?
-                                            row.ITEM_DESC
-                                            : String(row.ITEM_DESC).substring(0, 10) + "..."}</p>
-                                          <Button sx={{
-                                            backgroundColor: "", '&:hover': {
-                                              backgroundColor: "",
-                                            }, border: 0, color: "CadetBlue"
-                                            }}
-                                            style={{
-                                              maxWidth: '25px', minWidth: '25px', justifyContent: "flex-start"
-                                            }}
-                                            size='small'
-                                            className={LikeItem.textField}
-                                            onClick={() => {
-                                              swal(
-                                                <div>
-                                                  <p>{row.ITEM_DESC}</p>
-                                                </div>
-                                              )
-                                            }}
-                                            startIcon={<InfoIcon />}
-                                          >
-                                          </Button>
-                                        </Box>
-                                      </TableCell>
-                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.DIFF_ID}</TableCell>
-                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.LIKE_ITEM}</TableCell>
-                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>
+                                          style={{
+                                            maxWidth: '25px', minWidth: '25px', justifyContent: "flex-start"
+                                          }}
+                                          size='small'
+                                          className={LikeItem.textField}
+                                          onClick={() => {
+                                            swal(
+                                              <div>
+                                                <p>{row.ITEM_DESC}</p>
+                                              </div>
+                                            )
+                                          }}
+                                          startIcon={<InfoIcon />}
+                                        >
+                                        </Button>
+                                      </Box>
+                                    </TableCell>
+                                    <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.DIFF_ID}</TableCell>
+                                    <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.LIKE_ITEM}</TableCell>
+                                    <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>
                                       <Box
                                           display="flex"
                                           justifyContent="space-between"
@@ -2214,64 +2598,67 @@ setAllocNo({ALLOCATION_ID: value.ALLOC_NO})
                                             startIcon={<InfoIcon />}
                                           >
                                           </Button>
-                                        </Box>
-                                      </TableCell>
-                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.LIKE_ITEM_DIFF_ID}</TableCell>
-                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{mapData.WEIGHT}</TableCell>
-                                      <TableCell padding="checkbox"> <Checkbox color="primary" disabled={alloc_Level==="T"} style={{ transform: "scale(0.8)",}}/></TableCell>
-                                    </TableRow>
-                                  );}) :null}
-                                  {mapTableData.length<5?
-                                   [...Array(5-(mapTableData.length)).keys()]
-                                   .map(val=>(
-                                    <TableRow>
-                                      <TableCell padding="checkbox">
-                                        <Checkbox
-                                          color="primary"
-                                          disabled={true}
-                                          style={{transform: "scale(0.8)",}}
-                                        />
-                                      </TableCell>
-                                      <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}></TableCell>
-                                      <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}></TableCell>
-                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}></TableCell>
-                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}></TableCell>
-                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}></TableCell>
-                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}></TableCell>
-                                      <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}></TableCell>
-                                      <TableCell padding="checkbox"> <Checkbox color="primary" disabled={true} style={{transform: "scale(0.8)", }}/></TableCell>
-                                    </TableRow>
-                                    )):false}
-                                </TableBody>
-                                 </Table>
-                                </TableContainer>
-                            </Paper>                
-                    </Box>
-                    <Box   
-                        display="flex"
-                        gridColumn="span 13"
-                        //alignItems="self-end"
-                        justifyContent="right"
-                        sx={{border:0}}>
-                        <Button sx={{backgroundColor:"maroon",'&:hover': {
-                            backgroundColor: "maroon",boxShadow:3},borderRadius: '16px'}}
-                            variant="contained"
-                            size='medium'
-                            className={LikeItem.textField}
-                            type="submit"
-                            onClick={handleDelete}
-                            startIcon={<DeleteSweepIcon/>}
-                        />
-                    </Box> 
-                </Box>
-                
-           
-          </Box>
-           
-          
+                                      </Box>
+                                    </TableCell>
+                                    <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.LIKE_ITEM_DIFF_ID}</TableCell>
+                                    <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}>{row.LIKE_ITEM_WEIGHT}</TableCell>
+                                    <TableCell padding="checkbox"> <Checkbox color="primary" disabled={alloc_Level==="T"} style={{ transform: "scale(0.8)",}}/></TableCell>
+                                  </TableRow>
+                                );}) 
+                              :null
+                            }
+                            {mapTableData.length<5?
+                              [...Array(5-(mapTableData.length)).keys()]
+                              .map(val=>(
+                              <TableRow>
+                                <TableCell padding="checkbox">
+                                  <Checkbox
+                                    color="primary"
+                                    disabled={true}
+                                    style={{transform: "scale(0.8)",}}
+                                  />
+                                </TableCell>
+                                <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}></TableCell>
+                                <TableCell align="right" sx={{fontFamily:"system-ui",textAlign:"left",fontSize:"75%",padding:0}}></TableCell>
+                                <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}></TableCell>
+                                <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}></TableCell>
+                                <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}></TableCell>
+                                <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}></TableCell>
+                                <TableCell align="right" sx={{ fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: 0 }}></TableCell>
+                                <TableCell padding="checkbox"> <Checkbox color="primary" disabled={true} style={{transform: "scale(0.8)", }}/></TableCell>
+                              </TableRow>
+                              )):false
+                            }
+                          </TableBody>
+                          </Table>
+                        </TableContainer>
+                        {selectedMap.length>0?<EnhancedTableToolbarMap numMapSelected={selectedMap.length} />:false}
+                    </Paper>                
+                 </Box>
+                <Box   
+                    display="flex"
+                    gridColumn="span 13"
+                    //alignItems="self-end"
+                    justifyContent="right"
+                    sx={{border:0}}>
+                    <Button sx={{backgroundColor:"maroon",'&:hover': {
+                        backgroundColor: "maroon",boxShadow:3},borderRadius: '16px'}}
+                        variant="contained"
+                        size='medium'
+                        className={LikeItem.textField}
+                        type="submit"
+                        onClick={handleDelete}
+                        startIcon={<DeleteSweepIcon/>}
+                     />
+                 </Box> 
+             </Box>
+            
+        
         </Box>
-    )
-
+        
+      
+    </Box>
+  )
 
 }
 export default LikeItemMap;

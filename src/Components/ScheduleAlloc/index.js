@@ -9,6 +9,7 @@ import Button from "@mui/material/Button";
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
 import InfoIcon from '@mui/icons-material/Info';
+import IconButton from "@mui/material/IconButton";
 import CancelIcon from '@mui/icons-material/Cancel';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import swal from '@sweetalert/with-react';
@@ -163,7 +164,23 @@ const ScheduleAlloc=()=>{
     const ScheduleAllocation = useStyles();
     useEffect(() => {
         document.title = 'Allocation';
-      },[]);
+      }
+    ,[]);
+    
+    const SearchButtonTrend = () => (
+        <IconButton sx={{ padding: "0px 0px 0px 0px", margin: "0px" }} >
+            <InfoIcon fontSize="small" sx={{ height: '0.8em', width: '0.8em',color:"CadetBlue" }}  
+                onClick={() => {
+                    swal(
+                    <div>
+                        <p>desc</p>
+                    </div>
+                    )
+                }}   
+             />
+        </IconButton>
+      
+    )
     const Header=()=>(
         <Box 
             component="fieldset"
@@ -196,10 +213,10 @@ const ScheduleAlloc=()=>{
                         sx={{"& .MuiInputBase-input.Mui-disabled": {
                             backgroundColor:"#f0f0f0",border:0
                         },backgroundColor:"white"}}
-                        InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
+                        InputLabelProps={{ style: {fontSize: "12px"},shrink:"true"}}
                         InputProps={{
-                        style:{fontSize:12},
-                        className: ScheduleAllocation.inputField,
+                            style:{fontSize:12},
+                            className: ScheduleAllocation.inputField,
                         }}
                     />
                     </div> </div> 
@@ -219,12 +236,13 @@ const ScheduleAlloc=()=>{
                         },backgroundColor:"white"}}
                         InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
                         InputProps={{
-                        style:{fontSize:12},
-                        className: ScheduleAllocation.inputField,
+                            endAdornment: <SearchButtonTrend />,
+                            style:{fontSize:12},
+                            className: ScheduleAllocation.inputField,
                         }}
                     />
                     </div> </div> 
-                    <Button sx={{
+                    {/* <Button sx={{
                         backgroundColor: "", '&:hover': {
                             backgroundColor: "",
                         }, border: 0, color: "CadetBlue"
@@ -243,14 +261,16 @@ const ScheduleAlloc=()=>{
                         }}
                         startIcon={<InfoIcon />}
                         >
-                    </Button> 
+                    </Button>  */}
             </Box>
             <Box 
-            display="inline"
-            sx={{height:"fit-content", width:"auto",border: 0,}}
-            >
+                display="flex"
+                sx={{height:"fit-content", width:"auto",border: 0,marginLeft:"15px",marginTop:"30px",}}
+                >
                 <Button sx={{backgroundColor:"green",'&:hover': {
-                            backgroundColor: "#228B22",textShadow:"0 0 #000"},fontSize:"12px" ,margin: "0rem",height:"38"}}
+                            backgroundColor: "#228B22",textShadow:"0 0 #000"},fontSize:"12px" ,margin: "0rem -0.6rem",
+                            height:"38"
+                        }}
                     variant="contained"
                     type="submit"
                     //onClick={handleOK}
@@ -259,7 +279,8 @@ const ScheduleAlloc=()=>{
                         OK
                 </Button> 
                 <Button sx={{backgroundColor:"maroon",'&:hover': {
-                            backgroundColor: "maroon",boxShadow:3},fontSize:"12px", margin: "0rem 2.7rem",height:"38"}}
+                            backgroundColor: "maroon",boxShadow:3},fontSize:"12px", margin: "0rem 2.7rem",
+                            height:"38"}}
                     variant="contained"
                     className={ScheduleAllocation.textField}
                     type="submit"
@@ -273,7 +294,7 @@ const ScheduleAlloc=()=>{
       )
 
 
-      const Paramters=()=>(
+    const Paramters=()=>(
         <Box 
             component="fieldset"
             display="inline-block"
@@ -281,9 +302,11 @@ const ScheduleAlloc=()=>{
                 height:"auto",
                 marginLeft:"5px",
                 marginTop:"20px",
-            backgroundColor:"#F5F5F5",
+            // backgroundColor:"#F5F5F5",
+            backgroundColor:"white",
             borderRadius: 1,
             //width:"100%",
+            width:"fit-content",
             boxShadow: 2, border: 0,
             borderBottom:3,
             }}
@@ -292,264 +315,276 @@ const ScheduleAlloc=()=>{
             <Box  display="grid" sx={{width:"100%"}} 
                     gridTemplateColumns="repeat(13, 1fr)" gap={1}
                     >
-                <Box gridColumn="span 6">
+                <Box gridColumn="span 6"
+                    component="fieldset"
+                    display="inline-block"
+                    sx={{
+                        height:"auto",
+                    // marginTop:"20px",
+                        //backgroundColor:"white",
+                        borderRadius: 1,
+                        width:"fit-content",
+                        //boxShadow: 3, 
+                        border: 0,
+                        // borderBottom:1,
+                    }}
+                    >
                     <div className={ScheduleAllocation.float_container}>
-                        <div>
-                        <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-                        Status</InputLabel>
-                        </div>
-                        <div className={ScheduleAllocation.multiselectfield}>
-                        <Select 
-                            closeMenuOnSelect={true}
-                            isSearchable={true}                
-                            styles={styleSelect}  
-                            //onChange={selectedSKU}     
-                            //isMulti 
-                            isClearable={true} 
-                        />
-                    </div></div> 
-                    <Box
-                        component="fieldset"
-                        display="inline-block"
-                        sx={{
-                            height:"auto",
-                            marginLeft:"5px",
-                            marginTop:"20px",
+                            <div>
+                            <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+                            Status</InputLabel>
+                            </div>
+                            <div className={ScheduleAllocation.multiselectfield}>
+                            <Select 
+                                closeMenuOnSelect={true}
+                                isSearchable={true}                
+                                styles={styleSelect}  
+                                //onChange={selectedSKU}     
+                                //isMulti 
+                                isClearable={true} 
+                            />
+                        </div></div>      
+                        <Box
+                            component="fieldset"
+                        // display="inline-block"
+                            sx={{
+                                height:"auto",
+                                marginLeft:"5px",
+                                marginTop:"20px",
+                            backgroundColor:"white",
+                            borderRadius: 1,
+                            width:"fit-content",
+                            boxShadow: 3, border: 0,
+                            //borderBottom:1,
+                            }}>
+                            <legend style={{fontWeight:"bold",color:"#191970",fontSize:13}}>Date Range</legend>
+                            <div className={ScheduleAllocation.float_container}>
+                                <div>
+                                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+                                From</InputLabel>
+                                </div>
+                                <div className={ScheduleAllocation.multiselectfield}>
+                                    <TextField
+                                        size="small"
+                                        variant="outlined"
+                                        type="date"
+                                        //name="ESID_FROM"
+                                        helperText=""
+                                        sx={{
+                                            "& .MuiInputBase-input.Mui-disabled": {
+                                            backgroundColor: "#f0f0f0"
+                                            }
+                                        }}
+                                        //onChange={onChangeCPO}
+                                        id="outlined-disabled"
+                                        // label="EISD From"
+                                        InputLabelProps={{ style: { fontSize: "12px" }, shrink: "true" }}
+                                        InputProps={{
+                                            style: { fontSize: 12 ,backgroundColor:"white"},
+                                            //className: ScheduleAllocation.inputFielddate,
+                                            className: ScheduleAllocation.inputField,
+                                        }}
+                                    />
+                            </div></div>    
+                            <div className={ScheduleAllocation.float_container}>
+                                <div>
+                                <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+                                To</InputLabel>
+                                </div>
+                                <div className={ScheduleAllocation.multiselectfield}>
+                                    <TextField
+                                        size="small"
+                                        variant="outlined"
+                                        type="date"
+                                        //name="ESID_FROM"
+                                        helperText=""
+                                        sx={{
+                                            "& .MuiInputBase-input.Mui-disabled": {
+                                            backgroundColor: "#f0f0f0"
+                                            }
+                                        }}
+                                        //onChange={onChangeCPO}
+                                        id="outlined-disabled"
+                                        // label="EISD From"
+                                        InputLabelProps={{ style: { fontSize: "12px" }, shrink: "true" }}
+                                        InputProps={{
+                                            style: { fontSize: 12 ,backgroundColor:"white"},
+                                            //className: ScheduleAllocation.inputFielddate,
+                                            className: ScheduleAllocation.inputField,
+                                        }}
+                                    />
+                            </div></div>    
+                        </Box>
+                </Box>
+                <Box gridColumn="span 7"
+                    component="fieldset"
+                    display="inline-block"
+                    sx={{
+                        height:"auto",
+                        marginTop:"20px",
                         backgroundColor:"white",
                         borderRadius: 1,
                         width:"fit-content",
-                        boxShadow: 3, border: 0,
-                        borderBottom:1,
-                        }}>
-                        <legend style={{fontWeight:"bold",color:"#191970",fontSize:13}}>Date Range</legend>
+                        boxShadow: 3, 
+                        border: 0,
+                        // borderBottom:1,
+                    }}>
+                        <legend style={{fontWeight:"bold",color:"#191970",fontSize:13}}>Audit Trail</legend>
+                        <Box>
                         <div className={ScheduleAllocation.float_container}>
                             <div>
                             <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-                            From</InputLabel>
+                            Create By</InputLabel>
                             </div>
                             <div className={ScheduleAllocation.multiselectfield}>
-                                <TextField
+                            <TextField
                                     size="small"
                                     variant="outlined"
-                                    type="date"
-                                    //name="ESID_FROM"
+                                    name="ESID_FROM"
                                     helperText=""
-                                    sx={{
-                                        "& .MuiInputBase-input.Mui-disabled": {
-                                        backgroundColor: "#f0f0f0"
-                                        }
-                                    }}
-                                    //onChange={onChangeCPO}
-                                    id="outlined-disabled"
-                                    // label="EISD From"
-                                    InputLabelProps={{ style: { fontSize: "12px" }, shrink: "true" }}
+                                    sx={{"& .MuiInputBase-input.Mui-disabled": {
+                                        backgroundColor:"#f0f0f0",border:0
+                                    },backgroundColor:"white"}}
+                                    InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
                                     InputProps={{
-                                        style: { fontSize: 12 ,backgroundColor:"white"},
-                                        //className: ScheduleAllocation.inputFielddate,
-                                        className: ScheduleAllocation.inputField,
+                                    style:{fontSize:12},
+                                    className: ScheduleAllocation.inputField,
                                     }}
                                 />
-                        </div></div>    
+                            </div> 
+                        </div> 
                         <div className={ScheduleAllocation.float_container}>
                             <div>
                             <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-                            To</InputLabel>
+                            Create Date</InputLabel>
                             </div>
                             <div className={ScheduleAllocation.multiselectfield}>
-                                <TextField
+                            <TextField
                                     size="small"
                                     variant="outlined"
-                                    type="date"
-                                    //name="ESID_FROM"
+                                    name="ESID_FROM"
                                     helperText=""
-                                    sx={{
-                                        "& .MuiInputBase-input.Mui-disabled": {
-                                        backgroundColor: "#f0f0f0"
-                                        }
-                                    }}
-                                    //onChange={onChangeCPO}
-                                    id="outlined-disabled"
-                                    // label="EISD From"
-                                    InputLabelProps={{ style: { fontSize: "12px" }, shrink: "true" }}
+                                    sx={{"& .MuiInputBase-input.Mui-disabled": {
+                                        backgroundColor:"#f0f0f0",border:0
+                                    },backgroundColor:"white"}}
+                                    InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
                                     InputProps={{
-                                        style: { fontSize: 12 ,backgroundColor:"white"},
-                                        //className: ScheduleAllocation.inputFielddate,
-                                        className: ScheduleAllocation.inputField,
+                                    style:{fontSize:12},
+                                    className: ScheduleAllocation.inputField,
                                     }}
                                 />
-                        </div></div>    
-                    </Box>
-                </Box>
-                <Box gridColumn="span 5" display="inline-block">
-                    <Box
-                            component="fieldset"
-                            display="inline-block"
+                            </div> 
+                        </div> 
+                        </Box>
+                        <Box 
                             sx={{
                                 height:"auto",
-                                 backgroundColor:"white",
-                                 borderRadius: 1,
-                                 width:"fit-content",
-                                 boxShadow: 3, 
-                                border: 0,
-                                // borderBottom:1,
-                            }}>
-                            <legend style={{fontWeight:"bold",color:"#191970",fontSize:13}}>Audit Trail</legend>
-                    <Box>
-                    <div className={ScheduleAllocation.float_container}>
-                        <div>
-                        <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-                        Create By</InputLabel>
-                        </div>
-                        <div className={ScheduleAllocation.multiselectfield}>
-                        <TextField
-                                size="small"
-                                variant="outlined"
-                                name="ESID_FROM"
-                                helperText=""
-                                sx={{"& .MuiInputBase-input.Mui-disabled": {
-                                    backgroundColor:"#f0f0f0",border:0
-                                },backgroundColor:"white"}}
-                                InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
-                                InputProps={{
-                                style:{fontSize:12},
-                                className: ScheduleAllocation.inputField,
-                                }}
-                            />
+                                //marginLeft:"5px",
+                                marginTop:"20px",}}
+                        >
+                        <div className={ScheduleAllocation.float_container}>
+                            <div>
+                            <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+                            Modified By</InputLabel>
+                            </div>
+                            <div className={ScheduleAllocation.multiselectfield}>
+                            <TextField
+                                    size="small"
+                                    variant="outlined"
+                                    name="ESID_FROM"
+                                    helperText=""
+                                    sx={{"& .MuiInputBase-input.Mui-disabled": {
+                                        backgroundColor:"#f0f0f0",border:0
+                                    },backgroundColor:"white"}}
+                                    InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
+                                    InputProps={{
+                                    style:{fontSize:12},
+                                    className: ScheduleAllocation.inputField,
+                                    }}
+                                />
+                            </div> 
                         </div> 
-                    </div> 
-                    <div className={ScheduleAllocation.float_container}>
-                        <div>
-                        <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-                        Create Date</InputLabel>
-                        </div>
-                        <div className={ScheduleAllocation.multiselectfield}>
-                        <TextField
-                                size="small"
-                                variant="outlined"
-                                name="ESID_FROM"
-                                helperText=""
-                                sx={{"& .MuiInputBase-input.Mui-disabled": {
-                                    backgroundColor:"#f0f0f0",border:0
-                                },backgroundColor:"white"}}
-                                InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
-                                InputProps={{
-                                style:{fontSize:12},
-                                className: ScheduleAllocation.inputField,
-                                }}
-                            />
+                        <div className={ScheduleAllocation.float_container}>
+                            <div>
+                            <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
+                            Modified Date</InputLabel>
+                            </div>
+                            <div className={ScheduleAllocation.multiselectfield}>
+                            <TextField
+                                    size="small"
+                                    variant="outlined"
+                                    name="ESID_FROM"
+                                    helperText=""
+                                    sx={{"& .MuiInputBase-input.Mui-disabled": {
+                                        backgroundColor:"#f0f0f0",border:0
+                                    },backgroundColor:"white"}}
+                                    InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
+                                    InputProps={{
+                                    style:{fontSize:12},
+                                    className: ScheduleAllocation.inputField,
+                                    }}
+                                />
+                            </div> 
                         </div> 
-                    </div> 
-                    </Box>
-                    <Box 
-                        sx={{
-                            height:"auto",
-                            //marginLeft:"5px",
-                            marginTop:"20px",}}
-                    >
-                    <div className={ScheduleAllocation.float_container}>
-                        <div>
-                        <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-                        Modified By</InputLabel>
-                        </div>
-                        <div className={ScheduleAllocation.multiselectfield}>
-                        <TextField
-                                size="small"
-                                variant="outlined"
-                                name="ESID_FROM"
-                                helperText=""
-                                sx={{"& .MuiInputBase-input.Mui-disabled": {
-                                    backgroundColor:"#f0f0f0",border:0
-                                },backgroundColor:"white"}}
-                                InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
-                                InputProps={{
-                                style:{fontSize:12},
-                                className: ScheduleAllocation.inputField,
-                                }}
-                            />
-                        </div> 
-                    </div> 
-                    <div className={ScheduleAllocation.float_container}>
-                        <div>
-                        <InputLabel sx={{fontWeight:"bold",fontSize:"12px",margin:"2px 0px 0px 0px", display: 'inline', float: 'left'}}>
-                        Modified Date</InputLabel>
-                        </div>
-                        <div className={ScheduleAllocation.multiselectfield}>
-                        <TextField
-                                size="small"
-                                variant="outlined"
-                                name="ESID_FROM"
-                                helperText=""
-                                sx={{"& .MuiInputBase-input.Mui-disabled": {
-                                    backgroundColor:"#f0f0f0",border:0
-                                },backgroundColor:"white"}}
-                                InputLabelProps={{style: {fontSize: "12px"},shrink:"true"}}
-                                InputProps={{
-                                style:{fontSize:12},
-                                className: ScheduleAllocation.inputField,
-                                }}
-                            />
-                        </div> 
-                    </div> 
-                    </Box>
-                </Box>
+                        </Box>
                 </Box>
             </Box>
-
-            <Box  display="grid" sx={{width:"100%"}} 
-                    gridTemplateColumns="repeat(13, 1fr)" gap={1}
+                
+            <Box  display="grid" sx={{width:"100%",marginLeft:"15px",}} 
+                    gridTemplateColumns="repeat(14, 3fr)" gap={1}
                     >
-            <Box 
-                 gridColumn="span 9"
-                component="fieldset"
-                display="inline-block"
-                sx={{
-                    height:"auto",
-                    marginTop:"20px",
-                    backgroundColor:"white",
-                    borderRadius: 1,
-                    width:"fit-content",
-                    boxShadow: 3, 
-                    border: 0,
-                    // borderBottom:1,
-                }}>
-                <legend style={{fontWeight:"bold",color:"#191970",fontSize:13}}>Allocation Day</legend>
-                        {/* <FormControlLabel value="first" label="Sunday"  control={<Radio />} />
-                        <FormControlLabel value="second" label="Monday" control={<Radio />} />
-                        <FormControlLabel value="first" label="Tuesday"  control={<Radio />} />
-                        <FormControlLabel value="second" label="Wednesday" control={<Radio />} />
-                        <FormControlLabel value="first" label="Thursday"  control={<Radio />} />
-                        <FormControlLabel value="second" label="Friday" control={<Radio />} />
-                        <FormControlLabel value="first" label="Saturday"  control={<Radio />} /> */}
-                         <FormControlLabel control={<Checkbox defaultChecked />} label="Sunday" />
-                         <FormControlLabel control={<Checkbox defaultChecked />} label="Monday" />
-                         <FormControlLabel control={<Checkbox defaultChecked />} label="Tuesday" />
-                         <FormControlLabel control={<Checkbox defaultChecked />} label="Wednesday" />
-                         <FormControlLabel control={<Checkbox defaultChecked />} label="Thursday" />
-                         <FormControlLabel control={<Checkbox defaultChecked />} label="Friday" />
-                         <FormControlLabel control={<Checkbox defaultChecked />} label="Saturday" />
+                <Box gridColumn="span 9"
+                    component="fieldset"
+                    display="inline-block"
+                    sx={{
+                        height:"auto",
+                        marginTop:"20px",
+                        backgroundColor:"white",
+                        borderRadius: 1,
+                        width:"fit-content",
+                        boxShadow: 3, 
+                        border: 0,
+                        // borderBottom:1,
+                    }}>
+                    <legend style={{fontWeight:"bold",color:"#191970",fontSize:13}}>Allocation Day</legend>
+                            {/* <FormControlLabel value="first" label="Sunday"  control={<Radio />} />
+                            <FormControlLabel value="second" label="Monday" control={<Radio />} />
+                            <FormControlLabel value="first" label="Tuesday"  control={<Radio />} />
+                            <FormControlLabel value="second" label="Wednesday" control={<Radio />} />
+                            <FormControlLabel value="first" label="Thursday"  control={<Radio />} />
+                            <FormControlLabel value="second" label="Friday" control={<Radio />} />
+                            <FormControlLabel value="first" label="Saturday"  control={<Radio />} /> */}
+                            <FormControlLabel control={<Checkbox defaultChecked />} label="Sunday" />
+                            <FormControlLabel control={<Checkbox defaultChecked />} label="Monday" />
+                            <FormControlLabel control={<Checkbox defaultChecked />} label="Tuesday" />
+                            <FormControlLabel control={<Checkbox defaultChecked />} label="Wednesday" />
+                            <FormControlLabel control={<Checkbox defaultChecked />} label="Thursday" />
+                            <FormControlLabel control={<Checkbox defaultChecked />} label="Friday" />
+                            <FormControlLabel control={<Checkbox defaultChecked />} label="Saturday" />
                 </Box>
-                <Box 
-                 gridColumn="span 3"
-                component="fieldset"
-                display="inline-block"
-                sx={{
-                    height:"auto",
-                    marginTop:"20px",
-                    backgroundColor:"white",
-                    borderRadius: 1,
-                    width:"fit-content",
-                    boxShadow: 3, 
-                    border: 0,
-                    // borderBottom:1,
-                }}>
-                    <legend style={{fontWeight:"bold",color:"#191970",fontSize:13}}>Frequency</legend>
-                    
-                    <FormControlLabel value="first" label="Weekly" control={<Radio />} />
-                    <FormControlLabel value="second" label="Bi-Weekly" control={<Radio />} />
-                    
-                </Box></Box>
+                <Box gridColumn="span 5"
+                    component="fieldset"
+                    display="inline-block"
+                    sx={{
+                        height:"auto",
+                        marginTop:"20px",
+                        backgroundColor:"white",
+                        borderRadius: 1,
+                        width:"fit-content",
+                        boxShadow: 3, 
+                        border: 0,
+                        // borderBottom:1,
+                    }}>
+                        <legend style={{fontWeight:"bold",color:"#191970",fontSize:13}}>Frequency</legend>
+                        
+                        <FormControlLabel value="first" label="Weekly" control={<Radio />} />
+                        <FormControlLabel value="second" label="Bi-Weekly" control={<Radio />} />
+                        
+                </Box>
+            </Box>
         </Box>
-      )
+    )
+    
 
     return(
         <Box sx={{

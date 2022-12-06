@@ -232,7 +232,7 @@ export default function Index() {
 
   return (
     <>
-      <Box sx={{ display: "flex", bgcolor: "grey",height:"100vh"}}>
+      <Box sx={{ display: "flex", bgcolor: "white",height:"100vh"}}>
         <CssBaseline/>
         <AppBar position="fixed" open={open} style={{backgroundColor:'#f9f9f9'}}>
           <Toolbar className={Layoutclasses.LayoutDiv}>
@@ -272,7 +272,7 @@ export default function Index() {
                 <Typography variant="h5">Stock Ledger </Typography>
               </div>
 
-              <IconButton onClick={handleDrawerClose} sx = {{bgcolor: "grey"}}>
+              <IconButton onClick={handleDrawerClose} sx = {{bgcolor: "white"}}>
                 {theme.direction === "rtl" ? (
                   <ChevronRightIcon />
                 ) : (
@@ -283,7 +283,7 @@ export default function Index() {
           </DrawerHeader>
           <Divider/>
           <List
-            sx={{ width: "100%", maxWidth: 360, bgcolor: "grey" }}
+            sx={{ width: "100%", maxWidth: 360, bgcolor: "white" }}
             component="nav"
             aria-labelledby="nested-list-subheader"
           >
@@ -322,7 +322,7 @@ export default function Index() {
                             unmountOnExit
                             key={dataSet.name}
                           >
-                            <List component="div" sx={{ marginLeft: "-5px" , bgcolor: "grey"}}>
+                            <List component="div" sx={{ marginLeft: "-5px" , bgcolor: "white"}}>
                               <ListItemButton
                                 sx={{ pl: 4 }}
                                 onClick={() => {
