@@ -168,7 +168,7 @@ export default function Index() {
     if(routeName === "SubLedger Cost"){
       navigate("/sub_Ledger_Cost");
     }
-    if (routeName === "Finance Interface Data") {
+    if (routeName === "Finance Interface Data") { 
       navigate("/Finance-Interface");
   }
     if (routeName === "Stock Ledger View") {
@@ -186,15 +186,15 @@ export default function Index() {
     if (routeName == "System Config Creation") {
       navigate(`/system-config-creation`);
     }
-    if (routeName == "PO Enquiry") {
-      navigate(`/PO_Enquiry`);
-    }
-    if (routeName == "Like Item Mapping") {
-      navigate(`/Like_Item_Map`);
-    }
-    if (routeName == "Schedule") {
-      navigate(`/Schedule`);
-    }
+    // if (routeName == "PO Enquiry") {
+    //   navigate(`/PO_Enquiry`);
+    // }
+    // if (routeName == "Like Item Mapping") {
+    //   navigate(`/Like_Item_Map`);
+    // }
+    // if (routeName == "Schedule") {
+    //   navigate(`/Schedule`);
+    // }
     handleDrawerClose()
   };
   const handleHomePage = (routedata) => {

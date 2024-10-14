@@ -191,20 +191,16 @@ useEffect(() => {
 
   useEffect(() => {
         if(DailyViewData?.data?.Data && Array.isArray(DailyViewData?.data?.Data)){
-          ////console.log("rtd",DailyViewData)
           setTabledata(serializedata(DailyViewData?.data?.Data));
           setAllData(serializedata(DailyViewData?.data?.Data));
           setLoading(false);
           setSubmit(false);
           setSearch(false);
-          ////console.log("rtd",DailyViewData)
-          ////console.log("rt",allData)
         }
       
         else {
           setSearch(false)
         }
-        ////console.log(tabledata)
   },[DailyViewData?.data])
 
 

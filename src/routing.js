@@ -43,9 +43,9 @@ function Routing() {
         <Route path="/Stock-Ledger-View" element={<DailyView />} />
         <Route path="/sub_Ledger_Cost" element={<SubLedgerCost />} />
         <Route path="/system-config-creation" element={<SystemConfigCreation />} />
-        <Route path="/PO_Enquiry" element={<POrder />} />
+        {/* <Route path="/PO_Enquiry" element={<POrder />} />
         <Route path="/Like_Item_Map" element={<LikeItemMap />} />
-        <Route path="/Schedule" element={<ScheduleAlloc />} />
+        <Route path="/Schedule" element={<ScheduleAlloc />} /> */}
 
       </Route>
     </Routes>

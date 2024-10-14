@@ -159,32 +159,32 @@ export const GetItems = () => {
             },   
         ],
       },
-      {
-        id: 11,
-        name: "PO",
-        icon: <StorefrontIcon sx={{color: "#b4b4b4"}}/>,
-        subitems: [
-          {
-            id: 1,
-            name: "PO Enquiry",
-            },   
-        ],
-      },
-      {
-        id: 12,
-        name: "Allocation",
-        icon: <AddBoxIcon sx={{color: "#b4b4b4"}}/>,
-        subitems: [
-          {
-            id: 1,
-            name: "Like Item Mapping",
-            },   
-          {
-            id: 2,
-            name: "Schedule",
-            },   
-        ],
-      },
+      // {
+      //   id: 11,
+      //   name: "PO",
+      //   icon: <StorefrontIcon sx={{color: "#b4b4b4"}}/>,
+      //   subitems: [
+      //     {
+      //       id: 1,
+      //       name: "PO Enquiry",
+      //       },   
+      //   ],
+      // },
+      // {
+      //   id: 12,
+      //   name: "Allocation",
+      //   icon: <AddBoxIcon sx={{color: "#b4b4b4"}}/>,
+      //   subitems: [
+      //     {
+      //       id: 1,
+      //       name: "Like Item Mapping",
+      //       },   
+      //     {
+      //       id: 2,
+      //       name: "Schedule",
+      //       },   
+      //   ],
+      // },
       
     ],
   };
