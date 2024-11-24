@@ -20,12 +20,12 @@ import { PaperComponent } from "../../Custom Table/styledComponents";
 // API DISPATCH 
 import { postCurrencyGLRequest } from "../../../Redux/Actions/global";
 import { postGLAccountTabRequest, postGLAccountUpdRequest } from "../../../Redux/Actions/Account";
-
+import { tabDataErrp } from "./tabDataErrp";
 const initData = {
     PRIMARY_ACCOUNT: "",
     CURRENCY: [],
 };
-const AccountView = () => {
+const ErrorProcessing = () => {
     // State for loading and dialog management
     const [loading, setLoading] = useState(true);
     const [openDialog, setOpenDialog] = useState(false);
@@ -183,50 +183,10 @@ const AccountView = () => {
         }
         setState({ ...state, [anchor]: open });
     };
-    const tabData = serializedata([{
-        "Hier1": "124",
-        "Hier2": "1300",
-        "Hier3": "2188",
-        "Extended Attribute": "",
-        "Attribute Value": "",
-        "Item": "015878432",
-        "Item Description": "Bluetooth Red Speaker W/ Carabiner",
-        "Variant": "RED",
-        "Location": 7,
-        "On Hand In Stores": 780,
-        "Allocated Qty": 0,
-        "Weeks of Supply": 0
-    },
-    {
-        "Hier1": "124",
-        "Hier2": "1300",
-        "Hier3": "2188",
-        "Extended Attribute": "",
-        "Attribute Value": "",
-        "Item": "015878432",
-        "Item Description": "Bluetooth Red Speaker W/ Carabiner",
-        "Variant": "RED",
-        "Location": 10,
-        "On Hand In Stores": 2,
-        "Allocated Qty": 14,
-        "Weeks of Supply": 0
-    }])
+    const tabData = serializedata(tabDataErrp)
 
 
-    const tableColumns = Object.keys({
-        "Hier1": "124",
-        "Hier2": "1300",
-        "Hier3": "2188",
-        "Extended Attribute": "",
-        "Attribute Value": "",
-        "Item": "015878432",
-        "Item Description": "Bluetooth Red Speaker W/ Carabiner",
-        "Variant": "RED",
-        "Location": 20,
-        "On Hand In Stores": 2,
-        "Allocated Qty": 14,
-        "Weeks of Supply": 0
-    }).map(str => {
+    const tableColumns = Object.keys(tabDataErrp[0]).map(str => {
 
         const label =
             str
@@ -389,7 +349,7 @@ const AccountView = () => {
                 width: '100%'  // Ensures full width to spread the items
             }}
         >
-            <h4 style={{ margin: "0px" }}>Account Maintanence</h4>
+            <h4 style={{ margin: "0px" }}>Error Processing</h4>
             <div>
                 {isChanged.length> 0 &&
                     <Button
@@ -453,57 +413,13 @@ const AccountView = () => {
                 width: '100%'  // Ensures full width to spread the items
             }}>
 
-            {/* <div style={{ position: "relative", padding: "20px" }}>
-      {isPopoverOpen && (
-        <div
-          style={{
-            position: "absolute",
-            top: "50px", // Adjust to your layout
-            left: "50%",
-            transform: "translateX(-50%)",
-            backgroundColor: "#fff",
-            border: "1px solid #ccc",
-            boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
-            padding: "10px",
-            zIndex: 100,
-          }}
-        >
-          <p>This is the Popover content!</p>
-          <button
-            onClick={closePopover}
-            style={{
-              padding: "5px 10px",
-              backgroundColor: "dodgerblue",
-              color: "#fff",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            Close
-          </button>
-        </div>
-      )}
-
-      <button
-        onClick={togglePopover}
-        style={{
-          padding: "10px 20px",
-          backgroundColor: "dodgerblue",
-          color: "#fff",
-          border: "none",
-          cursor: "pointer",
-        }}
-      >
-        Toggle Popover
-      </button>
-    </div> */}
-            {data.length > 0 &&
+            {tabData.length > 0 &&
                 < CustomTable
-                    reportName={"Account Maintenance"}
-                    data={data}
+                    reportName={"Error Processing"}
+                    data={tabData}
                     setData={setData}
-                    headColumns={tabCols}
-                    currentPageData={currentPageData}
+                    headColumns={tableColumns}
+                    currentPageData={tabData.slice(0, 30)}
                     setcurrentPageData={setcurrentPageData}
                     inputVal={inputVal} setInputVal ={setInputVal}
                     page={page}
@@ -587,4 +503,4 @@ const AccountView = () => {
     </>
     )
 }
-export default AccountView;
+export default ErrorProcessing;

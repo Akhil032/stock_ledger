@@ -1,5 +1,5 @@
 import {
-    Paper ,styled, TableCell, tableCellClasses
+    Paper, styled, TableCell, tableCellClasses
 } from "@mui/material";
 
 // Draggable Dialog imports
@@ -30,7 +30,7 @@ export const StyledTableCell = styled(TableCell)(({ theme }) => ({
 export const StyledTableCellBody = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.root}`]: {
         height: "20px",
-        padding: "0px",
+        padding: "0px 0px 0px 3px",
         opacity: 1,
     },
     [`&.${tableCellClasses.body}`]: {
@@ -39,6 +39,7 @@ export const StyledTableCellBody = styled(TableCell)(({ theme }) => ({
         borderRight: "1px solid #ccc",
         opacity: 1,
     },
+
 }));
 
 export const TableInlineFltr = styled(TableCell)(({ theme }) => ({
@@ -47,11 +48,13 @@ export const TableInlineFltr = styled(TableCell)(({ theme }) => ({
         fontSize: "12px",
         textAlign: "left",
         borderRight: "1px solid #ccc", // Add border between columns
+        padding: "0px"
     },
     [`&.${tableCellClasses.body}`]: {
         fontSize: "11px",
         textAlign: "left",
         borderRight: "1px solid #ccc", // Add border between columns
+        padding: "0px"
     },
 }));
 export function PaperComponent(props) {

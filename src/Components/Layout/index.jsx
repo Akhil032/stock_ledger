@@ -268,6 +268,7 @@ export default function AdminLayout() {
           padding: "5px 5px 0px 65px",
           background: 'white',
         }}
+        onClick={() => setOpen(false)}
       >
         <Outlet />
       </Box>

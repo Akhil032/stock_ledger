@@ -5,7 +5,8 @@ import React, { useEffect, useState } from "react";
 import {
     Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle,
     FormControlLabel, InputLabel, Paper, Table, TableBody, TableContainer,
-    TableHead, TablePagination, TableRow, TableSortLabel, TextField, IconButton
+    TableHead, TablePagination, TableRow, TableSortLabel, TextField, IconButton,
+    TableCell
 } from "@mui/material";
 import { visuallyHidden } from "@mui/utils";
 
@@ -19,6 +20,7 @@ import {
 
 // Third-Party Libraries
 import DatePicker from "react-datepicker"; // Date Picker
+import 'react-datepicker/dist/react-datepicker.css';
 import { BsFillEraserFill } from "react-icons/bs"; // React Icons
 import Select from "react-select"; // Select Component
 
@@ -31,25 +33,19 @@ import { useStyles } from "./customStyle";
 
 
 export default function CustomTable(
-    { reportName, data, headColumns, selected, setSelected,
-        allPageSelected, setAllPageSelected, selectedRow, setSelectedRow
+    { reportName, data, setData, headColumns, currentPageData, setcurrentPageData, inputVal, setInputVal, page, setPage,
+        rowsPerPage, selected, setSelected, allPageSelected, setAllPageSelected,
+        selectedRow, setSelectedRow, editableCols, isChanged, setIsChanged
     }) {
     // Custom Styles
     const customStyle = useStyles();
-
     // Table Sorting & Pagination
     const [order, setOrder] = useState('asc');
     const [orderBy, setOrderBy] = useState('');
-    const [rowsPerPage, setRowsPerPage] = useState(30);
-    const [page, setPage] = useState(0);
-    const [currentPageData, setcurrentPageData] = useState(
-        data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).filter(row => row !== undefined)
-    );
     const [currentPageRows, setcurrentPageRows] = useState(currentPageData);
     const [selectedRows, setSelectedRows] = useState({});
 
     // Input & Header States
-    const [inputVal, setInputVal] = useState({});
     const [ManageHeaderCheck, setManageHeaderCheck] = useState(true);
     const [ManageHeaderData, setManageHeaderData] = useState([]);
 
@@ -186,8 +182,7 @@ export default function CustomTable(
     };
     const gridFilter = (e) => {
         const { name, value } = e.target;
-
-        if (name.toLowerCase().includes('date').includes(name)) {
+        if (name.toLowerCase().includes('date')) {
             if (value === null || value === "") {
                 setInputVal((prev) => ({
                     ...prev,
@@ -248,7 +243,7 @@ export default function CustomTable(
         }
     }, [inputVal]);
 
-
+    // console.log("manage :", editableCols)
     /*
       #################################################
       ##########  MANAGE COLUMNS IN TABLE  ############
@@ -326,7 +321,6 @@ export default function CustomTable(
                       ######### SORTING FUNCTIONALITY #########
                       #########################################
    */
-
     const handleSort = (event, property) => {
         handleRequestSort(event, property, setOrder, setOrderBy, order, orderBy);
     };
@@ -335,6 +329,10 @@ export default function CustomTable(
         const createSortHandler = (property) => (event) => {
             onRequestSort(event, property);
         }
+        const maxValues  =createKeyLengthObject(currentPageData);
+        console.log("maxValues ",maxValues );
+        //sx={row[col]!==undefined && (row[col].toString()).length>0 && {maxWidth:calculateWidth(row[col].toString())}}
+        
         return (
             <>
                 <TableHead className={customStyle.TitleHead} sx={{ margin: "0", padding: "0" }}>
@@ -371,7 +369,6 @@ export default function CustomTable(
                                 style={{
                                     whiteSpace: "nowrap", padding: "0px", margin: "0px", paddingLeft: "3px"
                                 }}
-
                             >
 
                                 <TableSortLabel
@@ -392,7 +389,10 @@ export default function CustomTable(
                                         "& .MuiTableSortLabel-icon": {
                                             color: "#fff !important",
                                         },
-                                        padding: "0px", margin: "0px"
+                                        padding: "0px", margin: "0px",
+                                        ...(maxValues[column.id] !== undefined && maxValues[column.id].toString().length > 0 && { 
+                                            width: calculateWidth(maxValues[column.id].toString(),column.id) 
+                                        }),
                                     }}
                                 >
                                     {column.label}
@@ -415,13 +415,66 @@ export default function CustomTable(
             </>
         )
     }
+    const handleRowChange = (e, col, index) => {
+        const modifiedData = data.map((row, rowIndex) => {
+            if (rowIndex === index - 1) {
+                return { ...row, [col]: e.target.textContent };
+            }
+            return row;
+        });
+        const pageData = modifiedData
+            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+            .filter((row) => row !== undefined);
+
+        setcurrentPageData(pageData);
+        setData(modifiedData);
+        // console.log("ischange", isChanged)
+        if (!isChanged.includes(index)) {
+            setIsChanged([...isChanged, index]);
+        }
+    };
+    const calculateWidth = (text,column) => {
+        const baseWidth = 20; // Minimum width in pixels
+        const longerString = text.length > column.length ? text : column;
+        const perCharacterWidth = 5; // Approximate width per character in pixels
+        console.log('cal width ',baseWidth + longerString.length * perCharacterWidth,text,)
+        return `${baseWidth + longerString.length * perCharacterWidth}px`;
+    };
+    const createKeyLengthObject = (currentPageData) => {
+                                                                    
+        if (!Array.isArray(currentPageData) || currentPageData.length === 0) return {};
+    
+        // Initialize an object to store the key and its longest value
+        const result = {};
+    
+        // Iterate over the keys of the first object
+        Object.keys(currentPageData[0]).forEach((key) => {
+            let maxLengthValue = "";
+    
+            currentPageData.forEach((row) => {
+                const value = row[key] !== undefined && row[key] !== null 
+                    ? row[key].toString() 
+                    : ""; // Convert to string, handle null/undefined
+    
+                if (value.length > maxLengthValue.length) {
+                    maxLengthValue = value; // Keep the longest string
+                }
+            });
+    
+            // Assign the longest string value to the result object
+            result[key] = maxLengthValue;
+        });
+    
+        return result;
+    };
+    
     return (
         <>
             <Box
                 component="fieldset"
                 display="inline-block"
                 sx={{
-                    backgroundColor: "", padding: "0px 0px 0px 0px", borderRadius: 1, boxShadow: 2, border: "0", margin: "30px 0px 0px 0px",
+                    backgroundColor: "", padding: "0px 0px 0px 0px", borderRadius: 1, boxShadow: 2, border: "0", margin: "25px 0px 0px 0px",
                     borderBottom: 3, backgroundColor: "", width: isScreenBigger ? "calc(95vw - 0px)" : "calc(93vw - 6px)",
                 }}
             >
@@ -480,7 +533,9 @@ export default function CustomTable(
                             />
                             <TableHead className={customStyle.SearchHead}>
                                 <TableRow>
-                                    <TableInlineFltr padding="checkbox" style={{ whiteSpace: "nowrap", padding: "0px" }}>
+                                    {/* <TableInlineFltr padding="checkbox" style={{ whiteSpace: "nowrap", padding: "0px" }}> */}
+                                    <TableCell padding="checkbox" sx={{ padding: "0px", width: "10px", margin: "0px", borderRight: "1px solid #ccc" }} >
+
                                         <IconButton small="small" sx={{ padding: "0px", }} onClick={() => {
                                             setInputVal({});
                                             const updatedSelected = { ...selected };
@@ -499,55 +554,96 @@ export default function CustomTable(
                                         }}>
                                             <RestartAltIcon small="small" sx={{ padding: "0px" }} />
                                         </IconButton>
-                                    </TableInlineFltr>
+                                    </TableCell>
+                                    {/* </TableInlineFltr> */}
 
-                                    {ManageHeaderData.map((column) => (
-                                        <TableInlineFltr
-                                            // key={column}  // Using the column as the unique key directly
-                                            size="small"
-                                            style={{
-                                                whiteSpace: "nowrap", padding: "0px", margin: "0px", paddingLeft: "3px"
-                                            }}
-                                        >
-                                            <TextField
-                                                variant="standard"
-                                                autoComplete="off"
-                                                name={column}
-                                                onChange={gridFilter}
-                                                value={inputVal && inputVal[column] ? inputVal[column] : ""}
-                                                placeholder={column}
-                                                sx={{
-                                                    width: "100%",
-                                                    "& .MuiInput-underline:before": {
-                                                        borderBottom: "1px solid black",
-                                                        transform: "translateY(2px)",
-                                                    },
-                                                    "& .MuiInput-underline:hover:before": {
-                                                        borderBottom: "2px solid black",
-                                                        transform: "translateY(2px)",
-                                                    },
-                                                    "& .MuiInput-underline:after": {
-                                                        borderBottom: "1px solid #808080",
-                                                        transform: "translateY(2px)",
-                                                    },
+                                    {ManageHeaderData.map((column) => {
+                                        const rowCol = headColumns.find((col) => col.id === column);
+                                        const col = rowCol?.id;
+                                        const placeholderName = rowCol?.label
+                                        return (
+                                            <TableInlineFltr
+                                                // key={column}  // Using the column as the unique key directly
+                                                size="small"
+                                                style={{
+                                                    whiteSpace: "nowrap", padding: "0px", margin: "0px", paddingLeft: "3px"
                                                 }}
-                                                slotProps={{
-                                                    htmlInput: {
-                                                        sx: {
-                                                            fontSize: 12,
-                                                            padding: "0px 0px 0px 3px",
-                                                            height: "20px",
-                                                            textAlign: "left",
-                                                            "&::placeholder": {
-                                                                textAlign: "left",
-                                                                padding: "0px",
-                                                            },
-                                                        },
-                                                    },
-                                                }}
-                                            />
-                                        </TableInlineFltr>
-                                    )
+                                            >
+                                                {
+                                                    (col.toLowerCase().includes('date')) ? (
+                                                        <DatePicker
+                                                            autoComplete="off"
+                                                            selected={inputVal && inputVal[col] ? new Date(inputVal[col]) : null}
+                                                            onChange={(date) => gridFilter({ target: { name: col, value: date } })}
+                                                            onChangeRaw={(event) => { event.preventDefault(); }}
+                                                            placeholderText="MM-DD-YYYY" dateFormat="MM-dd-yyyy"
+                                                            showYearDropdown showMonthDropdown
+                                                            scrollableMonthYearDropdown scrollableYearDropdown={true}
+                                                            yearDropdownItemNumber={300}
+                                                            className="date-picker"
+                                                            customInput={
+                                                                <TextField
+                                                                    variant="standard"
+                                                                    InputProps={{
+                                                                        endAdornment: (<>
+                                                                            <CalendarTodayIcon style={{ fontSize: "11px", margin: "0px 3px 0px 0px" }} />
+                                                                            {(inputVal && inputVal[col] ? new Date(inputVal[col]) : null)
+                                                                                && <BsFillEraserFill fontSize="medium" onClick={() => handleDateErase(col)} />}
+                                                                        </>),
+                                                                        sx: { '& input::placeholder': { fontSize: '12px', }, fontSize: 12, padding: "5px", height: "20px", textAlign: "left", },
+                                                                    }}
+                                                                    inputProps={{
+                                                                        sx: {
+                                                                            fontSize: 12, padding: "0px 0px 0px 3px", height: "20px", textAlign: "left",
+                                                                            "&::placeholder": { textAlign: "left", padding: "0px", },
+                                                                        },
+                                                                    }}
+                                                                />
+                                                            }
+                                                        />
+                                                    )
+                                                        :
+                                                        (<TextField
+                                                            variant="standard"
+                                                            autoComplete="off"
+                                                            name={col}
+                                                            onChange={gridFilter}
+                                                            value={inputVal && inputVal[col] ? inputVal[col] : ""}
+                                                            placeholder={placeholderName}
+                                                            sx={{
+                                                                width: "100%",
+                                                                "& .MuiInput-underline:before": {
+                                                                    borderBottom: "1px solid black",
+                                                                    transform: "translateY(2px)",
+                                                                },
+                                                                "& .MuiInput-underline:hover:before": {
+                                                                    borderBottom: "2px solid black",
+                                                                    transform: "translateY(2px)",
+                                                                },
+                                                                "& .MuiInput-underline:after": {
+                                                                    borderBottom: "1px solid #808080",
+                                                                    transform: "translateY(2px)",
+                                                                },
+                                                            }}
+                                                            slotProps={{
+                                                                htmlInput: {
+                                                                    sx: {
+                                                                        fontSize: 12,
+                                                                        padding: "0px 0px 0px 3px",
+                                                                        height: "20px",
+                                                                        textAlign: "left",
+                                                                        "&::placeholder": {
+                                                                            textAlign: "left",
+                                                                            padding: "0px",
+                                                                        },
+                                                                    },
+                                                                },
+                                                            }}
+                                                        />)
+                                                }
+                                            </TableInlineFltr>
+                                        )
+                                    }
                                     )}
 
                                 </TableRow>
@@ -555,11 +651,13 @@ export default function CustomTable(
                             </TableHead>
                             <TableBody >
 
+
                                 {currentPageData.length > 0 ?
                                     stableSort(currentPageData, getComparator(order, orderBy)).map((row, rowIndex) => {
                                         const isItemSelected = isSelected(row.SR_NO);
                                         const labelId = `enhanced-table-checkbox-${rowIndex}`;
-
+                                        const makeEditable = (selected.length && Object.keys(selected[0]).length > 0) ?
+                                            selected.flatMap(obj => Object.values(obj).flat()) : [];
                                         return (
                                             <TableRow
                                                 key={row}
@@ -569,10 +667,7 @@ export default function CustomTable(
                                                     backgroundColor: rowIndex % 2 === 0 ? "#F2F2F2" : "#DCDCDC",
                                                 }}
                                             >
-                                                <StyledTableCellBody padding="checkbox" style={{
-                                                    whiteSpace: "nowrap", padding: "0px",
-                                                }}
-                                                >
+                                                <TableCell padding="checkbox" sx={{ padding: "0px", width: "10px", margin: "0px", borderRight: "1px solid #ccc" }} >
                                                     <Checkbox
                                                         size="small" color="primary"
                                                         onClick={(event) => {
@@ -584,53 +679,75 @@ export default function CustomTable(
                                                             'aria-labelledby': labelId,
                                                         }}
                                                         style={{ padding: "0px", textAlign: "center", display: 'flex', justifyContent: 'center', alignItems: 'center', }} />
-                                                </StyledTableCellBody>
+                                                </TableCell>
                                                 {ManageHeaderData.map((key, index) => {
+                                                    const rowCol = headColumns.find((col) => col.id === key);
+                                                    const col = rowCol?.id;
+                                                    const editRow = row.SR_NO;
                                                     if (key !== "SR_NO") {
                                                         return (
-                                                            // <StyledTableCell
-                                                            //     key={index} align="right" textAlign="right"
-                                                            //     sx={{
-                                                            //         fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: "0px 1px 0px 3px",
-                                                            //         height: "20px", width: 'auto', minWidth: '100px', maxWidth: '400px'
-                                                            //     }}
-                                                            // >{row[key]}
-                                                            // </StyledTableCell>
-                                                            (key.toLowerCase().includes('desc') && row[key].length > 0) ?
-                                                                <StyledTableCellBody align="right" sx={{
-                                                                    padding: "0px 0px 0px 3px", textAlign: "left", fontSize: "12px", whiteSpace: 'nowrap',
-                                                                    overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100px', borderRight: "1px solid #ccc",
-                                                                }}>
-                                                                    <Box display="flex" justifyContent="space-between" >
-                                                                        <InputLabel
-                                                                            sx={{
-                                                                                paddingTop: "3px", fontSize: "12px", fontFamily: "system-ui",
-                                                                                color: "rgb(10, 10, 10)", paddingLeft: "0px", paddingRight: "0px",
-                                                                                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
-                                                                            }}
-                                                                        >
-                                                                            {row[key]}
-                                                                        </InputLabel>
-                                                                        <Button sx={{ backgroundColor: "", '&:hover': { backgroundColor: "", }, border: 0, color: "CadetBlue", padding: "0px" }}
-                                                                            style={{ maxWidth: '25px', minWidth: '25px', justifyContent: "flex-start" }}
-                                                                            size='small' className={customStyle.textField}
-                                                                            onClick={() => { setOpenDialog(true); setDialogData(String(row[key])); }}
-                                                                            startIcon={<InfoIcon style={{ fontSize: 16, backgroundColor: "" }} />}
-                                                                        >
-                                                                        </Button>
-                                                                    </Box>
-                                                                </StyledTableCellBody>
-                                                                :
-                                                                <StyledTableCellBody
-                                                                    key={index} align="right" textAlign="right"
-                                                                    sx={{
-                                                                        fontFamily: "system-ui", textAlign: "left", fontSize: "75%", padding: "0px 1px 0px 3px",
-                                                                        height: "18px", width: 'auto', minWidth: '100px', maxWidth: '400px', borderRight: "1px solid #ccc",
+                                                            (!(editableCols === undefined) && editableCols.includes(col) && makeEditable.includes(editRow)) ?
+                                                                <TableCell sx={{
+                                                                    padding: "0px",
+                                                                    textAlign: "left",
+                                                                    fontSize: "12px",
+                                                                    outline: "none",
+                                                                    verticalAlign: "left",
+                                                                    margin: "0px 0px 0px 0px",
+                                                                }}
+                                                                    contentEditable={true}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === "Enter") {
+                                                                            e.preventDefault();
+                                                                        }
                                                                     }}
+                                                                    onInput={(e) => handleRowChange(e, col, editRow)}
+                                                                    suppressContentEditableWarning={true}
                                                                 >
-                                                                    {/* {(key.toLowerCase().includes('date') && row[key].length > 0) ? convertDateFormat(row[key]) : row[key]} */}
-                                                                    {row[key]}
-                                                                </StyledTableCellBody>
+                                                                    <Box sx={{
+                                                                        backgroundColor: '#fff',
+                                                                        padding: "1px 0px 0px 3px",
+                                                                        height: "22px",
+                                                                        border: "1px solid lightgrey",
+                                                                        borderRadius: "3px",
+                                                                        fontSize: 12,
+                                                                        margin: "0px"
+                                                                    }}>
+                                                                        {row[col]}
+                                                                    </Box>
+                                                                </TableCell>
+                                                                :
+                                                                (key.toLowerCase().includes('desc') && row[key].length > 0) ?
+                                                                    <StyledTableCellBody align="right" sx={{
+                                                                        padding: "0px 0px 0px 3px", textAlign: "left", fontSize: "12px", whiteSpace: 'nowrap',
+                                                                        overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: "100px", borderRight: "1px solid #ccc",
+                                                                    }}>
+                                                                        <Box display="flex" justifyContent="space-between" >
+                                                                            <InputLabel
+                                                                                sx={{
+                                                                                    paddingTop: "3px", fontSize: "12px", fontFamily: "system-ui",
+                                                                                    color: "rgb(10, 10, 10)", paddingLeft: "0px", paddingRight: "0px",
+                                                                                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
+                                                                                }}
+                                                                            >
+                                                                                {row[col]}
+                                                                            </InputLabel>
+                                                                            <Button sx={{ backgroundColor: "", '&:hover': { backgroundColor: "", }, border: 0, color: "CadetBlue", padding: "0px" }}
+                                                                                style={{ maxWidth: '25px', minWidth: '25px', justifyContent: "flex-start" }}
+                                                                                size='small' className={customStyle.textField}
+                                                                                onClick={() => { setOpenDialog(true); setDialogData(String(row[key])); }}
+                                                                                startIcon={<InfoIcon style={{ fontSize: 16, backgroundColor: "" }} />}
+                                                                            >
+                                                                            </Button>
+                                                                        </Box>
+                                                                    </StyledTableCellBody>
+                                                                    :
+                                                                    <StyledTableCellBody
+                                                                        key={index} align="right" textAlign="right" 
+                                                                       
+                                                                    >
+                                                                        {row[col]}
+                                                                    </StyledTableCellBody>
                                                         )
                                                     }
                                                 }
@@ -641,6 +758,8 @@ export default function CustomTable(
                                         )
                                     }
                                     ) : null}
+                                {/* {(key.toLowerCase().includes('date') && row[key].length > 0) ? convertDateFormat(row[key]) : row[key]} */}
+
                                 {currentPageData.length < (isScreenBigger ? 30 : 15) ?
                                     [...Array((isScreenBigger ? 30 : 15) - currentPageData.length).keys()].map((row, rowIndex) => (
                                         <TableRow
@@ -648,11 +767,9 @@ export default function CustomTable(
                                                 backgroundColor: rowIndex % 2 === 0 ? "#F2F2F2" : "#DCDCDC",
                                             }}
                                         >
-                                            <StyledTableCellBody padding="checkbox" style={{
-                                                whiteSpace: "nowrap", padding: "0px",
-                                            }}
-                                            ><Checkbox size="small" color="primary" disabled={true} style={{ padding: "0px", textAlign: "center", display: 'flex', justifyContent: 'center', alignItems: 'center', }} />
-                                            </StyledTableCellBody>
+                                            <TableCell padding="checkbox" sx={{ padding: "0px", width: "10px", margin: "0px", borderRight: "1px solid #ccc" }} >
+                                                <Checkbox size="small" color="primary" disabled={true} style={{ padding: "0px", textAlign: "center", display: 'flex', justifyContent: 'center', alignItems: 'center', }} />
+                                            </TableCell>
                                             {ManageHeaderData.map((row, index) => {
                                                 return (
                                                     <StyledTableCellBody align="right"
@@ -665,27 +782,49 @@ export default function CustomTable(
 
                                         </TableRow >
                                     )) : null}
-                                {/* {currentPageData.length < (isScreenBigger ? 30 : 15) ?
-                    [...Array((isScreenBigger ? 30 : 15) - currentPageData.length).keys()].map((row, index) => ( */}
 
                             </TableBody>
 
                         </Table>
                     </TableContainer>
                     {/* {data.length > 10 ? */}
-
-                    <div className={customStyle.header_child}>
-                        <TablePagination
-                            rowsPerPageOptions={[30]}
-                            component="div"
-                            count={data.length}
-                            rowsPerPage={rowsPerPage}
-                            page={page}
-                            onPageChange={handleChangePage}
-                            //onRowsPerPageChange={handleChangeRowsPerPage}
-                            sx={{ '& .MuiToolbar-root': { minHeight: '20px', maxHeight: '40px' }, }}
-                        />
-                    </div>
+                    {data.length > 0 ?
+                        <div style={{ display: 'flex', alignItems: '', justifyContent: "space-between", }}>
+                            <span
+                                style={{
+                                    margin: '13px 0px 0px 15px', fontSize: '14px',
+                                    fontFamily: 'Arial, sans-serif',
+                                }}
+                            >
+                                {selected.length && Object.keys(selected[0]).length > 0 && Object.keys(selected[0]).includes(String(page))
+                                    ? "Selected : " + String(selected[0][page].length)
+                                    : null}
+                            </span>
+                            <div>
+                                <div className={customStyle.header_child}>
+                                    <span
+                                        style={{
+                                            margin: '13px 0px 0px 15px', fontSize: '14px',
+                                            fontFamily: 'Arial, sans-serif',
+                                        }}
+                                    >
+                                        {"Total Selected: " + String(allPageSelected.length)}
+                                    </span>
+                                </div>
+                                <div className={customStyle.header_child}>
+                                    <TablePagination
+                                        rowsPerPageOptions={[30]}
+                                        component="div"
+                                        count={data.length}
+                                        rowsPerPage={rowsPerPage}
+                                        page={page}
+                                        onPageChange={handleChangePage}
+                                        //onRowsPerPageChange={handleChangeRowsPerPage}
+                                        sx={{ '& .MuiToolbar-root': { minHeight: '20px', maxHeight: '40px' }, }}
+                                    />
+                                </div>
+                            </div>
+                        </div> : null}
 
                     {/* : null} */}
                 </Paper>
@@ -750,7 +889,7 @@ export default function CustomTable(
                         </Box>
                     </DialogActions>
                 </Dialog>
-               
+
             </div>
 
 

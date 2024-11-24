@@ -1,7 +1,7 @@
 import { all, fork } from "redux-saga/effects";
 import { watchDailyCountData, watchStageCountData, watchErrorCountData } from "./dboardSaga";
 import { watchCurrencyGLSaga } from "./globalSaga";
-import { watchGLAccountTabSaga } from "./AccountSaga";
+import { watchGLAccountTabSaga, watchGLAccountUpdSaga } from "./AccountSaga";
 export function* rootSaga() {
   yield all([
     fork(watchDailyCountData),
@@ -9,5 +9,6 @@ export function* rootSaga() {
     fork(watchErrorCountData),
     fork(watchCurrencyGLSaga),
     fork(watchGLAccountTabSaga),
+    fork(watchGLAccountUpdSaga),
   ]);
 }

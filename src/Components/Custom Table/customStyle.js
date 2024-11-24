@@ -33,4 +33,10 @@ export const useStyles = makeStyles({
         padding: "6px 6px !important",
         lineHeight: "1.2rem !important",
     },
+    header_child: {
+        display: "inline-block",
+        // border: "1px solid red",
+        padding: "0rem 0.2rem",
+        verticalAlign: "middle",
+    },
 });

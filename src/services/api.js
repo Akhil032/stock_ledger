@@ -7,5 +7,6 @@ export const API = {
     CURRENCYGL: "/currency_gl/",
     /* Global Used API END */
     GLACCOUNTTAB: "/gl_account_tab/",
+    GLACCOUNTUPD:"/GL_ACCOUNT_update/",
     /*Account Tab API END */
 }
