@@ -40,3 +40,14 @@ export const useStyles = makeStyles({
         verticalAlign: "middle",
     },
 });
+export const styleSelectCell = {
+    control: base => ({ ...base, fontSize: "12px", minHeight: "20px", textAlign: "center", borderRadius: "3px", }),
+    dropdownIndicator: (base) => ({ ...base, padding: 0, }),
+    clearIndicator: (base) => ({ ...base, paddingTop: 0, paddingBottom: 0, }),
+    valueContainer: (provided) => ({ ...provided, height: '20px', paddingTop: '0', paddingBottom: '0', }),
+    singleValue: (provided) => ({ ...provided, }),
+    input: (provided) => ({ ...provided, width: "100%", justifyContent: "left" }),
+    option: provided => ({ ...provided, fontSize: "12px", }),
+    menu: base => ({ ...base, borderRadius: 0, marginTop: 0, textAlign: "center", }),
+    menuList: base => ({ ...base, padding: 0, textAlign: "center", })
+  };

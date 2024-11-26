@@ -28,14 +28,14 @@ import Select from "react-select"; // Select Component
 import { generateExcel } from "./excelExport";
 import { getComparator, stableSort, handleRequestSort } from "./sorting";
 import { StyledTableCell, StyledTableCellBody, TableInlineFltr, PaperComponent } from "./styledComponents";
-import { useStyles } from "./customStyle";
+import { useStyles,styleSelectCell } from "./customStyle";
 
 
 
 export default function CustomTable(
     { reportName, data, setData, headColumns, currentPageData, setcurrentPageData, inputVal, setInputVal, page, setPage,
         rowsPerPage, selected, setSelected, allPageSelected, setAllPageSelected,
-        selectedRow, setSelectedRow, editableCols, isChanged, setIsChanged
+        selectedRow, setSelectedRow, editableCols, isChanged, setIsChanged, dropDownCol,dropDownVal
     }) {
     // Custom Styles
     const customStyle = useStyles();
@@ -63,7 +63,20 @@ export default function CustomTable(
     const handleSEnter1 = () => setIsHovered1(true);
     const handleSLeave1 = () => setIsHovered1(false);
 
-
+    const handleResize = () => {
+        const screenWidth = window.innerWidth;
+        setIsScreenBigger(screenWidth < 1500 ? false : true);
+      };
+    
+      // TABLE RESIZE
+      useEffect(() => {
+        // document.title = 'Alloc Summary';
+        window.addEventListener('resize', handleResize);
+        // Clean up the event listener on component unmount
+        return () => {
+          window.removeEventListener('resize', handleResize);
+        };
+      }, []);
 
     /*
                      #########################################
@@ -243,7 +256,7 @@ export default function CustomTable(
         }
     }, [inputVal]);
 
-    // console.log("manage :", editableCols)
+     console.log("Inline Filter :", inputVal)
     /*
       #################################################
       ##########  MANAGE COLUMNS IN TABLE  ############
@@ -329,10 +342,9 @@ export default function CustomTable(
         const createSortHandler = (property) => (event) => {
             onRequestSort(event, property);
         }
-        const maxValues  =createKeyLengthObject(currentPageData);
-        console.log("maxValues ",maxValues );
+        const maxValues = createKeyLengthObject(currentPageData);
         //sx={row[col]!==undefined && (row[col].toString()).length>0 && {maxWidth:calculateWidth(row[col].toString())}}
-        
+
         return (
             <>
                 <TableHead className={customStyle.TitleHead} sx={{ margin: "0", padding: "0" }}>
@@ -390,8 +402,8 @@ export default function CustomTable(
                                             color: "#fff !important",
                                         },
                                         padding: "0px", margin: "0px",
-                                        ...(maxValues[column.id] !== undefined && maxValues[column.id].toString().length > 0 && { 
-                                            width: calculateWidth(maxValues[column.id].toString(),column.id) 
+                                        ...(maxValues[column.id] !== undefined && maxValues[column.id].toString().length > 0 && {
+                                            width: calculateWidth(maxValues[column.id].toString(), column.id)
                                         }),
                                     }}
                                 >
@@ -433,41 +445,40 @@ export default function CustomTable(
             setIsChanged([...isChanged, index]);
         }
     };
-    const calculateWidth = (text,column) => {
+    const calculateWidth = (text, column) => {
         const baseWidth = 20; // Minimum width in pixels
         const longerString = text.length > column.length ? text : column;
-        const perCharacterWidth = 5; // Approximate width per character in pixels
-        console.log('cal width ',baseWidth + longerString.length * perCharacterWidth,text,)
+        const perCharacterWidth = 5;
         return `${baseWidth + longerString.length * perCharacterWidth}px`;
     };
     const createKeyLengthObject = (currentPageData) => {
-                                                                    
+
         if (!Array.isArray(currentPageData) || currentPageData.length === 0) return {};
-    
+
         // Initialize an object to store the key and its longest value
         const result = {};
-    
+
         // Iterate over the keys of the first object
         Object.keys(currentPageData[0]).forEach((key) => {
             let maxLengthValue = "";
-    
+
             currentPageData.forEach((row) => {
-                const value = row[key] !== undefined && row[key] !== null 
-                    ? row[key].toString() 
+                const value = row[key] !== undefined && row[key] !== null
+                    ? row[key].toString()
                     : ""; // Convert to string, handle null/undefined
-    
+
                 if (value.length > maxLengthValue.length) {
                     maxLengthValue = value; // Keep the longest string
                 }
             });
-    
+
             // Assign the longest string value to the result object
             result[key] = maxLengthValue;
         });
-    
+
         return result;
     };
-    
+
     return (
         <>
             <Box
@@ -613,18 +624,18 @@ export default function CustomTable(
                                                             sx={{
                                                                 width: "100%",
                                                                 "& .MuiInput-underline:before": {
-                                                                    borderBottom: "1px solid black",
-                                                                    transform: "translateY(2px)",
+                                                                  borderBottom: "1px solid black", // Default 1px border
+                                                                  transform: "translateY(2px)",
                                                                 },
                                                                 "& .MuiInput-underline:hover:before": {
-                                                                    borderBottom: "2px solid black",
-                                                                    transform: "translateY(2px)",
+                                                                  borderBottom: "2px solid black", // Hover 2px border
+                                                                  transform: "translateY(2px)",
                                                                 },
                                                                 "& .MuiInput-underline:after": {
-                                                                    borderBottom: "1px solid #808080",
-                                                                    transform: "translateY(2px)",
+                                                                  borderBottom: 0, // Focused 2px border
+                                                                  transform: "translateY(2px)",
                                                                 },
-                                                            }}
+                                                              }}
                                                             slotProps={{
                                                                 htmlInput: {
                                                                     sx: {
@@ -683,8 +694,7 @@ export default function CustomTable(
                                                 {ManageHeaderData.map((key, index) => {
                                                     const rowCol = headColumns.find((col) => col.id === key);
                                                     const col = rowCol?.id;
-                                                    const editRow = row.SR_NO;
-                                                    if (key !== "SR_NO") {
+                                                    const editRow = row.SR_NO; if (key !== "SR_NO") {
                                                         return (
                                                             (!(editableCols === undefined) && editableCols.includes(col) && makeEditable.includes(editRow)) ?
                                                                 <TableCell sx={{
@@ -717,37 +727,59 @@ export default function CustomTable(
                                                                     </Box>
                                                                 </TableCell>
                                                                 :
-                                                                (key.toLowerCase().includes('desc') && row[key].length > 0) ?
-                                                                    <StyledTableCellBody align="right" sx={{
-                                                                        padding: "0px 0px 0px 3px", textAlign: "left", fontSize: "12px", whiteSpace: 'nowrap',
-                                                                        overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: "100px", borderRight: "1px solid #ccc",
-                                                                    }}>
-                                                                        <Box display="flex" justifyContent="space-between" >
-                                                                            <InputLabel
-                                                                                sx={{
-                                                                                    paddingTop: "3px", fontSize: "12px", fontFamily: "system-ui",
-                                                                                    color: "rgb(10, 10, 10)", paddingLeft: "0px", paddingRight: "0px",
-                                                                                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
-                                                                                }}
-                                                                            >
-                                                                                {row[col]}
-                                                                            </InputLabel>
-                                                                            <Button sx={{ backgroundColor: "", '&:hover': { backgroundColor: "", }, border: 0, color: "CadetBlue", padding: "0px" }}
-                                                                                style={{ maxWidth: '25px', minWidth: '25px', justifyContent: "flex-start" }}
-                                                                                size='small' className={customStyle.textField}
-                                                                                onClick={() => { setOpenDialog(true); setDialogData(String(row[key])); }}
-                                                                                startIcon={<InfoIcon style={{ fontSize: 16, backgroundColor: "" }} />}
-                                                                            >
-                                                                            </Button>
-                                                                        </Box>
-                                                                    </StyledTableCellBody>
+                                                                (!(dropDownCol === undefined) && dropDownCol.includes(col) && makeEditable.includes(editRow)) ?
+                                                                    <TableCell sx={{ padding: "0px", textAlign: "center", fontSize: "12px" }}>
+                                                                        <Select
+                                                                            name={col}
+                                                                            maxMenuHeight={150}
+                                                                            classNamePrefix="mySelect"
+                                                                            getOptionLabel={option => `${option.mode.toString()}`}
+                                                                            getOptionValue={option => option.code}
+                                                                            options={dropDownVal[col] || []} // Dynamically fetch options for the column
+                                                                            isSearchable={true}
+                                                                            menuPlacement="bottom"
+                                                                            // onChange={(e) => onTableCellChange(e, row.LOC, col)} // Pass column dynamically
+                                                                            value={(dropDownVal[col] || []).filter(obj => obj.code === row[col])} // Match value dynamically
+                                                                            isClearable={true}
+                                                                            closeMenuOnSelect={true}
+                                                                            hideSelectedOptions={false}
+                                                                            styles={styleSelectCell}
+                                                                            style={{ maxWidth: '20px' }}
+                                                                        />
+                                                                    </TableCell>
                                                                     :
-                                                                    <StyledTableCellBody
-                                                                        key={index} align="right" textAlign="right" 
-                                                                       
-                                                                    >
-                                                                        {row[col]}
-                                                                    </StyledTableCellBody>
+
+                                                                    (key.toLowerCase().includes('desc') && row[key].length > 0) ?
+                                                                        <StyledTableCellBody align="right" sx={{
+                                                                            padding: "0px 0px 0px 3px", textAlign: "left", fontSize: "12px", whiteSpace: 'nowrap',
+                                                                            overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: "100px", borderRight: "1px solid #ccc",
+                                                                        }}>
+                                                                            <Box display="flex" justifyContent="space-between" >
+                                                                                <InputLabel
+                                                                                    sx={{
+                                                                                        paddingTop: "3px", fontSize: "12px", fontFamily: "system-ui",
+                                                                                        color: "rgb(10, 10, 10)", paddingLeft: "0px", paddingRight: "0px",
+                                                                                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
+                                                                                    }}
+                                                                                >
+                                                                                    {row[col]}
+                                                                                </InputLabel>
+                                                                                <Button sx={{ backgroundColor: "", '&:hover': { backgroundColor: "", }, border: 0, color: "CadetBlue", padding: "0px" }}
+                                                                                    style={{ maxWidth: '25px', minWidth: '25px', justifyContent: "flex-start" }}
+                                                                                    size='small' className={customStyle.textField}
+                                                                                    onClick={() => { setOpenDialog(true); setDialogData(String(row[key])); }}
+                                                                                    startIcon={<InfoIcon style={{ fontSize: 16, backgroundColor: "" }} />}
+                                                                                >
+                                                                                </Button>
+                                                                            </Box>
+                                                                        </StyledTableCellBody>
+                                                                        :
+                                                                        <StyledTableCellBody
+                                                                            key={index} align="right" textAlign="right"
+
+                                                                        >
+                                                                            {row[col]}
+                                                                        </StyledTableCellBody>
                                                         )
                                                     }
                                                 }

@@ -13,6 +13,7 @@ export const tabDataErrp =[
         "LOCATION": 15,
         "LOCATION_NAME": "WH-15",
         "TRN_DATE": "2022-08-04",
+        "TRN_TYPE": "TIN",
         "TRN_NAME": "Book Transfer IN",
         "QTY": 75,
         "UNIT_COST": 20,
@@ -27,7 +28,7 @@ export const tabDataErrp =[
         "CREATE_ID": "admin",
         "ERR_SEQ_NO": 11111125,
         "TRAN_SEQ_NO": 100014,
-        "TRN_TYPE": "TIN",
+        
         "AREF": "3"
     },
     {
