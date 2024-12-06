@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import {
   styled,
-  useTheme,
+  // useTheme,
   Box,
   CssBaseline,
   Drawer as MuiDrawer,
   AppBar as MuiAppBar,
   Toolbar,
   List,
-  Divider,
+  // Divider,
   IconButton,
   Typography,
   Collapse,
@@ -22,7 +22,6 @@ import Hamburger from "hamburger-react"; // npm install hamburger-react
 import { useNavigate, Outlet } from "react-router-dom";
 import proxima360 from "../../Assets/proxima360.png";
 import { GetItems, routeMap } from "./menu";
-import { yellow } from "@mui/material/colors";
 
 const drawerWidth = 300;
 
@@ -84,12 +83,13 @@ const Drawer = styled(MuiDrawer)(({ theme, open }) => ({
 }));
 
 export default function AdminLayout() {
-  const theme = useTheme();
+  // const theme = useTheme();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [pageName, setPageName] = useState('');
+  // const [pageName, setPageName] = useState('');
+  const [tabName, setTabName] = useState('');
   const [highlight, setHighlight] = useState('');
   const items = GetItems();
 
@@ -112,7 +112,7 @@ export default function AdminLayout() {
     } else {
       console.error("Route not found for:", itemName);
     }
-
+    setTabName(itemName);
     handleDrawerToggle();
   };
   return (
@@ -173,7 +173,7 @@ export default function AdminLayout() {
             bgcolor: "white",
             display: "flex",
             flexDirection: "column", // Ensure vertical stacking
-            padding: 0, // Remove extra padding
+            padding: '5px 0xp 0px 0px', // Remove extra padding
           }}
           component="nav"
           aria-labelledby="nested-list-subheader"
@@ -268,7 +268,7 @@ export default function AdminLayout() {
           padding: "5px 5px 0px 65px",
           background: 'white',
         }}
-        onClick={() => setOpen(false)}
+        onClick={() => { setOpen(false); setMenu(null); setHighlight(tabName); }}
       >
         <Outlet />
       </Box>

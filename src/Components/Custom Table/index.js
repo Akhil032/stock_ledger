@@ -28,14 +28,14 @@ import Select from "react-select"; // Select Component
 import { generateExcel } from "./excelExport";
 import { getComparator, stableSort, handleRequestSort } from "./sorting";
 import { StyledTableCell, StyledTableCellBody, TableInlineFltr, PaperComponent } from "./styledComponents";
-import { useStyles,styleSelectCell } from "./customStyle";
+import { useStyles, styleSelectCell } from "./customStyle";
 
 
 
 export default function CustomTable(
     { reportName, data, setData, headColumns, currentPageData, setcurrentPageData, inputVal, setInputVal, page, setPage,
         rowsPerPage, selected, setSelected, allPageSelected, setAllPageSelected,
-        selectedRow, setSelectedRow, editableCols, isChanged, setIsChanged, dropDownCol,dropDownVal
+        selectedRow, setSelectedRow, editableCols, isChanged, setIsChanged, dropDownCol, dropDownVal
     }) {
     // Custom Styles
     const customStyle = useStyles();
@@ -66,17 +66,17 @@ export default function CustomTable(
     const handleResize = () => {
         const screenWidth = window.innerWidth;
         setIsScreenBigger(screenWidth < 1500 ? false : true);
-      };
-    
-      // TABLE RESIZE
-      useEffect(() => {
+    };
+
+    // TABLE RESIZE
+    useEffect(() => {
         // document.title = 'Alloc Summary';
         window.addEventListener('resize', handleResize);
         // Clean up the event listener on component unmount
         return () => {
-          window.removeEventListener('resize', handleResize);
+            window.removeEventListener('resize', handleResize);
         };
-      }, []);
+    }, []);
 
     /*
                      #########################################
@@ -256,7 +256,7 @@ export default function CustomTable(
         }
     }, [inputVal]);
 
-     console.log("Inline Filter :", inputVal)
+    // console.log("Inline Filter :", inputVal)
     /*
       #################################################
       ##########  MANAGE COLUMNS IN TABLE  ############
@@ -273,9 +273,10 @@ export default function CustomTable(
         setcurrentPageData(temp);
         setcurrentPageRows(temp);
         // setInputVal([]);
-        // setIsLoading(false);
+        //setIsLoading(false);
 
     };
+
     const handleCloseDialogManage = (e) => {
         if (ManageHeaderData.length > 0) { setOpenDialogManage(false); }
         else { setOpenDialog(true); setDialogData("Table must contain atleast one column."); }
@@ -447,10 +448,13 @@ export default function CustomTable(
     };
     const calculateWidth = (text, column) => {
         const baseWidth = 20; // Minimum width in pixels
-        const longerString = text.length > column.length ? text : column;
         const perCharacterWidth = 5;
-        return `${baseWidth + longerString.length * perCharacterWidth}px`;
+        const longerString = column.toUpperCase().includes('_DATE')
+            ? Math.max(text.length, column.length, 16)
+            : Math.max(text.length, column.length);
+        return `${baseWidth + longerString * perCharacterWidth}px`;
     };
+
     const createKeyLengthObject = (currentPageData) => {
 
         if (!Array.isArray(currentPageData) || currentPageData.length === 0) return {};
@@ -532,8 +536,12 @@ export default function CustomTable(
                         margin: "0px 0px 0px 0px", padding: "0px 5px 5px 5px", borderRadius: 0, boxShadow: 0, border: "0",
                     }}
                 >
-                    <TableContainer style={{ maxHeight: (isScreenBigger ? 700 : 420), width: "100%", borderRadius: '7px', }} component={Paper}>
-                        <Table aria-label="customized table">
+                    <TableContainer sx={{
+                        maxHeight: (isScreenBigger ? 710 : 420),
+                        borderRadius: '7px', padding: 0, margin: 0,width:'100%'
+                    }} component={Paper}>
+                        
+                        <Table aria-label="customized table" style={{ padding: 0, margin: 0, width:'100%'}}>
                             <TabHead className={customStyle.TitleHead}
                                 numSelected={selected.length}
                                 onSelectAllClick={handleSelectAllClick}
@@ -581,32 +589,59 @@ export default function CustomTable(
                                                 }}
                                             >
                                                 {
-                                                    (col.toLowerCase().includes('date')) ? (
+                                                    (col.toLowerCase().includes('_date')) ? (
                                                         <DatePicker
                                                             autoComplete="off"
                                                             selected={inputVal && inputVal[col] ? new Date(inputVal[col]) : null}
                                                             onChange={(date) => gridFilter({ target: { name: col, value: date } })}
-                                                            onChangeRaw={(event) => { event.preventDefault(); }}
-                                                            placeholderText="MM-DD-YYYY" dateFormat="MM-dd-yyyy"
-                                                            showYearDropdown showMonthDropdown
-                                                            scrollableMonthYearDropdown scrollableYearDropdown={true}
+                                                            onChangeRaw={(event) => event.preventDefault()}
+                                                            placeholderText="MM-DD-YYYY"
+                                                            dateFormat="MM-dd-yyyy"
+                                                            showYearDropdown
+                                                            showMonthDropdown
+                                                            scrollableMonthYearDropdown
+                                                            scrollableYearDropdown
                                                             yearDropdownItemNumber={300}
                                                             className="date-picker"
+                                                            popperPlacement="bottom-start" // Position the calendar
                                                             customInput={
                                                                 <TextField
                                                                     variant="standard"
-                                                                    InputProps={{
-                                                                        endAdornment: (<>
-                                                                            <CalendarTodayIcon style={{ fontSize: "11px", margin: "0px 3px 0px 0px" }} />
-                                                                            {(inputVal && inputVal[col] ? new Date(inputVal[col]) : null)
-                                                                                && <BsFillEraserFill fontSize="medium" onClick={() => handleDateErase(col)} />}
-                                                                        </>),
-                                                                        sx: { '& input::placeholder': { fontSize: '12px', }, fontSize: 12, padding: "5px", height: "20px", textAlign: "left", },
+                                                                    sx={{
+                                                                        width: "100px",
+                                                                        "& .MuiInput-underline:before": {
+                                                                            borderBottom: "1px solid black", // Default 1px border
+                                                                            transform: "translateY(2px)",
+                                                                        },
+                                                                        "& .MuiInput-underline:hover:before": {
+                                                                            borderBottom: "2px solid black", // Hover 2px border
+                                                                            transform: "translateY(2px)",
+                                                                        },
+                                                                        "& .MuiInput-underline:after": {
+                                                                            borderBottom: 0, // Focused 2px border
+                                                                            transform: "translateY(2px)",
+                                                                        },
                                                                     }}
-                                                                    inputProps={{
+                                                                    InputProps={{
+                                                                        endAdornment: (
+                                                                            <>
+                                                                                <CalendarTodayIcon
+                                                                                    style={{ fontSize: "11px", margin: "0px 3px 0px 0px" }}
+                                                                                />
+                                                                                {(inputVal && inputVal[col] ? new Date(inputVal[col]) : null) && (
+                                                                                    <BsFillEraserFill
+                                                                                        fontSize="medium"
+                                                                                        onClick={() => handleDateErase(col)}
+                                                                                    />
+                                                                                )}
+                                                                            </>
+                                                                        ),
                                                                         sx: {
-                                                                            fontSize: 12, padding: "0px 0px 0px 3px", height: "20px", textAlign: "left",
-                                                                            "&::placeholder": { textAlign: "left", padding: "0px", },
+                                                                            "& input::placeholder": { fontSize: "12px" },
+                                                                            fontSize: 12,
+                                                                            padding: "0px 0px 0px 3px",
+                                                                            height: "20px",
+                                                                            textAlign: "left",
                                                                         },
                                                                     }}
                                                                 />
@@ -624,18 +659,18 @@ export default function CustomTable(
                                                             sx={{
                                                                 width: "100%",
                                                                 "& .MuiInput-underline:before": {
-                                                                  borderBottom: "1px solid black", // Default 1px border
-                                                                  transform: "translateY(2px)",
+                                                                    borderBottom: "1px solid black", // Default 1px border
+                                                                    transform: "translateY(2px)",
                                                                 },
                                                                 "& .MuiInput-underline:hover:before": {
-                                                                  borderBottom: "2px solid black", // Hover 2px border
-                                                                  transform: "translateY(2px)",
+                                                                    borderBottom: "2px solid black", // Hover 2px border
+                                                                    transform: "translateY(2px)",
                                                                 },
                                                                 "& .MuiInput-underline:after": {
-                                                                  borderBottom: 0, // Focused 2px border
-                                                                  transform: "translateY(2px)",
+                                                                    borderBottom: 0, // Focused 2px border
+                                                                    transform: "translateY(2px)",
                                                                 },
-                                                              }}
+                                                            }}
                                                             slotProps={{
                                                                 htmlInput: {
                                                                     sx: {
@@ -749,7 +784,7 @@ export default function CustomTable(
                                                                     </TableCell>
                                                                     :
 
-                                                                    (key.toLowerCase().includes('desc') && row[key].length > 0) ?
+                                                                    (key.toLowerCase().includes('_desc') && row[key].length > 0) ?
                                                                         <StyledTableCellBody align="right" sx={{
                                                                             padding: "0px 0px 0px 3px", textAlign: "left", fontSize: "12px", whiteSpace: 'nowrap',
                                                                             overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: "100px", borderRight: "1px solid #ccc",

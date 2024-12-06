@@ -1,6 +1,8 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, {
+    useEffect, useState,// useRef 
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
 import {
     Box, Button, Drawer, Dialog, DialogActions, DialogContent,
@@ -8,10 +10,9 @@ import {
 } from "@mui/material";
 import {
     DoneAll as DoneAllIcon, Cancel as CancelIcon, Search as SearchIcon,
-    ViewColumn as ViewColumnIcon, Animation as AnimationIcon,
-    CalendarToday as CalendarTodayIcon, Download as DownloadIcon,
-    Info as InfoIcon, RestartAlt as RestartAltIcon,
-    Send as SendIcon,
+    RestartAlt as RestartAltIcon, Send as SendIcon,
+    // ViewColumn as ViewColumnIcon, Animation as AnimationIcon,
+    // CalendarToday as CalendarTodayIcon, Download as DownloadIcon, Info as InfoIcon,
 } from "@mui/icons-material";
 import Select from 'react-select';
 import CustomTable from "../../Custom Table";
@@ -60,7 +61,7 @@ const AccountView = () => {
     // Redux
     const dispatch = useDispatch();
     const globalData = useSelector((state) => state.GlobalReducers);
-    const AcoountData = useSelector((state) => state.AccountTabReducer);
+    const AccountData = useSelector((state) => state.AccountTabReducer);
 
     // Custom styles
     const customStyle = useStyles();
@@ -81,10 +82,10 @@ const AccountView = () => {
     };
     const deserializeData = (tableData) => {
         if (!Array.isArray(tableData)) return []; // Handle invalid input gracefully
-    
+
         return tableData.map(({ SR_NO, ...rest }) => rest); // Remove the `SR_NO` property
     };
-    
+
 
     useEffect(() => {
         document.title = 'Account Maintanence';//CurrencyGL
@@ -101,9 +102,9 @@ const AccountView = () => {
 
             setCurData(CurrencyGL)
         }
-        if (AcoountData?.data?.GLAccountTab && Array.isArray(AcoountData?.data?.GLAccountTab)) {
+        if (AccountData?.data?.GLAccountTab && Array.isArray(AccountData?.data?.GLAccountTab)) {
             // Create an immutable copy of the GLAccountTab data
-            const tableData = AcoountData?.data?.GLAccountTab.map((item) => ({
+            const tableData = AccountData?.data?.GLAccountTab.map((item) => ({
                 ...item, // Ensure no direct mutation of the state
             }));
             const columns = Object.keys(tableData[0]); // Get all column names
@@ -112,9 +113,6 @@ const AccountView = () => {
             );
             setPage(0);
             setSelected([]);
-            console.log(columnsContainingSegment); // Outputs all matching columns
-
-
             setEditableCols(columnsContainingSegment)
             // Generate columns immutably
             const tableColumns = columns.map((str) => {
@@ -145,10 +143,10 @@ const AccountView = () => {
         const errorMessage =
             globalData?.data?.CurrencyGL?.status === 500 && globalData?.data?.CurrencyGL?.message
                 ? globalData.data.CurrencyGL.message
-                : AcoountData?.data?.GLAccountTab?.status === 500 && AcoountData?.data?.GLAccountTab?.message
-                    ? AcoountData.data.GLAccountTab.message
-                    : AcoountData?.data?.GLAccountUpd?.status === 500 && AcoountData?.data?.GLAccountUpd?.message
-                        ? AcoountData.data.GLAccountUpd.message
+                : AccountData?.data?.GLAccountTab?.status === 500 && AccountData?.data?.GLAccountTab?.message
+                    ? AccountData.data.GLAccountTab.message
+                    : AccountData?.data?.GLAccountUpd?.status === 500 && AccountData?.data?.GLAccountUpd?.message
+                        ? AccountData.data.GLAccountUpd.message
                         : null;
 
         if (errorMessage) {
@@ -157,21 +155,21 @@ const AccountView = () => {
             setLoading(false); // Stop the loading state
         }
 
-        if ((AcoountData?.data?.GLAccountUpd?.status === 200 && AcoountData?.data?.GLAccountUpd?.message)) {
-            setDialogData(AcoountData?.data?.GLAccountUpd?.message);  // Set the error message to dialog data
+        if ((AccountData?.data?.GLAccountUpd?.status === 200 && AccountData?.data?.GLAccountUpd?.message)) {
+            setDialogData(AccountData?.data?.GLAccountUpd?.message);  // Set the error message to dialog data
             setOpenDialog(true);
             dispatch(postGLAccountTabRequest([searchData]));
             setLoading(true);
         }
 
-    }, [globalData?.data, AcoountData?.data])
-    const togglePopover = () => {
-        setPopoverOpen(!isPopoverOpen);
-    };
+    }, [globalData?.data, AccountData?.data])
+    // const togglePopover = () => {
+    //     setPopoverOpen(!isPopoverOpen);
+    // };
 
-    const closePopover = () => {
-        setPopoverOpen(false);
-    };
+    // const closePopover = () => {
+    //     setPopoverOpen(false);
+    // };
 
 
     const toggleDrawer = (anchor, open) => (event) => {
@@ -183,60 +181,7 @@ const AccountView = () => {
         }
         setState({ ...state, [anchor]: open });
     };
-    const tabData = serializedata([{
-        "Hier1": "124",
-        "Hier2": "1300",
-        "Hier3": "2188",
-        "Extended Attribute": "",
-        "Attribute Value": "",
-        "Item": "015878432",
-        "Item Description": "Bluetooth Red Speaker W/ Carabiner",
-        "Variant": "RED",
-        "Location": 7,
-        "On Hand In Stores": 780,
-        "Allocated Qty": 0,
-        "Weeks of Supply": 0
-    },
-    {
-        "Hier1": "124",
-        "Hier2": "1300",
-        "Hier3": "2188",
-        "Extended Attribute": "",
-        "Attribute Value": "",
-        "Item": "015878432",
-        "Item Description": "Bluetooth Red Speaker W/ Carabiner",
-        "Variant": "RED",
-        "Location": 10,
-        "On Hand In Stores": 2,
-        "Allocated Qty": 14,
-        "Weeks of Supply": 0
-    }])
-
-
-    const tableColumns = Object.keys({
-        "Hier1": "124",
-        "Hier2": "1300",
-        "Hier3": "2188",
-        "Extended Attribute": "",
-        "Attribute Value": "",
-        "Item": "015878432",
-        "Item Description": "Bluetooth Red Speaker W/ Carabiner",
-        "Variant": "RED",
-        "Location": 20,
-        "On Hand In Stores": 2,
-        "Allocated Qty": 14,
-        "Weeks of Supply": 0
-    }).map(str => {
-
-        const label =
-            str
-                .toLowerCase()
-                .replace(/_/g, ' ')
-                .replace(/\b\w/g, char => char.toUpperCase())
-            ;
-
-        return { id: str, label };
-    });
+    /* LOAD, CLEAR, AND UPDATE THE DATA */
     const handleSubmit = () => {
         // if (searchData.PRIMARY_ACCOUNT.length>0  || searchData.CURRENCY.length>0){
         dispatch(postGLAccountTabRequest([searchData]));
@@ -244,7 +189,7 @@ const AccountView = () => {
         // }
         setState({ ...state, 'right': false });
     }
-    const handleReset = () =>{
+    const handleReset = () => {
         setSearchData(initData);
         setData([]);
         setcurrentPageData([]);
@@ -252,11 +197,13 @@ const AccountView = () => {
         setInputVal({});
     }
     const handleUpdate = () => {
-        const updatedRows =data.filter((row)=> isChanged.includes(row.SR_NO))
+        const updatedRows = data.filter((row) => isChanged.includes(row.SR_NO))
         dispatch(postGLAccountUpdRequest(deserializeData(updatedRows)));
         setLoading(true);
         setIsChanged([]);
     }
+
+    /* SEARCH CRITERIA  HANDLING START */
     const handleChange = (event) => { setSearchData((prev) => { return { ...prev, PRIMARY_ACCOUNT: event.target.value, }; }); }
     const selectCurrency = (selectedOptions) => {
         // Update the CURRENCY field in searchData with the selected options
@@ -266,13 +213,13 @@ const AccountView = () => {
             CURRENCY: selectedCurrencies,
         }));
     };
-
+    /* SEARCH CRITERIA  HANDLING END */
 
     // Adjust options order to display selected options at the top
-    const sortedOptions = [
-        ...curData.filter(option => searchData.CURRENCY.includes(option.CURRENCY)), // Selected options
-        ...curData.filter(option => !searchData.CURRENCY.includes(option.CURRENCY)), // Remaining options
-    ];
+    // const sortedOptions = [
+    //     ...curData.filter(option => searchData.CURRENCY.includes(option.CURRENCY)), // Selected options
+    //     ...curData.filter(option => !searchData.CURRENCY.includes(option.CURRENCY)), // Remaining options
+    // ];
     const searchPanel = () => (
         <Box
             sx={{ width: 300, marginTop: "80px", }}
@@ -378,7 +325,7 @@ const AccountView = () => {
             </Button>
         </Box>
     )
-    console.log("dialog : ", openDialog, dialogData)
+
     return (<>
         <Box
             sx={{
@@ -391,7 +338,7 @@ const AccountView = () => {
         >
             <h4 style={{ margin: "0px" }}>Account Maintanence</h4>
             <div>
-                {isChanged.length> 0 &&
+                {isChanged.length > 0 &&
                     <Button
                         size="small"
                         variant="contained"
@@ -505,7 +452,7 @@ const AccountView = () => {
                     headColumns={tabCols}
                     currentPageData={currentPageData}
                     setcurrentPageData={setcurrentPageData}
-                    inputVal={inputVal} setInputVal ={setInputVal}
+                    inputVal={inputVal} setInputVal={setInputVal}
                     page={page}
                     setPage={setPage}
                     rowsPerPage={rowsPerPage}
@@ -513,7 +460,7 @@ const AccountView = () => {
                     allPageSelected={allPageSelected} setAllPageSelected={setAllPageSelected}
                     selectedRow={selectedRow} setSelectedRow={setSelectedRow}
                     editableCols={editableCols}
-                    isChanged ={isChanged}
+                    isChanged={isChanged}
                     setIsChanged={setIsChanged}
                 />}
         </Box>
@@ -549,7 +496,7 @@ const AccountView = () => {
                         onClick={() => {
                             setOpenDialog(false);
                             setDialogData("");
-                            if (isChanged.length>0) {
+                            if (isChanged.length > 0) {
                                 handleUpdate();
                             }
                         }}
@@ -559,7 +506,7 @@ const AccountView = () => {
                     >
                         Ok
                     </Button>
-                    {isChanged.length>0 &&
+                    {isChanged.length > 0 &&
                         <Button
                             sx={{
                                 backgroundColor: "maroon", width: "100px", marginLeft: "5px", marginTop: "2px",

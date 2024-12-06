@@ -1,6 +1,8 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, {
+    useEffect, useState,// useRef 
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
 import {
     Box, Button, Drawer, Dialog, DialogActions, DialogContent,
@@ -8,10 +10,9 @@ import {
 } from "@mui/material";
 import {
     DoneAll as DoneAllIcon, Cancel as CancelIcon, Search as SearchIcon,
-    ViewColumn as ViewColumnIcon, Animation as AnimationIcon,
-    CalendarToday as CalendarTodayIcon, Download as DownloadIcon,
-    Info as InfoIcon, RestartAlt as RestartAltIcon,
-    Send as SendIcon,
+    RestartAlt as RestartAltIcon, Send as SendIcon,
+    // ViewColumn as ViewColumnIcon, Animation as AnimationIcon,
+    // CalendarToday as CalendarTodayIcon, Download as DownloadIcon, Info as InfoIcon,
 } from "@mui/icons-material";
 import Select from 'react-select';
 import CustomTable from "../../Custom Table";
@@ -19,10 +20,8 @@ import { useStyles, styleSelect, } from "./customStyle";
 import { PaperComponent } from "../../Custom Table/styledComponents";
 // API DISPATCH 
 import { postCurrencyGLRequest } from "../../../Redux/Actions/global";
-import { postGLAccountTabRequest, postGLAccountUpdRequest } from "../../../Redux/Actions/Account";
-import { tabDataErrp } from "./tabDataErrp";
+import { postERRTABDATARequest } from "../../../Redux/Actions/Transaction";
 import TrnTypeList from "../../TRN_TYPE";
-
 
 const initData = {
     PRIMARY_ACCOUNT: "",
@@ -46,6 +45,7 @@ const ErrorProcessing = () => {
     const [selected, setSelected] = useState([{}]);
     const [allPageSelected, setAllPageSelected] = useState([]);
     const [selectedRow, setSelectedRow] = useState(null);
+    const [editableCols, setEditableCols] = useState([]);
     const [isChanged, setIsChanged] = useState([]);
     const [isPopoverOpen, setPopoverOpen] = useState(false);
     const [searchData, setSearchData] = useState(initData);
@@ -64,8 +64,7 @@ const ErrorProcessing = () => {
     // Redux
     const dispatch = useDispatch();
     const globalData = useSelector((state) => state.GlobalReducers);
-    const AcoountData = useSelector((state) => state.AccountTabReducer);
-
+    const TransactionData = useSelector((state) => state.TransactionTabReducer);
     // Custom styles
     const customStyle = useStyles();
 
@@ -91,31 +90,32 @@ const ErrorProcessing = () => {
 
 
     useEffect(() => {
-        document.title = 'Error Processing';//CurrencyGL
+        document.title = 'Error Processing';
         dispatch(postCurrencyGLRequest([{}]));
         setLoading(true);
     }, []);
-    console.log("globalData?.data 1:",globalData?.data)
     useEffect(() => {
-        if (curData.length > 0 || data.length > 0) {
+        data && Array.isArray(data)
+        if (typeof curData != 'undefined' && (curData.length > 0 || data.length > 0)) {
             setLoading(false);
         }
         if (globalData?.data) {
-            
             const { CurrencyGL } = globalData.data;
 
-            console.log("globalData?.data 2:",CurrencyGL,globalData.data)
-            setCurData(CurrencyGL === undefined?[]:CurrencyGL)
-            setLoading(false);
+            setCurData(CurrencyGL)
         }
-        if (AcoountData?.data?.GLAccountTab && Array.isArray(AcoountData?.data?.GLAccountTab)) {
-            // Create an immutable copy of the GLAccountTab data
-            const tableData = AcoountData?.data?.GLAccountTab.map((item) => ({
+        if (TransactionData?.data?.errTabData && Array.isArray(TransactionData?.data?.errTabData)) {
+            // Create an immutable copy of the errTabData data
+            const tableData = TransactionData?.data?.errTabData.map((item) => ({
                 ...item, // Ensure no direct mutation of the state
             }));
             const columns = Object.keys(tableData[0]); // Get all column names
+            const columnsContainingSegment = columns.filter(col =>
+                col.toUpperCase().includes("SEGMENT") // Check if "SEGMENT" is in the column name
+            );
             setPage(0);
             setSelected([]);
+            setEditableCols(columnsContainingSegment)
             // Generate columns immutably
             const tableColumns = columns.map((str) => {
                 const label = str
@@ -145,10 +145,10 @@ const ErrorProcessing = () => {
         const errorMessage =
             globalData?.data?.CurrencyGL?.status === 500 && globalData?.data?.CurrencyGL?.message
                 ? globalData.data.CurrencyGL.message
-                : AcoountData?.data?.GLAccountTab?.status === 500 && AcoountData?.data?.GLAccountTab?.message
-                    ? AcoountData.data.GLAccountTab.message
-                    : AcoountData?.data?.GLAccountUpd?.status === 500 && AcoountData?.data?.GLAccountUpd?.message
-                        ? AcoountData.data.GLAccountUpd.message
+                : TransactionData?.data?.errTabData?.status === 500 && TransactionData?.data?.errTabData?.message
+                    ? TransactionData.data.errTabData.message
+                    : TransactionData?.data?.GLAccountUpd?.status === 500 && TransactionData?.data?.GLAccountUpd?.message
+                        ? TransactionData.data.GLAccountUpd.message
                         : null;
 
         if (errorMessage) {
@@ -157,21 +157,21 @@ const ErrorProcessing = () => {
             setLoading(false); // Stop the loading state
         }
 
-        if ((AcoountData?.data?.GLAccountUpd?.status === 200 && AcoountData?.data?.GLAccountUpd?.message)) {
-            setDialogData(AcoountData?.data?.GLAccountUpd?.message);  // Set the error message to dialog data
+        if ((TransactionData?.data?.GLAccountUpd?.status === 200 && TransactionData?.data?.GLAccountUpd?.message)) {
+            setDialogData(TransactionData?.data?.GLAccountUpd?.message);  // Set the error message to dialog data
             setOpenDialog(true);
-            dispatch(postGLAccountTabRequest([searchData]));
+            dispatch(postERRTABDATARequest([searchData]));
             setLoading(true);
         }
 
-    }, [globalData?.data, AcoountData?.data])
-    const togglePopover = () => {
-        setPopoverOpen(!isPopoverOpen);
-    };
+    }, [globalData?.data, TransactionData?.data])
+    // const togglePopover = () => {
+    //     setPopoverOpen(!isPopoverOpen);
+    // };
 
-    const closePopover = () => {
-        setPopoverOpen(false);
-    };
+    // const closePopover = () => {
+    //     setPopoverOpen(false);
+    // };
 
 
     const toggleDrawer = (anchor, open) => (event) => {
@@ -183,53 +183,10 @@ const ErrorProcessing = () => {
         }
         setState({ ...state, [anchor]: open });
     };
-    const tabData = serializedata(tabDataErrp)
-
-
-    const tableColumns = Object.keys({
-        "ITEM": "200000015",
-        "ERR_MSG": "invalid trn_type",
-        "ITEM_DESC": "ITEM SKU-INFANT WEAR",
-        "HIER1": "15",
-        "HIER1_DESC": "Men Outerwear",
-        "HIER2": "1015",
-        "HIER2_DESC": "class-Power Bank",
-        "HIER3": "10015",
-        "HIER3_DESC": "subclass-Skincare",
-        "LOCATION_TYPE": "S",
-        "LOCATION": 15,
-        "LOCATION_NAME": "WH-15",
-        "TRN_DATE": "2022-08-04",
-        "TRN_NAME": "Book Transfer IN",
-        "QTY": 75,
-        "UNIT_COST": 20,
-        "UNIT_RETAIL": 25,
-        "TOTAL_COST": 100,
-        "TOTAL_RETAIL": 150,
-        "REF_NO1": "2345",
-        "REF_NO2": "345",
-        "REF_NO3": "4567",
-        "REF_NO4": "4563",
-        "CURRENCY": "USD",
-        "CREATE_ID": "admin",
-        "ERR_SEQ_NO": 11111125,
-        "TRAN_SEQ_NO": 100014,
-        "TRN_TYPE": "TIN",
-        "AREF": "3"
-    }).map(str => {
-
-        const label =
-            str
-                .toLowerCase()
-                .replace(/_/g, ' ')
-                .replace(/\b\w/g, char => char.toUpperCase())
-            ;
-
-        return { id: str, label };
-    });
+    /* LOAD, CLEAR, AND UPDATE THE DATA */
     const handleSubmit = () => {
         // if (searchData.PRIMARY_ACCOUNT.length>0  || searchData.CURRENCY.length>0){
-        dispatch(postGLAccountTabRequest([searchData]));
+        dispatch(postERRTABDATARequest([searchData]));
         setLoading(true);
         // }
         setState({ ...state, 'right': false });
@@ -243,10 +200,11 @@ const ErrorProcessing = () => {
     }
     const handleUpdate = () => {
         const updatedRows = data.filter((row) => isChanged.includes(row.SR_NO))
-        dispatch(postGLAccountUpdRequest(deserializeData(updatedRows)));
         setLoading(true);
         setIsChanged([]);
     }
+
+    /* SEARCH CRITERIA  HANDLING START */
     const handleChange = (event) => { setSearchData((prev) => { return { ...prev, PRIMARY_ACCOUNT: event.target.value, }; }); }
     const selectCurrency = (selectedOptions) => {
         // Update the CURRENCY field in searchData with the selected options
@@ -256,7 +214,7 @@ const ErrorProcessing = () => {
             CURRENCY: selectedCurrencies,
         }));
     };
-
+    /* SEARCH CRITERIA  HANDLING END */
 
     // Adjust options order to display selected options at the top
     // const sortedOptions = [
@@ -318,7 +276,7 @@ const ErrorProcessing = () => {
                         getOptionLabel={(option) => option.CURRENCY}
                         getOptionValue={(option) => option.CURRENCY}
                         options={curData}
-                        value={ curData.filter(option => searchData.CURRENCY.includes(option.CURRENCY))} // Filter based on searchData.CURRENCY
+                        // value={curData.filter(option => searchData.CURRENCY.includes(option.CURRENCY))} // Filter based on searchData.CURRENCY
                         hideSelectedOptions={false} // Show selected options at the top
                         styles={styleSelect}
                         menuPlacement="bottom"
@@ -368,7 +326,7 @@ const ErrorProcessing = () => {
             </Button>
         </Box>
     )
-    console.log("dialog : ", openDialog, dialogData,trnTypeData,curData)
+
     return (<>
         <Box
             sx={{
@@ -443,13 +401,14 @@ const ErrorProcessing = () => {
                 width: '100%'  // Ensures full width to spread the items
             }}>
 
-            {tabData.length > 0 &&
+
+            {data.length > 0 &&
                 < CustomTable
                     reportName={"Error Processing"}
-                    data={tabData}
+                    data={data}
                     setData={setData}
-                    headColumns={tableColumns}
-                    currentPageData={tabData.slice(0, 30)}
+                    headColumns={tabCols}
+                    currentPageData={currentPageData}
                     setcurrentPageData={setcurrentPageData}
                     inputVal={inputVal} setInputVal={setInputVal}
                     page={page}
@@ -461,7 +420,7 @@ const ErrorProcessing = () => {
                     isChanged={isChanged}
                     setIsChanged={setIsChanged}
                     dropDownCol={dropDownCol}
-                    dropDownVal = {dropDownVal}
+                    dropDownVal={dropDownVal}
                 />}
         </Box>
         <div>
