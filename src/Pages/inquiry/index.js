@@ -108,8 +108,8 @@ const initialsearch = {
   TRN_TYPE: [],
   TRN_NAME:[],
   AREF: [],
-  USER: "",
-  DATE: "",
+  CREATE_ID: "",
+  TRN_DATE: "",
 };
 
 const initialItemData = {
@@ -461,8 +461,8 @@ const InquryScreen = () => {
   }
 
   const onReset = (event) => {
-    initialsearch.USER = "";
-    initialsearch.DATE = "";
+    initialsearch.CREATE_ID = "";
+    initialsearch.TRN_DATE = "";
     initialsearch.HIER1 = [];
     initialsearch.HIER2 = [];
     initialsearch.HIER3 = [];
@@ -1038,11 +1038,11 @@ const selectTrantype=(e,value) =>{
             margin="normal"
             size="small"
             variant="standard"
-            name="USER"
+            name="CREATE_ID"
             label="USER"
             type="text"
             onChange={onChange}
-            value={searchData.USER}
+            value={searchData.CREATE_ID}
             sx={{ width: 250 }}
           />
           <TextField
@@ -1050,11 +1050,11 @@ const selectTrantype=(e,value) =>{
             margin="normal"
             size="small"
             variant="standard"
-            name="DATE"
+            name="TRN_DATE"
             label="TRN DATE"
             type="date"
             inputProps={{ max: currentDate()  }}
-            value={searchData.DATE}
+            value={searchData.TRN_DATE}
             onChange={onChange}
             sx={{ width: 250 }}
             style={{
