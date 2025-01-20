@@ -550,7 +550,7 @@ const searchPanel = () => (
                 }}
                 inputValue={inputTrn}
                 onChange={selectTrantype}
-                placeholder={"Choose a Trn Type"}
+                placeholder={"Choose a Tran Name"}
                 styles={styleSelect}
                 components={animatedComponents} 
                 value={trnTypeValue.filter(obj => searchData?.TRN_NAME.includes(obj.TRN_NAME))}
