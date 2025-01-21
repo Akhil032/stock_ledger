@@ -1247,8 +1247,8 @@ const selectLocation = (event, value) => {
                 onChange={handleHier1}
                 placeholder={"Choose HIER1"}
                 styles={styleSelect}
-                //components={animatedComponents}  
-                components={{ValueContainer: CustomValueContainer}}
+                components={animatedComponents}  
+                // components={{ValueContainer: CustomValueContainer}}
                 // onFocus={() => setFocused(true)}
                 // onBlur={() => setFocused(false)}
                 // isFocused={focused}
