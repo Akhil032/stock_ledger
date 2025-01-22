@@ -1,5 +1,13 @@
-export const exceltoJsdate = (date) => {
+export const exceltoJsdate = (date, setIsValidExcel) => {
   console.log("date:", date, typeof date);
+  if (typeof date === 'string' && /^\d+$/.test(date)) {
+    return ''
+  }
+  let Numbers = String(date).replace(/[-/]/g, '');
+  if (!/^\d+$/.test(Numbers)) {
+    console.log("date2:", date, typeof date);
+    return ''
+  }
   if (typeof date !== 'number' || isNaN(date)) {
     if (typeof date === 'string' && !isNaN(Date.parse(date))) {
       let parsedDate = new Date(date);

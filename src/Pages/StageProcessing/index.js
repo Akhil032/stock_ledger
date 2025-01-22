@@ -29,7 +29,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import swal from '@sweetalert/with-react';
-
+import { exceltoJsdate } from '../../Utils/exceltojsdate';
+import { useNavigate } from 'react-router-dom';
 import "./index.css";
 
 
@@ -89,8 +90,11 @@ const StageProcessing = () => {
   const [freeze, setFreeze] = useState(false);
   const [tabledataclone, setTabledataclone] = useState("");
   const theme = useTheme();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
   const StageProceesClasses = useStyles();
+  const [file, setFile] = useState(null);
   const StagingProcessing = useSelector(
     (state) => state.StagingProcessingReducers
   );
@@ -99,7 +103,7 @@ const StageProcessing = () => {
 
   useEffect(() => {
     document.title = 'Inventory Transaction';
-  },[]);
+  }, []);
   // Column Filter of table
   useEffect(() => {
     if (inputValue && freeze === false) {
@@ -115,37 +119,44 @@ const StageProcessing = () => {
       setFilterData(filteredTable);
     }
   }, [inputValue]);
-  
+  const showErrorDialog = (message) => {
+    //if (!isModalOpen && !isValidExcel)
+    setModalMessage(message);
+    setIsModalOpen(true);
+    setIsValidExcel(false);
+  };
   // Error handle by input from web-service
   useEffect(() => {
     if (StagingProcessing.isError) {
       //setIsError(true)
-      if((StagingProcessing["messgae"]).length >0)
-      {swal(
-        <div>     
-          <p>{StagingProcessing["messgae"]}</p>
-        </div>
-      )}
-      StagingProcessing.isError=false;
+      if ((StagingProcessing["messgae"]).length > 0) {
+        swal(
+          <div>
+            <p>{StagingProcessing["messgae"]}</p>
+          </div>
+        )
+      }
+      StagingProcessing.isError = false;
     } else if (StagingProcessing.isSuccess) {
-     // setIsSuccess(true)
-     if((StagingProcessing["messgae"]).length >0)
-      {swal(
-        <div>     
-          <p>{StagingProcessing["messgae"]}</p>
-        </div>
-      ).then(function(isConfirm) {
-        if (isConfirm) {
-          setLoading(() => window.location.reload())
-        }})
-    }
-    StagingProcessing.isSuccess=false;
+      // setIsSuccess(true)
+      if ((StagingProcessing["messgae"]).length > 0) {
+        swal(
+          <div>
+            <p>{StagingProcessing["messgae"]}</p>
+          </div>
+        ).then(function (isConfirm) {
+          if (isConfirm) {
+            setLoading(() => window.location.reload())
+          }
+        })
+      }
+      StagingProcessing.isSuccess = false;
       setTabledata("");
-    
+
     } else {
       console.log(234545)
       setIsError(false)
-      setIsSuccess(false) 
+      setIsSuccess(false)
     }
   }, [StagingProcessing])
   // Handle input of Column filter
@@ -189,22 +200,20 @@ const StageProcessing = () => {
           item['TOTAL_COST'] = (item['QTY'] * item['UNIT_COST']).toFixed(4);
           item['TOTAL_RETAIL'] = (item['QTY'] * item['UNIT_RETAIL']).toFixed(4);
           count++;
+          const date = exceltoJsdate(item['TRN_DATE'], setIsValidExcel);
+          if (date === '') {
+            setIsValidExcel(false);
+            showErrorDialog("Invalid date format found in the uploaded file.");
+            return;
+          }
         })
         formatData.filter((val) => {
           for (const [key, value] of Object.entries(val)) {
-            if(value==="NaN"){
-              val[key]=""
+            if (value === "NaN") {
+              val[key] = ""
             }
           }
-      })
-      formatData.filter((val) => {
-        // console.log("vale","   ",val)
-        for (const [key, value] of Object.entries(val)) {
-          if(value==="NaN"){
-            val[key]=""
-          }
-        }
-    })
+        })
         setTabledata(serializedata(formatData));
         setAllData(serializedata(formatData));
       } else {
@@ -215,6 +224,7 @@ const StageProcessing = () => {
 
   const handleClose = () => {
     setIsValidExcel(true);
+    setIsModalOpen(false);
     setOpen(false);
   };
 
@@ -244,14 +254,14 @@ const StageProcessing = () => {
         setErrormsg("UNIT_RETAIL data length should not more then 20");
         return false;
       } if (item['TOTAL_COST']?.length > 20) {
-       setIsError(true);
-       setErrormsg("TOTAL_COST data length should not more then 20");
-      return false;
-       } if (item['TOTAL_RETAIL']?.length > 20) {
-      setIsError(true);
-      setErrormsg("TOTAL_RETAIL data length should not more then 20");
-      return false;
-        }if (item['REF_NO1']?.length > 10) {
+        setIsError(true);
+        setErrormsg("TOTAL_COST data length should not more then 20");
+        return false;
+      } if (item['TOTAL_RETAIL']?.length > 20) {
+        setIsError(true);
+        setErrormsg("TOTAL_RETAIL data length should not more then 20");
+        return false;
+      } if (item['REF_NO1']?.length > 10) {
         setIsError(true);
         setErrormsg("REF_NO1 data length should not more then 10");
         return false;
@@ -426,7 +436,7 @@ const StageProcessing = () => {
       return newTabledata;
     }
   };
-
+  const navigate = useNavigate();
   return (
     <Box className={StageProceesClasses.stagemaindiv}>
       <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
@@ -524,7 +534,7 @@ const StageProcessing = () => {
         </Snackbar>
       </Stack>
 
-      <div> 
+      <div>
         <Dialog
           fullScreen={fullScreen}
           open={isError}
@@ -598,7 +608,7 @@ const StageProcessing = () => {
         </Dialog>
       </div>
 
-      <div>
+      {/* <div>
         <Dialog
           fullScreen={fullScreen}
           open={!isValidExcel}
@@ -626,8 +636,46 @@ const StageProcessing = () => {
             </Button>
           </DialogActions>
         </Dialog>
-      </div>
+      </div> */}
+      <div>
 
+        <Dialog
+          fullScreen={fullScreen}
+          open={isModalOpen && !isError}
+          onClose={handleClose}
+          aria-labelledby="responsive-dialog-title"
+          PaperProps={{
+            style: {
+              backgroundColor: '#D3D3D3',
+              borderRadius: '10px',
+            },
+          }}
+        >
+          <DialogTitle id="responsive-dialog-title">
+            {"Excel upload is Invalid"}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {modalMessage}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              type="button"
+              onClick={() => {
+                handleClose();
+                // setFile(null);         
+                navigate('/stage-processing');
+                window.location.reload();
+              }}
+              autoFocus
+            >
+              Ok
+            </Button>
+
+          </DialogActions>
+        </Dialog>
+      </div>
 
     </Box>
   );
