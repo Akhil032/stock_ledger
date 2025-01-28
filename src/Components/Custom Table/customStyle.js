@@ -50,4 +50,24 @@ export const styleSelectCell = {
     option: provided => ({ ...provided, fontSize: "12px", }),
     menu: base => ({ ...base, borderRadius: 0, marginTop: 0, textAlign: "center", }),
     menuList: base => ({ ...base, padding: 0, textAlign: "center", })
-  };
+};
+export const styleSelectFltr = {
+    control: base => ({
+        ...base, fontSize: "12px", minHeight: "20px", textAlign: "center", borderRadius: "0px", border: 0,
+        borderBottom: "1px solid gray", boxShadow: "none", '&:hover': { borderBottom: "1px solid gray", }
+    }),
+    dropdownIndicator: (base) => ({ ...base, padding: 0, }),
+    clearIndicator: (base) => ({ ...base, paddingTop: 0, paddingBottom: 0, }),
+    valueContainer: (provided) => ({ ...provided, height: '20px', padding: "0", alignItems: "center", }),
+    singleValue: (provided) => ({ ...provided,lineHeight: "20px",  }),
+    input: (provided) => ({ ...provided, width: "120px", justifyContent: "left",margin: "0",padding: "0",lineHeight: "20px",  }),
+    option: provided => ({ ...provided, fontSize: "12px", }),
+    menu: base => ({ ...base, borderRadius: 0, marginTop: 0, textAlign: "center", }),
+    menuList: base => ({ ...base, padding: 0, textAlign: "center", }),
+    placeholder: (provided) => ({
+        ...provided,
+        fontSize: "12px",lineHeight: "20px",position: "absolute",top: "50%",transform: "translateY(-50%)",
+        color: "gray", // Optional: Change placeholder color
+    }),
+};
+

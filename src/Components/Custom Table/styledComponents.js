@@ -1,9 +1,10 @@
 import {
     Paper, styled, TableCell, tableCellClasses
 } from "@mui/material";
-
+import { useRef } from "react";
 // Draggable Dialog imports
 import Draggable from 'react-draggable';
+import { DraggableCore } from "react-draggable";
 
 export const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.root}`]: {
@@ -57,14 +58,27 @@ export const TableInlineFltr = styled(TableCell)(({ theme }) => ({
         padding: "0px"
     },
 }));
+// export function PaperComponent(props) {
+//     return (
+//         <Draggable
+//             handle="#draggable-dialog-title"
+//             cancel={'[class*="MuiDialogContent-root"]'}
+//             bounds="body"
+//         >
+//             <Paper {...props} />
+//         </Draggable>
+//     );
+// }
 export function PaperComponent(props) {
+    const paperRef = useRef(null);
+
     return (
-        <Draggable
+        <DraggableCore
+            nodeRef={paperRef} // Use the ref API
             handle="#draggable-dialog-title"
-            cancel={'[class*="MuiDialogContent-root"]'}
             bounds="body"
         >
-            <Paper {...props} />
-        </Draggable>
+            <Paper ref={paperRef} {...props} />
+        </DraggableCore>
     );
 }

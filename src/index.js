@@ -1,17 +1,22 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter } from "react-router-dom";
-import { Provider } from 'react-redux';
-import store from './Redux/store';
-const root = ReactDOM.createRoot(document.getElementById('root'));
+import { ThemeProvider } from "@mui/material/styles";
+import { theme } from "./Theme";
+import { Provider } from "react-redux";
+import store from "./Redux/store";
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <BrowserRouter future={{ v7_startTransition: true,v7_relativeSplatPath: true, }}>
+    <BrowserRouter>
       <Provider store={store}>
-        <App />
+        <ThemeProvider theme={theme}>
+          <App />
+        </ThemeProvider>
       </Provider>
     </BrowserRouter>
   </React.StrictMode>

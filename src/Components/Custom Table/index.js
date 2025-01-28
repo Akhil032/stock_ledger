@@ -13,9 +13,9 @@ import { visuallyHidden } from "@mui/utils";
 // Material-UI Icons
 import {
     DoneAll as DoneAllIcon, Cancel as CancelIcon, Search as SearchIcon,
-    ViewColumn as ViewColumnIcon, Animation as AnimationIcon,
-    CalendarToday as CalendarTodayIcon, Download as DownloadIcon,
-    Info as InfoIcon, RestartAlt as RestartAltIcon
+    ViewColumn as ViewColumnIcon, Animation as AnimationIcon, CopyAll as CopyAllIcon,
+    CalendarToday as CalendarTodayIcon, Download as DownloadIcon, Lock as LockIcon,
+    Info as InfoIcon, RestartAlt as RestartAltIcon, ManageSearch as ManageSearchIcon
 } from "@mui/icons-material";
 
 // Third-Party Libraries
@@ -28,14 +28,16 @@ import Select from "react-select"; // Select Component
 import { generateExcel } from "./excelExport";
 import { getComparator, stableSort, handleRequestSort } from "./sorting";
 import { StyledTableCell, StyledTableCellBody, TableInlineFltr, PaperComponent } from "./styledComponents";
-import { useStyles, styleSelectCell } from "./customStyle";
+import { useStyles, styleSelectCell, styleSelectFltr } from "./customStyle";
 
 
 
 export default function CustomTable(
     { reportName, data, setData, headColumns, currentPageData, setcurrentPageData, inputVal, setInputVal, page, setPage,
-        rowsPerPage, selected, setSelected, allPageSelected, setAllPageSelected,
-        selectedRow, setSelectedRow, editableCols, isChanged, setIsChanged, dropDownCol, dropDownVal
+        rowsPerPage, selected, setSelected, allPageSelected, setAllPageSelected, selectedRow, setSelectedRow, editableCols,
+        isChanged, setIsChanged, dropDownCol, dropDownVal, dropDownColFltr, dropDownValFltr, dateFltr = {},
+        sHeight = 400, lHeight = 720, cWidth = "calc(95vw - 6px)", descField = [], RmvChkBox = false, enbSearch = false, enDwnldRpt = true,
+        handleToggle, handleCopy, handleView
     }) {
     // Custom Styles
     const customStyle = useStyles();
@@ -44,7 +46,7 @@ export default function CustomTable(
     const [orderBy, setOrderBy] = useState('');
     const [currentPageRows, setcurrentPageRows] = useState(currentPageData);
     const [selectedRows, setSelectedRows] = useState({});
-
+    const [LockCheck, setLockCheck] = useState(false);
     // Input & Header States
     const [ManageHeaderCheck, setManageHeaderCheck] = useState(true);
     const [ManageHeaderData, setManageHeaderData] = useState([]);
@@ -59,14 +61,24 @@ export default function CustomTable(
 
     // Screen & Hover States
     const [isScreenBigger, setIsScreenBigger] = useState(window.innerWidth >= 1500);
+
+    const [isSHovered, setIsHovered] = useState(false);
     const [isSHovered1, setIsHovered1] = useState(false);
     const handleSEnter1 = () => setIsHovered1(true);
     const handleSLeave1 = () => setIsHovered1(false);
 
+    const handleSEnter = () => {
+        setIsHovered1(true);
+    };
+
+    const handleSLeave = () => {
+        setIsHovered1(false);
+    };
     const handleResize = () => {
         const screenWidth = window.innerWidth;
         setIsScreenBigger(screenWidth < 1500 ? false : true);
     };
+    useEffect(() => { setcurrentPageRows(currentPageData) }, [data]);
 
     // TABLE RESIZE
     useEffect(() => {
@@ -132,8 +144,7 @@ export default function CustomTable(
         const filteredArray = currentPageData
         const newSelected = filteredArray.map((n) => n.SR_NO);
         const pageselected = { [page]: newSelected };
-
-        if (event.target.checked && (Object.keys(selected[0]).length > 0 && !Object.keys(selected[0]).includes(String(page)))
+        if (event.target.checked && (selected.length > 0 && Object.keys(selected[0]).length > 0 && !Object.keys(selected[0]).includes(String(page)))
         ) {
             const sortedArray = ((selected && Object.keys(selected[0]).length > 0) ? [{ ...selected[0], ...pageselected }]
                 : [pageselected]).sort((a, b) => {
@@ -145,7 +156,7 @@ export default function CustomTable(
             const combinedList = Object.values(sortedArray[0]).flat()
             setAllPageSelected(combinedList);
             return;
-        } else if (event.target.checked && Object.keys(selected[0]).length > 0 && Object.keys(selected[0]).includes(String(page))) {
+        } else if (event.target.checked && selected.length > 0 && Object.keys(selected[0]).length > 0 && Object.keys(selected[0]).includes(String(page))) {
             const updatedArray = selected.map((obj) => {
                 if (obj.hasOwnProperty(page)) {
                     delete obj[page];
@@ -161,7 +172,7 @@ export default function CustomTable(
             const combinedList = Object.values(updatedArray[0]).flat()
             setAllPageSelected(combinedList);
             return;
-        } else if (event.target.checked && (Object.keys(selected[0]).length === 0)) {
+        } else if (event.target.checked && (selected.length === 0 || (Object.keys(selected[0]).length === 0))) {
             setSelected([pageselected]);
             const combinedList = Object.values(pageselected).flat()
             setAllPageSelected(combinedList);
@@ -219,6 +230,7 @@ export default function CustomTable(
             }));
         }
     }
+
     useEffect(() => {
         if (Object.keys(inputVal).length > 0) {
             for (let i = 0; i < Object.keys(inputVal).length; i++) {
@@ -359,7 +371,7 @@ export default function CustomTable(
                         >
                             <Checkbox
                                 color="primary"
-                                size="small"
+                                size="small" disabled={RmvChkBox}
                                 indeterminate={selected.length && Object.keys(selected[0]).length > 0
                                     && Object.keys(selected[0]).includes(String(page))
                                     && selected[0][page].length < currentPageData.length}
@@ -482,19 +494,123 @@ export default function CustomTable(
 
         return result;
     };
+    const [fltrVal, setFltrVal] = useState({});
+    const handleFltrChange = (name, value) => {
+        if (value) {
+            setInputVal((prev) => ({
+                ...prev,
+                [name]: value?.LABEL,
+            }));
+        } else {
+            setInputVal((prev) => ({
+                ...prev,
+                [name]: '',
+            }));
+        }
+    }
+    const handleFltrCopyChange = (name, value) => {
+        if (value) {
+            setFltrVal((prev) => {
+                return {
+                    ...prev,
+                    [name]: value?.LABEL,
+                };
+            });
+            if (name === "BILL_TO_ADDRESS") {
+                setFltrVal((prev) => ({
+                    ...prev,
+                    "BILL_TO_ID_DESC": value?.DESC,
+                }));
+            }
+        } else {
+            setFltrVal((prev) => {
+                return {
+                    ...prev,
+                    [name]: '',
+                };
+            });
+        }
+    }
+    // console.log(fltrVal)
+    const handleCopyDown = (name) => {
+        const selRows = selected.flatMap(obj => Object.values(obj).flat()); // Get SR_NO array
+        if (selRows.length === 0 || Object.keys(fltrVal).length === 0) { setLockCheck(false); return; }
+        // Update the data with selected rows and filter values
+        const updatedData = currentPageData.map(row =>
+            selRows.includes(row.SR_NO) // Check if the row's SR_NO is in selRows
+                ? { ...row, ...fltrVal } // Update the row with keys and values from fltrVal
+                : row // Leave the row unchanged
+        );
+        handleCopy(name, selRows, fltrVal);
+        // Update the data state
+        // setData(updatedData);
 
+        // Derive the current page data after modification
+        const pageData = updatedData
+            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+            .filter(row => row !== undefined); // Filter out any undefined rows
+
+        // Update the current page data state
+        // setcurrentPageRows(pageData);
+        setLockCheck(false);
+        setInputVal({});
+        setFltrVal({});
+    };
+
+    const SearchButton = ({ name }) => (
+        [
+            <IconButton sx={{ padding: "0px 5px 0px 0px", margin: "0px" }} >
+                {LockCheck ?
+                    <CopyAllIcon fontSize="small" sx={{ height: '0.8em', width: '0.8em' }} onClick={() => handleCopyDown(name)}
+                    />
+                    : <LockIcon fontSize="small" sx={{ height: '0.6em', width: '0.6em' }} onClick={() => setLockCheck(true)}
+                    />}
+            </IconButton>
+            // ,
+            // <IconButton sx={{ padding: "0px 0px 0px 5px", margin: "0px" }} >
+            //     <BsFillEraserFill fontSize="small"
+            //     onClick={()=>set}
+            //     />
+            // </IconButton>
+        ]
+    )
     return (
         <>
             <Box
                 component="fieldset"
                 display="inline-block"
                 sx={{
-                    backgroundColor: "", padding: "0px 0px 0px 0px", borderRadius: 1, boxShadow: 2, border: "0", margin: "25px 0px 0px 0px",
-                    borderBottom: 3, backgroundColor: "", width: isScreenBigger ? "calc(95vw - 0px)" : "calc(93vw - 6px)",
+                    backgroundColor: "", padding: "0px 0px 0px 0px", borderRadius: 1, boxShadow: 2, border: "0",
+                    borderBottom: 3, backgroundColor: "", width: isScreenBigger ? cWidth : "calc(93vw - 6px)",
                 }}
             >
                 <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
-                    {reportName.length > 0 &&
+                    {/* <div style={{ display: "flex", }}> */}
+                    {enbSearch && <div
+                        style={{
+                            flex: "0",
+                            backgroundColor: isSHovered ? '#f5f5f5' : 'white',
+                            borderRadius: '20%',
+                            padding: "0px 8px 0px 8px",
+                            marginRight: "2px", height: "30px", minHeight: "30px",
+                            //border:"1px solid red"
+                        }}
+                        title="Search"
+                        onMouseEnter={() => { setIsHovered(true) }}
+                        onMouseLeave={() => { setIsHovered(false) }}
+                        onClick={handleToggle}
+                    >
+                        <ManageSearchIcon
+                            variant="contained"
+                            style={{
+                                backgroundColor: isSHovered ? '#f5f5f5' : 'white',
+                                //border:"1px solid blue",
+                                marginTop: "2px"
+                            }}
+                            title="Search"
+                        />
+                    </div>}
+                    {reportName.length > 0 && enDwnldRpt &&
                         <div title="Download"
                             style={{
                                 flex: "0", borderRadius: '20%', padding: "0px 0px 0px 5px", margin: "2px",
@@ -532,16 +648,16 @@ export default function CustomTable(
                 </div>
                 <Paper
                     sx={{
-                        width: isScreenBigger ? "calc(95vw - 0px)" : "calc(92vw - 0px)",
+                        width: isScreenBigger ? cWidth : "calc(92vw - 0px)",
                         margin: "0px 0px 0px 0px", padding: "0px 5px 5px 5px", borderRadius: 0, boxShadow: 0, border: "0",
                     }}
                 >
                     <TableContainer sx={{
-                        maxHeight: (isScreenBigger ? 710 : 420),
-                        borderRadius: '7px', padding: 0, margin: 0,width:'100%'
+                        maxHeight: (isScreenBigger ? lHeight : sHeight),
+                        borderRadius: '7px', padding: 0, margin: 0, width: '100%'
                     }} component={Paper}>
-                        
-                        <Table aria-label="customized table" style={{ padding: 0, margin: 0, width:'100%'}}>
+
+                        <Table aria-label="customized table" style={{ padding: 0, margin: 0, width: '100%' }}>
                             <TabHead className={customStyle.TitleHead}
                                 numSelected={selected.length}
                                 onSelectAllClick={handleSelectAllClick}
@@ -550,10 +666,10 @@ export default function CustomTable(
                                 orderBy={orderBy}
 
                             />
-                            <TableHead className={customStyle.SearchHead}>
-                                <TableRow>
+                            <TableHead className={customStyle.SearchHead} >
+                                <TableRow sx={{ bgcolor: 'white', }}>
                                     {/* <TableInlineFltr padding="checkbox" style={{ whiteSpace: "nowrap", padding: "0px" }}> */}
-                                    <TableCell padding="checkbox" sx={{ padding: "0px", width: "10px", margin: "0px", borderRight: "1px solid #ccc" }} >
+                                    <TableCell padding="checkbox" sx={{ padding: "0px", width: "10px", margin: "0px", borderRight: "1px solid #ccc", }} >
 
                                         <IconButton small="small" sx={{ padding: "0px", }} onClick={() => {
                                             setInputVal({});
@@ -580,6 +696,9 @@ export default function CustomTable(
                                         const rowCol = headColumns.find((col) => col.id === column);
                                         const col = rowCol?.id;
                                         const placeholderName = rowCol?.label
+                                        const maxDate = dateFltr[col] === 'MAX' ? new Date() : null;
+                                        const minDate = dateFltr[col] === 'MIN' ? new Date() : null;
+
                                         return (
                                             <TableInlineFltr
                                                 // key={column}  // Using the column as the unique key directly
@@ -595,6 +714,8 @@ export default function CustomTable(
                                                             selected={inputVal && inputVal[col] ? new Date(inputVal[col]) : null}
                                                             onChange={(date) => gridFilter({ target: { name: col, value: date } })}
                                                             onChangeRaw={(event) => event.preventDefault()}
+                                                            maxDate={maxDate}
+                                                            minDate={minDate}
                                                             placeholderText="MM-DD-YYYY"
                                                             dateFormat="MM-dd-yyyy"
                                                             showYearDropdown
@@ -604,6 +725,7 @@ export default function CustomTable(
                                                             yearDropdownItemNumber={300}
                                                             className="date-picker"
                                                             popperPlacement="bottom-start" // Position the calendar
+                                                            disabled={LockCheck}
                                                             customInput={
                                                                 <TextField
                                                                     variant="standard"
@@ -649,43 +771,66 @@ export default function CustomTable(
                                                         />
                                                     )
                                                         :
-                                                        (<TextField
-                                                            variant="standard"
-                                                            autoComplete="off"
-                                                            name={col}
-                                                            onChange={gridFilter}
-                                                            value={inputVal && inputVal[col] ? inputVal[col] : ""}
-                                                            placeholder={placeholderName}
-                                                            sx={{
-                                                                width: "100%",
-                                                                "& .MuiInput-underline:before": {
-                                                                    borderBottom: "1px solid black", // Default 1px border
-                                                                    transform: "translateY(2px)",
-                                                                },
-                                                                "& .MuiInput-underline:hover:before": {
-                                                                    borderBottom: "2px solid black", // Hover 2px border
-                                                                    transform: "translateY(2px)",
-                                                                },
-                                                                "& .MuiInput-underline:after": {
-                                                                    borderBottom: 0, // Focused 2px border
-                                                                    transform: "translateY(2px)",
-                                                                },
-                                                            }}
-                                                            slotProps={{
-                                                                htmlInput: {
+                                                        ((!(dropDownColFltr === undefined) && dropDownColFltr.includes(col)) ?
+                                                            <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto" }}>
+                                                                <Select
+                                                                    name={col}
+                                                                    placeholder={placeholderName}
+                                                                    maxMenuHeight={150}
+                                                                    classNamePrefix="mySelect"
+                                                                    getOptionLabel={option =>
+                                                                        option.DESC
+                                                                            ? `${option.LABEL} - ${option.DESC.length > 10 ? option.DESC.substring(0, 10) + '...' : option.DESC}`
+                                                                            : `${option.LABEL}`
+                                                                    } getOptionValue={option => option.LABEL}
+                                                                    options={dropDownValFltr} // Dynamically fetch options for the column
+                                                                    isSearchable={true}
+                                                                    menuPlacement="bottom"
+                                                                    onChange={LockCheck ? (val) => handleFltrCopyChange(col, val) : (val) => handleFltrChange(col, val)} // Pass column dynamically
+                                                                    value={dropDownValFltr.filter(obj => obj.LABEL === (LockCheck ? fltrVal[col] : inputVal[col]))} // Match value dynamically
+                                                                    isClearable={true}
+                                                                    closeMenuOnSelect={true}
+                                                                    hideSelectedOptions={false}
+                                                                    styles={styleSelectFltr}
+                                                                    style={{ maxWidth: '20px' }}
+                                                                />
+                                                                <SearchButton name={col} />
+                                                            </div>
+                                                            : <TextField
+                                                                variant="standard"
+                                                                autoComplete="off"
+                                                                name={col}
+                                                                onChange={gridFilter}
+                                                                value={inputVal && inputVal[col] ? inputVal[col] : ""}
+                                                                placeholder={placeholderName} disabled={LockCheck}
+                                                                InputProps={{ sx: { fontSize: 12, marginTop: '2px', padding: "0px", height: "20px", textAlign: "left", }, }}
+                                                                // InputProps={{
+                                                                //     sx: {
+                                                                //         fontSize: 12,
+                                                                //         padding: "0px",marginTop:'2px',
+                                                                //         height: "20px",
+                                                                //         textAlign: "left",
+                                                                //         "& .MuiInput-underline:before": {
+                                                                //         borderBottom: "1px solid black", // Default 1px border
+                                                                //         transform: "translateY(2px)",
+                                                                //     },
+                                                                //     "& .MuiInput-underline:hover:before": {
+                                                                //         borderBottom: "2px solid black", // Hover 2px border
+                                                                //         transform: "translateY(2px)",
+                                                                //     },
+                                                                //     "& .MuiInput-underline:after": {
+                                                                //         borderBottom: 0, // Focused 2px border
+                                                                //         transform: "translateY(2px)",
+                                                                //     },
+                                                                //     },
+                                                                // }}
+                                                                inputProps={{
                                                                     sx: {
-                                                                        fontSize: 12,
-                                                                        padding: "0px 0px 0px 3px",
-                                                                        height: "20px",
-                                                                        textAlign: "left",
-                                                                        "&::placeholder": {
-                                                                            textAlign: "left",
-                                                                            padding: "0px",
-                                                                        },
+                                                                        fontSize: 12, padding: "0px 0px 0px 3px", height: "20px", textAlign: "left",
+                                                                        "&::placeholder": { textAlign: "left", padding: "0px", },
                                                                     },
-                                                                },
-                                                            }}
-                                                        />)
+                                                                }}
+                                                            />)
                                                 }
                                             </TableInlineFltr>
                                         )
@@ -708,6 +853,7 @@ export default function CustomTable(
                                             <TableRow
                                                 key={row}
                                                 // onClick={() => handleRowClick(row)}
+                                                onDoubleClick={() => handleView && handleView(row)}
                                                 style={selectedRow === row ? { backgroundColor: "#CDF0FF" } : null}
                                                 sx={{
                                                     backgroundColor: rowIndex % 2 === 0 ? "#F2F2F2" : "#DCDCDC",
@@ -720,10 +866,8 @@ export default function CustomTable(
                                                             handleClick(event, row?.SR_NO);
                                                             setSelectedRows({ page: row?.SR_NO })
                                                         }}
-                                                        checked={isItemSelected}
-                                                        inputProps={{
-                                                            'aria-labelledby': labelId,
-                                                        }}
+                                                        checked={isItemSelected} disabled={RmvChkBox}
+                                                        inputProps={{ 'aria-labelledby': labelId, }}
                                                         style={{ padding: "0px", textAlign: "center", display: 'flex', justifyContent: 'center', alignItems: 'center', }} />
                                                 </TableCell>
                                                 {ManageHeaderData.map((key, index) => {
@@ -739,7 +883,7 @@ export default function CustomTable(
                                                                     outline: "none",
                                                                     verticalAlign: "left",
                                                                     margin: "0px 0px 0px 0px",
-                                                                }}
+                                                                }} //onDoubleClick={()=>{console.log("view2222")}}
                                                                     contentEditable={true}
                                                                     onKeyDown={(e) => {
                                                                         if (e.key === "Enter") {
@@ -784,7 +928,7 @@ export default function CustomTable(
                                                                     </TableCell>
                                                                     :
 
-                                                                    (key.toLowerCase().includes('_desc') && row[key].length > 0) ?
+                                                                    ((key.toLowerCase().includes('_desc') || key.toLowerCase().includes('description') || (Object.keys(descField)).includes(key)) && row[key].length > 0) ?
                                                                         <StyledTableCellBody align="right" sx={{
                                                                             padding: "0px 0px 0px 3px", textAlign: "left", fontSize: "12px", whiteSpace: 'nowrap',
                                                                             overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: "100px", borderRight: "1px solid #ccc",
@@ -802,7 +946,12 @@ export default function CustomTable(
                                                                                 <Button sx={{ backgroundColor: "", '&:hover': { backgroundColor: "", }, border: 0, color: "CadetBlue", padding: "0px" }}
                                                                                     style={{ maxWidth: '25px', minWidth: '25px', justifyContent: "flex-start" }}
                                                                                     size='small' className={customStyle.textField}
-                                                                                    onClick={() => { setOpenDialog(true); setDialogData(String(row[key])); }}
+                                                                                    onClick={() => {
+                                                                                        setOpenDialog(true); setDialogData(
+
+                                                                                            (Object.keys(descField)).includes(key) ? `${row[col]}-${row[descField[key]]}` : String(row[key])
+                                                                                        );
+                                                                                    }}
                                                                                     startIcon={<InfoIcon style={{ fontSize: 16, backgroundColor: "" }} />}
                                                                                 >
                                                                                 </Button>
