@@ -1,5 +1,5 @@
 // Core React Imports
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 // Material-UI Components & Utilities
 import {
@@ -39,6 +39,7 @@ export default function CustomTable(
         sHeight = 400, lHeight = 720, cWidth = "calc(95vw - 6px)", descField = [], RmvChkBox = false, enbSearch = false, enDwnldRpt = true,
         handleToggle, handleCopy, handleView
     }) {
+    const hasRendered = useRef(true);
     // Custom Styles
     const customStyle = useStyles();
     // Table Sorting & Pagination
@@ -263,8 +264,15 @@ export default function CustomTable(
                     setcurrentPageData(filteredTable);
                 }
             }
-        } else if (Object.keys(inputVal).length === 0) {
-            setcurrentPageData(currentPageRows);
+        } else if (Object.keys(inputVal).length === 0 && (data.length > 0 && Array.isArray(data))) {
+            // setcurrentPageData(currentPageRows);
+            if (!hasRendered.current) {
+                setcurrentPageRows(currentPageRows)
+            }
+            else {
+                setcurrentPageData(currentPageData);
+                hasRendered.current = false;
+            }
         }
     }, [inputVal]);
 
@@ -282,7 +290,7 @@ export default function CustomTable(
         setPage(newPage);
         const temp = data.slice(newPage * rowsPerPage, newPage * rowsPerPage + rowsPerPage)
             .filter(row => row !== undefined);
-        setcurrentPageData(temp);
+        setcurrentPageData(temp); 
         setcurrentPageRows(temp);
         // setInputVal([]);
         //setIsLoading(false);
@@ -451,7 +459,7 @@ export default function CustomTable(
             .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
             .filter((row) => row !== undefined);
 
-        setcurrentPageData(pageData);
+        setcurrentPageData(pageData); 
         setData(modifiedData);
         // console.log("ischange", isChanged)
         if (!isChanged.includes(index)) {
@@ -692,7 +700,7 @@ export default function CustomTable(
                                     </TableCell>
                                     {/* </TableInlineFltr> */}
 
-                                    {ManageHeaderData.map((column) => {
+                                    {ManageHeaderData.map((column, index) => {
                                         const rowCol = headColumns.find((col) => col.id === column);
                                         const col = rowCol?.id;
                                         const placeholderName = rowCol?.label
@@ -701,7 +709,7 @@ export default function CustomTable(
 
                                         return (
                                             <TableInlineFltr
-                                                // key={column}  // Using the column as the unique key directly
+                                                key={col || index} // Ensures each element has a unique key
                                                 size="small"
                                                 style={{
                                                     whiteSpace: "nowrap", padding: "0px", margin: "0px", paddingLeft: "3px"
@@ -763,6 +771,8 @@ export default function CustomTable(
                                                                             fontSize: 12,
                                                                             padding: "0px 0px 0px 3px",
                                                                             height: "20px",
+                                                                        },
+                                                                        style: {
                                                                             textAlign: "left",
                                                                         },
                                                                     }}
@@ -771,7 +781,7 @@ export default function CustomTable(
                                                         />
                                                     )
                                                         :
-                                                        ((!(dropDownColFltr === undefined) && dropDownColFltr.includes(col)) ?
+                                                        ((!(dropDownColFltr === undefined) && dropDownColFltr?.includes(col)) ?
                                                             <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto" }}>
                                                                 <Select
                                                                     name={col}
@@ -826,17 +836,18 @@ export default function CustomTable(
                                                                 // }}
                                                                 inputProps={{
                                                                     sx: {
-                                                                        fontSize: 12, padding: "0px 0px 0px 3px", height: "20px", textAlign: "left",
+                                                                        fontSize: 12, padding: "0px 0px 0px 3px", height: "20px",
                                                                         "&::placeholder": { textAlign: "left", padding: "0px", },
+                                                                    },
+                                                                    style: {
+                                                                        textAlign: "left",
                                                                     },
                                                                 }}
                                                             />)
                                                 }
                                             </TableInlineFltr>
-                                        )
-                                    }
-                                    )}
-
+                                        );
+                                    })}
                                 </TableRow>
                                 {/* </TableRow> */}
                             </TableHead>
